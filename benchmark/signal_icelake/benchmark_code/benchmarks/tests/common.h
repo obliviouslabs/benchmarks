@@ -3,6 +3,8 @@
 #include <stdlib.h> 
 #include <time.h>
 #include "string.h"
+#include <unistd.h>
+#include <sys/wait.h>
 
 static inline uint64_t current_time_ns(void)
 {
@@ -39,3 +41,35 @@ static uint64_t getMemValue(){ //Note: this value is in KB!
 }
 
 #define REPORT_LINE(BENCH, IMPL, S, ...) TEST_LOG("\nREPORT_123" BENCH "|" IMPL "|" S "REPORT_123\n", ##__VA_ARGS__)
+
+
+
+#define RUN_TEST_FORKED(x)                              \
+do {                                                    \
+  pid_t childPid = fork();                              \
+  if (childPid == 0) {                                  \
+    /* Child process */                                 \
+    fprintf(stderr, "\nRunning test: %s...\n", #x);     \
+    int _result = x;                                    \
+    if (_result == 0) {                                 \
+      fprintf(stderr, "  SUCCESS\n");                   \
+      exit(0);                                          \
+    } else {                                            \
+      fprintf(stderr, " FAIL (%d)\n", _result);         \
+      exit(_result);                                    \
+    }                                                   \
+  } else if (childPid < 0) {                            \
+    /* Fork failed */                                   \
+    fprintf(stderr, "Fork failed: %s\n", #x);           \
+  } else {                                              \
+    int returnStatus;                                   \
+    waitpid(childPid, &returnStatus, 0);                \
+    if (returnStatus == 0) {                            \
+      /* Child process terminated without error */      \
+      TEST_LOG("OK\n");                                 \
+    } else {                                            \
+      /* Child process terminated with an error*/       \
+      TEST_LOG("FAILED: %d\n", returnStatus);           \
+    }                                                   \
+  }                                                     \
+} while(0)
