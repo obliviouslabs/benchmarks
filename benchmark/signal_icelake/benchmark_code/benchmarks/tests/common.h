@@ -55,12 +55,12 @@ do {                                                    \
       fprintf(stderr, "  SUCCESS\n");                   \
       exit(0);                                          \
     } else {                                            \
-      fprintf(stderr, " FAIL (%d)\n", _result);         \
+      fprintf(stderr, " FAIL: %s (%d)\n", #x, _result); \
       exit(_result);                                    \
     }                                                   \
   } else if (childPid < 0) {                            \
     /* Fork failed */                                   \
-    fprintf(stderr, "Fork failed: %s\n", #x);           \
+    fprintf(stderr, "FAILED: %s(fork)\n", #x);          \
   } else {                                              \
     int returnStatus;                                   \
     waitpid(childPid, &returnStatus, 0);                \
@@ -69,7 +69,7 @@ do {                                                    \
       TEST_LOG("OK\n");                                 \
     } else {                                            \
       /* Child process terminated with an error*/       \
-      TEST_LOG("FAILED: %d\n", returnStatus);           \
+      TEST_LOG("FAILED: %s (%d)\n", #x, returnStatus);  \
     }                                                   \
   }                                                     \
 } while(0)
