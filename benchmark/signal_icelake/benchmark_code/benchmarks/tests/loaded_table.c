@@ -115,8 +115,7 @@ int main()
 {
     // We run the tests up to 40GB of memory usage.
     //
-    for (uint64_t i = 10; i <= 22; i++) { // UNDONE(): change this back
-    // for (uint64_t i = 10; i <= 26; i++) {
+    for (uint64_t i = 10; i <= 26; i++) {
         RUN_TEST_FORKED(loaded_table(1<<i));
     }    
     return 0;

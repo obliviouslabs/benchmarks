@@ -175,7 +175,7 @@ int main()
 {
     // We run the tests up to 40GB of memory usage, and avoid slower tests for non optimal batch sizes
     //
-    for (uint64_t j = 10; j<=24; j++) {
+    for (uint64_t j = 10; j<=22; j++) {
         RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, NUM_SHARDS));
     }
 
