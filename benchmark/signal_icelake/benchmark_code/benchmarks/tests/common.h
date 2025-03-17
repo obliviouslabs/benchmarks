@@ -40,7 +40,17 @@ static uint64_t getMemValue(){ //Note: this value is in KB!
   return result;
 }
 
-#define REPORT_LINE(BENCH, IMPL, S, ...) TEST_LOG("\nREPORT_123" BENCH "|" IMPL "|" S "REPORT_123\n", ##__VA_ARGS__)
+#define BETTER_TEST_LOG(format, ...) do { \
+  char _buf[1024] = {0}; \
+  snprintf(_buf, sizeof(_buf), "LOG@%ld %s:%03d [%s] " format "\n", time_micros(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
+  fprintf(stderr, "%s", _buf); \
+} while (0)
+
+
+#define REPORT_LINE(BENCH, IMPL, S, ...) do { \
+  BETTER_TEST_LOG("\nREPORT_123" BENCH "|" IMPL "|" S "REPORT_123\n", ##__VA_ARGS__); \
+} while(0)
+
 
 
 

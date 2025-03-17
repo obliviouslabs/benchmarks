@@ -4,9 +4,9 @@ Signal-icelake has the following implementations that we want to benchmark:
 
 + c/position_map -> recursive position map
 
-+ c/ohtable -> non sharded hashtable
++ c/ohtable -> non sharded hashtable (benchmarks/tests/loaded_table.c)
 
-+ c/sharded_ohtable -> sharded hashtable
++ c/sharded_ohtable -> sharded hashtable (benchmarks/tests/loaded_sharded_table.c)
 
 
 The goal of this project is to be able to easily benchmark both implementation on various settings, at any given commit fromt ContactDiscoveryService-Icelake.

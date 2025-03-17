@@ -22,6 +22,8 @@ cp -r $base_dir'/benchmark/signal_icelake/benchmark_code/.' $base_dir/build/Cont
 
 echo "Patching the build script"
 sed -i 's/^##TESTS$/##TESTS\nTESTS=benchmarks\/loaded_sharded_table.test benchmarks\/loaded_table.test/' $base_dir/build/ContactDiscoveryService-Icelake/c/Makefile
+sed -i 's/^tests: $(patsubst %,%.out,$(TESTS)) enclave.test.out constant_time_check.test$/tests: $(patsubst %,%.out,$(TESTS))/' $base_dir/build/ContactDiscoveryService-Icelake/c/Makefile
+
 # sed -i 's/^##TESTS$/##TESTS\nTESTS=benchmarks\/loaded_sharded_table.test/' $base_dir/build/ContactDiscoveryService-Icelake/c/Makefile
 sed -i '/^[[:space:]]*-g[[:space:]]*\\[[:space:]]*$/d' $base_dir/build/ContactDiscoveryService-Icelake/c/Makefile.base
 

@@ -111,9 +111,10 @@ int test_loaded_sharded_table(size_t N, size_t batch_size)
   TEST_LOG("adding %zu blocks for %zu total records\n", num_blocks, num_records_to_add);
 
   uint64_t curr = 0;
+  uint64_t mod = (num_blocks / 20) > 0 ? (num_blocks / 20) : 1;
   for (size_t block = 0; block < num_blocks; ++block)
   {
-      if (block % (num_blocks / 20) == 0)
+      if (block % mod == 0)
       {
           fprintf(stderr, "block %zu/%zu\n", block, num_blocks);
       }
@@ -178,13 +179,13 @@ int main()
         RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, NUM_SHARDS));
     }
 
-    for (uint64_t j = 14; j<=25; j++) {
+    for (uint64_t j = 10; j<=25; j++) {
         RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, 100));
     }
 
     uint64_t batch_sizes[] = {1000,4096,8192};
     for (uint64_t i = 0; i<3; i++) {
-        for (uint64_t j = 14; j<=26; j++) {
+        for (uint64_t j = 10; j<=26; j++) {
             RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, batch_sizes[i]));
         }
     }
