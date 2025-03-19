@@ -9,3 +9,4 @@ mkdir -p logs
 # Run all inner setups
 #
 sh benchmark/signal_icelake/setup.sh
+sh benchmark/olabs_oram/setup.sh
