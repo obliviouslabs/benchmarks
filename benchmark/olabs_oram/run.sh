@@ -19,7 +19,9 @@ export CXX=/usr/bin/g++
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 ./build/applications/benchmarks/umap 2>&1 | stdbuf -oL tee $base_dir/logs/$run_id/umap.log
+./build/applications/benchmarks/umap_sharded 2>&1 | stdbuf -oL tee $base_dir/logs/$run_id/umap_sharded.log
 
 # Parse the results
 echo "" > $results_file
 python  $base_dir/scripts/parse.py -f $base_dir/logs/$run_id/umap.log >> $results_file
+python  $base_dir/scripts/parse.py -f $base_dir/logs/$run_id/umap_sharded.log >> $results_file
