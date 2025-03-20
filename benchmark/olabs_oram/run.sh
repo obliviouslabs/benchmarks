@@ -4,7 +4,7 @@ set -e
 base_dir=$(git rev-parse --show-toplevel)
 commit_hash=$(git -C $base_dir/build/olabs_oram/ rev-parse HEAD)
 timestamp=$(date +%s)
-run_id=olabs_oram_${commit_hash}_${timestamp}
+run_id=olabs_oram_${timestamp}_${commit_hash}
 results_file=$base_dir/results/${run_id}
 run_folder=$base_dir/build/olabs_oram/
 
