@@ -152,11 +152,11 @@ int benchmark_umap(uint64_t N) {
 
 
 int main() {
-  for (uint64_t i = 10; i<=27; i++) {
+  for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED(benchmark_umap_shortkv(1<<i));
   }
 
-  for (uint64_t i = 10; i<=27; i++) {
+  for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED(benchmark_umap(1<<i));
   }
 

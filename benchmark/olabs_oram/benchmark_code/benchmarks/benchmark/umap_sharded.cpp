@@ -99,7 +99,7 @@ for (uint64_t j = 10; j<=22; j++) {
 
 uint64_t batch_sizes[] = {1000,4096,8192};
 for (uint64_t i = 0; i<3; i++) {
-    for (uint64_t j = 10; j<=27; j++) {
+    for (uint64_t j = 10; j<=26; j++) {
         RUN_TEST_FORKED(benchmark_umap_sharded(1<<j, batch_sizes[i]));
     }
 }
