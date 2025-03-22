@@ -74,7 +74,6 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   }
   uint64_t end_query_time = current_time_ns();
 
-
   int memAfter = getMemValue();
 
   double avg_ns_success = (double)(end_query_time - start_query_time) / num_queries;
