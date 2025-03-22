@@ -13,7 +13,8 @@ fi
 mkdir -p "$base_dir/build/${project_name}"
 
 
-git clone 'git@github.com:xtrm0/rods.git' "$base_dir/build/${project_name}/rods"
+# git clone 'git@github.com:xtrm0/rods.git' "$base_dir/build/${project_name}/rods"
+cp -r "$base_dir/../rods/." "$base_dir/build/${project_name}/rods"
 
 echo "Copying the benchmark code"
 cp -r "$base_dir/benchmark/${project_name}/benchmark_code/." "$base_dir/build/${project_name}"

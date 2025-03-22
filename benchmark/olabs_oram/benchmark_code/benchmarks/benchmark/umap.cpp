@@ -150,7 +150,7 @@ int benchmark_umap(uint64_t N) {
   return 0;
 }
 
-
+// Should take less then 1h to run
 int main() {
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED(benchmark_umap_shortkv(1<<i));

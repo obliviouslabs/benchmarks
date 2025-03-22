@@ -15,6 +15,16 @@ mkdir -p "$base_dir/logs/$run_id"
 # Run the tests
 cd "$run_folder"
 cargo build --profile=maxperf
+
+# Extract assembly for manual inspection, feel free to comment these out:
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_64 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_32 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_16 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_8 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_4 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_2 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_1 0
+
 cargo run --profile=maxperf 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/rods_bench.log"
 
 # Parse the results

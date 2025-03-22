@@ -1,11 +1,16 @@
 use rand::Rng;
 use rods_oram::{
-  circuit_oram::CircuitORAM, linear_oram::LinearORAM, recursive_oram::RecursivePositionMap,
+  circuit_oram::CircuitORAM, linear_oram::LinearORAM, recursive_oram::RecursivePositionMap, prelude::PositionType
 };
 use rods_datastructures::array::DynamicArray;
 pub mod common;
 use common::{current_time_ns, get_mem_value, run_test_forked};
 use std::hint::black_box;
+use rods_primitives::{
+  cmov_body, impl_cmov_for_generic_pod,
+  traits::{Cmov, _Cmovbase, cswap},
+};
+
 
 fn benchmark_nroram(N: usize) -> i32 {
   let mem_start = get_mem_value().unwrap_or(0);
@@ -18,7 +23,7 @@ fn benchmark_nroram(N: usize) -> i32 {
 
   let start_query_ns = current_time_ns();
   for _ in 0..N {
-    let pos = rng.gen_range(0..N);
+    let pos = rng.gen_range(0..N as PositionType);
     let mut _value = 0;
     black_box(nroram.read(pos, black_box(0), black_box(0), &mut _value));
   }
@@ -123,6 +128,8 @@ fn benchmark_roram(N: usize) -> i32 {
 
 
 
+
+/// Should take less than 1 hour to run
 fn main() {
   for i in 10..=26 {
     let val = 1 << i;    
@@ -135,7 +142,7 @@ fn main() {
   }
 
   for i in 10..=26 {
-    let val = 1 << i;    
+    let val = 1 << i;
     let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);
     // run_test_forked takes the test name and a closure returning i32:
     run_test_forked(&test_name, || {

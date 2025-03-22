@@ -8,7 +8,7 @@ using namespace std;
 #include "odsl/page_oram.hpp"
 #include "odsl/recursive_oram.hpp"
 
-const uint64_t NUM_ACCESSES = 10000000;
+const uint64_t NUM_ACCESSES = 2000000;
 
 
 template<typename K, typename V>
@@ -23,7 +23,8 @@ int benchmark_nroram(uint64_t N) {
   uint64_t start_ns_query = current_time_ns(); 
   for (uint64_t i = 0; i < NUM_ACCESSES; i++) {
     V val;
-    uint32_t readPos = rand() % N;
+    // uint32_t readPos = rand() % N;
+    uint32_t readPos = 0;
     oram.Read(readPos, 0, val);
   }
   uint64_t end_ns_query = current_time_ns();
@@ -61,6 +62,8 @@ int benchmark_roram_8bk_8bv(uint64_t N) {
 
 
 
+// Should take less then 20 mins to run
+//
 int main() {
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED( (benchmark_nroram<uint32_t,uint32_t>(1<<i)) );
