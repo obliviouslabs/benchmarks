@@ -1,9 +1,6 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::process;
-use std::ffi::CString;
-use std::os::raw::c_char;
-use rand::Rng;
 
 use libc::{clock_gettime, timespec, CLOCK_MONOTONIC};
 

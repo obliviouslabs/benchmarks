@@ -1,29 +1,25 @@
 use rand::Rng;
 use rods_oram::{
-  circuit_oram::CircuitORAM, linear_oram::LinearORAM, recursive_oram::RecursivePositionMap, prelude::PositionType
+  circuit_oram::CircuitORAM, prelude::PositionType
 };
 use rods_datastructures::array::DynamicArray;
 pub mod common;
 use common::{current_time_ns, get_mem_value, run_test_forked};
 use std::hint::black_box;
-use rods_primitives::{
-  cmov_body, impl_cmov_for_generic_pod,
-  traits::{Cmov, _Cmovbase, cswap},
-};
 
 
-fn benchmark_nroram(N: usize) -> i32 {
+fn benchmark_nroram(n: usize) -> i32 {
   let mem_start = get_mem_value().unwrap_or(0);
   let start_create_ns = current_time_ns();
-  let mut rng = rand::thread_rng();
+  let mut rng = rand::rng();
 
-  let mut nroram = CircuitORAM::<u64>::new(N);
+  let mut nroram = CircuitORAM::<u64>::new(n);
   nroram.write_or_insert(0, 0, 0, 0);
   let end_create_ns = current_time_ns();
 
   let start_query_ns = current_time_ns();
-  for _ in 0..N {
-    let pos = rng.gen_range(0..N as PositionType);
+  for _ in 0..n {
+    let pos = rng.random_range(0..n as PositionType);
     let mut _value = 0;
     black_box(nroram.read(pos, black_box(0), black_box(0), &mut _value));
   }
@@ -32,13 +28,13 @@ fn benchmark_nroram(N: usize) -> i32 {
 
   let mem_diff = mem_end - mem_start;
   let create_time_ns = end_create_ns - start_create_ns;
-  let avg_ns = (end_query_ns - start_query_ns) as f64 / N as f64;
+  let avg_ns = (end_query_ns - start_query_ns) as f64 / n as f64;
 
   report_line!(
     "NRORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {}",
-    N,
+    n,
     create_time_ns / 1_000
   );
 
@@ -46,7 +42,7 @@ fn benchmark_nroram(N: usize) -> i32 {
     "NRORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
-    N,
+    n,
     avg_ns / 1_000.0
   );
 
@@ -54,33 +50,33 @@ fn benchmark_nroram(N: usize) -> i32 {
     "NRORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
-    N,
-    (N as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
+    n,
+    (n as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
   );
 
   report_line!(
     "NRORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
-    N,
+    n,
     mem_diff
   );
 
   0
 }
 
-fn benchmark_roram(N: usize) -> i32 {
+fn benchmark_roram(n: usize) -> i32 {
   let mem_start = get_mem_value().unwrap_or(0);
   let start_create_ns = current_time_ns();
-  let mut rng = rand::thread_rng();
+  let mut rng = rand::rng();
 
-  let mut roram = DynamicArray::<u64>::new(N);  
+  let mut roram = DynamicArray::<u64>::new(n);  
   roram.write(0, 0);
   let end_create_ns = current_time_ns();
 
   let start_query_ns = current_time_ns();
-  for _ in 0..N {
-    let pos = rng.gen_range(0..N);
+  for _ in 0..n {
+    let pos = rng.random_range(0..n);
     let mut _value = 0;
     black_box(roram.read(black_box(pos), &mut _value));
   }
@@ -89,13 +85,13 @@ fn benchmark_roram(N: usize) -> i32 {
 
   let mem_diff = mem_end - mem_start;
   let create_time_ns = end_create_ns - start_create_ns;
-  let avg_ns = (end_query_ns - start_query_ns) as f64 / N as f64;
+  let avg_ns = (end_query_ns - start_query_ns) as f64 / n as f64;
 
   report_line!(
     "RORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {}",
-    N,
+    n,
     create_time_ns / 1_000
   );
 
@@ -103,7 +99,7 @@ fn benchmark_roram(N: usize) -> i32 {
     "RORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
-    N,
+    n,
     avg_ns / 1_000.0
   );
 
@@ -111,15 +107,15 @@ fn benchmark_roram(N: usize) -> i32 {
     "RORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
-    N,
-    (N as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
+    n,
+    (n as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
   );
 
   report_line!(
     "RORAM",
     "olabs_rods",
     "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
-    N,
+    n,
     mem_diff
   );
 
