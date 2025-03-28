@@ -17,8 +17,8 @@ mkdir -p "$base_dir/results"
 cd "$run_folder"
 echo "Running benchmark for $project_name..."
 cargo build --profile=maxperf
-cargo run --profile=maxperf 2>&1 | tee "$base_dir/logs/$run_id/rods_bench.log"
+cargo run --profile=maxperf 2>&1 | tee "$base_dir/logs/$run_id/meta_bench.log"
 
 # Parse the results
 echo "" > "$results_file"
-python "$base_dir/scripts/parse.py" -f "$base_dir/logs/$run_id/rods_bench.log" >> "$results_file"
+python "$base_dir/scripts/parse.py" -f "$base_dir/logs/$run_id/meta_bench.log" >> "$results_file"
