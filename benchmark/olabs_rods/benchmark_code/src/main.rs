@@ -136,7 +136,7 @@ fn main() {
       benchmark_nroram(val)
     });
   }
-
+  
   for i in 10..=26 {
     let val = 1 << i;
     let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);

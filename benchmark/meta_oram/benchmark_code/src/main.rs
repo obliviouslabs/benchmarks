@@ -29,33 +29,33 @@ fn benchmark_default_oram(capacity: usize) -> i32 {
     let avg_ns = (end_query_ns - start_query_ns) as f64 / capacity as f64;
 
     report_line!(
-        "DefaultOram",
-        "olabs_rods",
-        "N := {} | Block_bytes := 8 | Initialization_time_us := {}",
+        "RORAN",
+        "meta_oram",
+        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_time_us := {}",
         capacity,
         create_time_ns / 1_000
     );
 
     report_line!(
-        "DefaultOram",
-        "olabs_rods",
-        "N := {} | Block_bytes := 8 | Read_latency_us := {}",
+        "RORAN",
+        "meta_oram",
+        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
         capacity,
         avg_ns / 1_000.0
     );
 
     report_line!(
-        "DefaultOram",
-        "olabs_rods",
-        "N := {} | Block_bytes := 8 | Read_throughput_qps := {}",
+        "RORAN",
+        "meta_oram",
+        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
         capacity,
         (capacity as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
     );
 
     report_line!(
-        "DefaultOram",
-        "olabs_rods",
-        "N := {} | Block_bytes := 8 | Memory_kb := {}",
+        "RORAN",
+        "meta_oram",
+        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
         capacity,
         mem_diff
     );
