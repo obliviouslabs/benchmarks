@@ -29,15 +29,15 @@ fn benchmark_default_oram(capacity: usize) -> i32 {
     let avg_ns = (end_query_ns - start_query_ns) as f64 / capacity as f64;
 
     report_line!(
-        "RORAN",
+        "RORAM",
         "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_time_us := {}",
+        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {}",
         capacity,
         create_time_ns / 1_000
     );
 
     report_line!(
-        "RORAN",
+        "RORAM",
         "meta_oram",
         "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
         capacity,
@@ -45,7 +45,7 @@ fn benchmark_default_oram(capacity: usize) -> i32 {
     );
 
     report_line!(
-        "RORAN",
+        "RORAM",
         "meta_oram",
         "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
         capacity,
@@ -53,7 +53,7 @@ fn benchmark_default_oram(capacity: usize) -> i32 {
     );
 
     report_line!(
-        "RORAN",
+        "RORAM",
         "meta_oram",
         "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
         capacity,
@@ -64,26 +64,6 @@ fn benchmark_default_oram(capacity: usize) -> i32 {
 }
 
 fn main() {
-    // for i in 10..=26 {
-    //   let val = 1 << i;    
-    //   let test_name = format!("benchmark_nroram<u64,u64>(1<<{})", i);
-    //   // run_test_forked takes the test name and a closure returning i32:
-    //   run_test_forked(&test_name, || {
-    //     // Call your benchmark with the chosen generics
-    //     benchmark_nroram(val)
-    //   });
-    // }
-  
-    // for i in 10..=26 {
-    //   let val = 1 << i;
-    //   let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);
-    //   // run_test_forked takes the test name and a closure returning i32:
-    //   run_test_forked(&test_name, || {
-    //     // Call your benchmark with the chosen generics
-    //     benchmark_roram(val)
-    //   });
-    // }
-
     for i in 10..=26 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<8>>(1<<{})", i);

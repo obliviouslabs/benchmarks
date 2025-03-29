@@ -2,6 +2,7 @@
 
 import re
 import argparse
+import json
 
 parser = argparse.ArgumentParser(description="Find and extract x, y, z from lines containing 'REPORT_123 x | y | z | ...  REPORT_123'.")
 parser.add_argument('-f', '--file', required=True, help='File to search.')
@@ -47,5 +48,5 @@ with open(args.file, "r") as file:
 for line in lines:
   x = parse_line(line)
   if x is not None:
-    print(x)
+    print(json.dumps(x))
   
