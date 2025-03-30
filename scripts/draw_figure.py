@@ -60,6 +60,7 @@ for constraint in args.constraints:
 pts = defaultdict(list)
 for line in lines:
   try:
+    if line.startswith("#") or line.strip() == "": continue
     pt = json.loads(line)
   except json.JSONDecodeError as e:
     print(f"Error decoding JSON: {e} (line: {line})")
@@ -117,8 +118,6 @@ else:
     # Use the largest common x for sorting
     x_common = max(common_xs)
     sorted_names = sorted(name_to_xy.keys(), key=lambda name: name_to_xy[name][x_common], reverse=True)
-
-
 
 
 for name in sorted_names:

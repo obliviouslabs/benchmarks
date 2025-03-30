@@ -24,6 +24,21 @@ cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_8 0
 cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_4 0
 cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_2 0
 cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cmov_1 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_64 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_64 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_32 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_32 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_16 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_16 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_8 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_8 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_4 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_4 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_2 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_2 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cxchg_1 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib explicit_cswap_1 0
+cargo asm --profile=maxperf -p olabs_rods_benchmark --lib heap_tree_read_path 0 
 
 cargo run --profile=maxperf 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/rods_bench.log"
 
