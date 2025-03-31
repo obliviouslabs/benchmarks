@@ -173,14 +173,14 @@ fn benchmark_umap(n: usize) -> i32 {
   report_line!(
     "UnorderedMap",
     "olabs_rods",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Read_latency_us := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Get_latency_us := {}",
     n,
     avg_ns / 1_000.0
   );
   report_line!(
     "UnorderedMap",
     "olabs_rods",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Read_throughput_qps := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Get_throughput_qps := {}",
     n,
     (n as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
   );
