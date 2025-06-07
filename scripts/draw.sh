@@ -1,22 +1,22 @@
 set -e
-files="./results/olabs_oram_1742692087_bbab52166942eecb604ca86c710b5ecbe592ba26 ./results/olabs_rods_1743325307_67aa3913cf7c7df1e09c48b19428a09681029210 ./results/signal_icelake_1742700453_ca00ab6b9eb5152277473a2755110b176975f4a4 ./results/meta_oram_1743207872_b0bffaeca5a3b7f2522df1e68ad87e15a9a2d3e9"
+files="./results/olabs_oram_1743959356_bbab52166942eecb604ca86c710b5ecbe592ba26 ./results/olabs_rods_1743917925_ea6c18c37475f012c61dfd912ef690d4729ae831 ./results/meta_oram_1743618869_ea6c18c37475f012c61dfd912ef690d4729ae831 ./results/signal_icelake_1744234307_ca00ab6b9eb5152277473a2755110b176975f4a4"
 
-python ./scripts/draw_figure.py -f $files  -x N -y Read_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Read Latency' 
-python ./scripts/draw_figure.py -f $files  -x N -y Initialization_zeroed_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Initialization Zeroed Time' 
-python ./scripts/draw_figure.py -f $files  -x N -y Read_throughput_qps -yl 'queries/s' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Read Throughput' 
-python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Memory' 
+python ./scripts/draw_figure.py -f $files  -x N -y Read_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Read Latency (8b key, 8b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Initialization_zeroed_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Initialization Zeroed Time (8b key, 8b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Read_throughput_qps -yl 'queries/s' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Read Throughput (8b key, 8b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Memory (8b key, 8b value)' 
 
-python ./scripts/draw_figure.py -f $files  -x N -y Read_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Read Latency' 
-python ./scripts/draw_figure.py -f $files  -x N -y Initialization_zeroed_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Initialization Zeroed Time' 
-python ./scripts/draw_figure.py -f $files  -x N -y Read_throughput_qps -yl 'queries/s' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Read Throughput' 
-python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Memory' 
+python ./scripts/draw_figure.py -f $files  -x N -y Read_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Read Latency (8b key, 8b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Initialization_zeroed_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Initialization Zeroed Time (8b key, 8b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Read_throughput_qps -yl 'queries/s' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Read Throughput (8b key, 8b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=NRORAM' -t 'NRORAM Memory (8b key, 8b value)' 
 
-python ./scripts/draw_figure.py -f $files  -x N -y Get_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Get Latency' 
-python ./scripts/draw_figure.py -f $files  -x N -y Initialization_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Initialization Time' 
-python ./scripts/draw_figure.py -f $files  -x N -y Get_throughput_qps -yl 'queries/s' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Throughput' 
-python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Memory' 
+python ./scripts/draw_figure.py -f $files  -x N -y Get_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Get Latency (8b key, 56b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Initialization_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Initialization Time (8b key, 56b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Get_throughput_qps -yl 'queries/s' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Throughput (8b key, 56b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' '!Shards' -t 'OMap Memory (8b key, 56b value)' 
 
-python ./scripts/draw_figure.py -f $files  -x N -y Get_latency_us -yl '$\mu s$' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Get Latency'   
-python ./scripts/draw_figure.py -f $files  -x N -y Initialization_time_us -yl '$\mu s$' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Initialization Time' 
-python ./scripts/draw_figure.py -f $files  -x N -y Get_throughput_qps -yl 'queries/s' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Throughput' 
-python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Memory' 
+python ./scripts/draw_figure.py -f $files  -x N -y Get_latency_us -yl '$\mu s$' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Get Latency (8b key, 56b value)'   
+python ./scripts/draw_figure.py -f $files  -x N -y Initialization_time_us -yl '$\mu s$' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Initialization Time (8b key, 56b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Get_throughput_qps -yl 'queries/s' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Throughput (8b key, 56b value)' 
+python ./scripts/draw_figure.py -f $files  -x N -y Memory_kb -yl 'Memory (kb)' -l '{implementation}-{Batch_size}' -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Batch_size@100,1000,4096' -t 'OMap_Sharded Memory (8b key, 56b value)' 

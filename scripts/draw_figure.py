@@ -144,6 +144,6 @@ plt.grid(True)
 # plt.tight_layout()
 plt.xscale("log")
 plt.yscale("log")
-filename = f'{args.title.replace(" ", "_").replace(":", "-").replace("/", "-")}'
+filename = f'{args.title.replace("(", " ").replace(")", " ").replace(",", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace(" ", "_").replace(":", "-").replace("/", "-")}'
 plt.savefig(f"{args.output}/{filename}.png")
 
