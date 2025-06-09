@@ -1,5 +1,5 @@
 set -e
-files="./results/olabs_oram_1743959356_bbab52166942eecb604ca86c710b5ecbe592ba26 ./results/olabs_rods_1743917925_ea6c18c37475f012c61dfd912ef690d4729ae831 ./results/meta_oram_1743618869_ea6c18c37475f012c61dfd912ef690d4729ae831 ./results/signal_icelake_1744234307_ca00ab6b9eb5152277473a2755110b176975f4a4"
+files="./results/olabs_oram_1743959356_bbab52166942eecb604ca86c710b5ecbe592ba26 ./results/olabs_rods_1749411400_cd1304dc134ce4357710965d0c3e1cacd50ccd5a ./results/meta_oram_1743618869_ea6c18c37475f012c61dfd912ef690d4729ae831 ./results/signal_icelake_1744234307_ca00ab6b9eb5152277473a2755110b176975f4a4"
 
 python ./scripts/draw_figure.py -f $files  -x N -y Read_latency_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Read Latency (8b key, 8b value)' 
 python ./scripts/draw_figure.py -f $files  -x N -y Initialization_zeroed_time_us -yl '$\mu s$' -l '{implementation}' -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=RORAM' -t 'RORAM Initialization Zeroed Time (8b key, 8b value)' 
