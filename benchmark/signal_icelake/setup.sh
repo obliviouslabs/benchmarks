@@ -14,7 +14,7 @@ echo "Cloning the Icelake branch of the ContactDiscoveryService"
 git clone 'https://github.com/signalapp/ContactDiscoveryService-Icelake'
 cd ContactDiscoveryService-Icelake 
 git submodule init
-git submodule update
+git submodule update --init --recursive
 cd ..
 
 echo "Copying the benchmark code"
