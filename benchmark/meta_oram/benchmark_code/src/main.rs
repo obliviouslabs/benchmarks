@@ -5,12 +5,12 @@ pub mod common;
 use common::{current_time_ns, get_mem_value, run_test_forked};
 use std::hint::black_box;
 
-fn benchmark_default_oram(capacity: usize) -> i32 {
+fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
     let mem_start = get_mem_value().unwrap_or(0);
     let start_create_ns = current_time_ns();
 
     let mut rng = StdRng::seed_from_u64(0);
-    let mut oram = DefaultOram::<BlockValue<8>>::new(capacity as Address, &mut rng).unwrap();
+    let mut oram = DefaultOram::<BlockValue<V>>::new(capacity as Address, &mut rng).unwrap();
 
     oram.write(0, BlockValue::default(), &mut rng).unwrap();
 
@@ -31,44 +31,59 @@ fn benchmark_default_oram(capacity: usize) -> i32 {
     report_line!(
         "RORAM",
         "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {}",
+        "N := {} | Key_bytes := 8 | Value_bytes := {} | Initialization_zeroed_time_us := {}",
         capacity,
+        V,
         create_time_ns / 1_000
     );
 
     report_line!(
         "RORAM",
         "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
+        "N := {} | Key_bytes := 8 | Value_bytes := {} | Read_latency_us := {}",
         capacity,
+        V,
         avg_ns / 1_000.0
     );
 
     report_line!(
         "RORAM",
         "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
+        "N := {} | Key_bytes := 8 | Value_bytes := {} | Read_throughput_qps := {}",
         capacity,
+        V,
         (capacity as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
     );
 
     report_line!(
         "RORAM",
         "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
+        "N := {} | Key_bytes := 8 | Value_bytes := {} | Memory_kb := {}",
         capacity,
+        V,
         mem_diff
     );
 
     0
 }
 
+
 fn main() {
+    // 8b key, 8b value
     for i in 10..=26 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<8>>(1<<{})", i);
         run_test_forked(&test_name, || {
-            benchmark_default_oram(val)
+            benchmark_default_oram::<8>(val)
+        });
+    }
+
+    // 8b key, 56b value
+    for i in 10..=26 {
+        let val = 1 << i;
+        let test_name = format!("benchmark_meta_oram<BlockValue<56>>(1<<{})", i);
+        run_test_forked(&test_name, || {
+            benchmark_default_oram::<56>(val)
         });
     }
     
