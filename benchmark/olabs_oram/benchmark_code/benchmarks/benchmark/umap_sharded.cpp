@@ -4,16 +4,28 @@ using namespace std;
 #include "odsl/par_omap.hpp"
 #include "odsl/omap_short_kv.hpp"
 
-const uint64_t KEY_SIZE = 8; // We just use uint64_t directly bellow
-const uint64_t VAL_SIZE = 56;
 const uint64_t NUM_SHARDS = 15;
 
-// using OMap_t = ODSL::OMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, uint32_t>;
-using OMap_t = ODSL::ParOMap<uint64_t, Bytes<VAL_SIZE>, uint32_t>;
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+using OMap_t = ODSL::ParOMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, uint32_t>;
 
+template<size_t KEY_SIZE>
+Bytes<KEY_SIZE> key_from_u64(uint64_t origin) {
+  Bytes<KEY_SIZE> key = Bytes<KEY_SIZE>::DUMMY();
+  uint64_t bytes_to_copy = KEY_SIZE;
+  if (bytes_to_copy > 8) {
+    bytes_to_copy = 8;
+  }
+  for (uint64_t i = 0; i < bytes_to_copy; ++i) {
+    key.data[i] = origin & 0xff; // Fill with dummy data
+    origin >>= 1;
+  }
+  return key;
+}
 
 // int benchmark_one_with_initializer(uint64_t N);
 
+template<size_t KEY_SIZE, size_t VAL_SIZE>
 int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   if (EM::Backend::g_DefaultBackend) {
     delete EM::Backend::g_DefaultBackend;
@@ -31,13 +43,13 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 
   cout << "N: " << N << endl;
   cout << "Creating ORAM with capacity " << cap << endl;
-  OMap_t oram = OMap_t(cap, NUM_SHARDS);
+  OMap_t<KEY_SIZE, VAL_SIZE> oram = OMap_t<KEY_SIZE, VAL_SIZE>(cap, NUM_SHARDS);
   cout << "Initializing ORAM" << endl;
   // oram.Init();
   cout << "ORAM initialized" << endl;
   cout << "omp max threads: " << omp_get_max_threads() << endl;
 
-  OMap_t::InitContext* init = oram.NewInitContext(N, 20ULL * (1ULL<<30));
+  typename OMap_t<KEY_SIZE, VAL_SIZE>::InitContext* init = oram.NewInitContext(N, 20ULL * (1ULL<<30));
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {
@@ -45,7 +57,7 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
     {
       BETTER_TEST_LOG("block %zu/%zu", i, N);
     }
-    uint64_t key = i;
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
     Bytes<VAL_SIZE> val;
     val.data[0] = i & 0xff;
     // We don't care about receiving things in batches, we just insert them to the initializer directly
@@ -61,12 +73,12 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   uint64_t end_ns_create = current_time_ns();
 
   uint64_t start_query_time = current_time_ns();
-  std::vector<uint64_t> queries(queries_batch_size);
+  std::vector<Bytes<KEY_SIZE>> queries(queries_batch_size);
   std::vector<Bytes<VAL_SIZE>> results(queries_batch_size);
   uint64_t curr = N - 1;
   for (uint64_t i=0; i<num_queries; i+=queries_batch_size) {    
     for (uint64_t j=0; j<queries_batch_size; j++) {
-      queries[j] = curr;
+      queries[j] = key_from_u64<KEY_SIZE>(curr);
       curr--;
     }
     std::vector<uint8_t> findExistFlag =
@@ -87,22 +99,37 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 }
 
 
-// Should take less then 2h to run
+// Should take less then 4h to run
 int main() {
+  uint64_t batch_sizes[] = {1000,4096,8192};
+
   for (uint64_t j = 10; j<=20; j++) {
-    RUN_TEST_FORKED(benchmark_umap_sharded(1<<j, NUM_SHARDS));
-}
+    RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, NUM_SHARDS)));
+  }
 
-for (uint64_t j = 10; j<=22; j++) {
-    RUN_TEST_FORKED(benchmark_umap_sharded(1<<j, 100));
-}
+  for (uint64_t j = 10; j<=22; j++) {
+      RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, 100)));
+  }
 
-uint64_t batch_sizes[] = {1000,4096,8192};
-for (uint64_t i = 0; i<3; i++) {
-    for (uint64_t j = 10; j<=26; j++) {
-        RUN_TEST_FORKED(benchmark_umap_sharded(1<<j, batch_sizes[i]));
-    }
-}
+  for (uint64_t i = 0; i<3; i++) {
+      for (uint64_t j = 10; j<=26; j++) {
+          RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, batch_sizes[i])));
+      }
+  }
+
+  for (uint64_t j = 10; j<=20; j++) {
+    RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, NUM_SHARDS)));
+  }
+
+  for (uint64_t j = 10; j<=22; j++) {
+      RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, 100)));
+  }
+
+  for (uint64_t i = 0; i<3; i++) {
+      for (uint64_t j = 10; j<=26; j++) {
+          RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, batch_sizes[i])));
+      }
+  }
   
   return 0;
 }

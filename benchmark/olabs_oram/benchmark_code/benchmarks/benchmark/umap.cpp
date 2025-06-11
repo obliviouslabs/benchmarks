@@ -4,18 +4,33 @@ using namespace std;
 #include "odsl/omap.hpp"
 #include "odsl/omap_short_kv.hpp"
 
-const uint64_t KEY_SIZE = 8;
-const uint64_t VAL_SIZE = 56;
 
-// using OMap_t = ODSL::OMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, uint32_t>;
-using OMap_t = ODSL::OMap<uint64_t, Bytes<VAL_SIZE>, uint32_t>;
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+using OMapShortKv_t = ODSL::OHashMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, ODSL::ObliviousLevel::FULL_OBLIVIOUS, uint32_t>;
 
-using OMapShortKv_t = ODSL::OHashMap<uint64_t, Bytes<VAL_SIZE>, ODSL::ObliviousLevel::FULL_OBLIVIOUS, uint32_t>;
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+using OMap_t = ODSL::OMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, uint32_t>;
 
+
+template<size_t KEY_SIZE>
+Bytes<KEY_SIZE> key_from_u64(uint64_t origin) {
+  Bytes<KEY_SIZE> key = Bytes<KEY_SIZE>::DUMMY();
+  uint64_t bytes_to_copy = KEY_SIZE;
+  if (bytes_to_copy > 8) {
+    bytes_to_copy = 8;
+  }
+  for (uint64_t i = 0; i < bytes_to_copy; ++i) {
+    key.data[i] = origin & 0xff; // Fill with dummy data
+    origin >>= 1;
+  }
+  return key;
+}
 
 // int benchmark_one_with_initializer(uint64_t N);
 
+template<size_t KEY_SIZE, size_t VAL_SIZE>
 int benchmark_umap_shortkv(uint64_t N) {
+
   // Create and initialize a hashtable
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
   int memBefore = getMemValue();
@@ -23,11 +38,11 @@ int benchmark_umap_shortkv(uint64_t N) {
 
   cout << "N: " << N << endl;
   cout << "Creating ORAM with capacity " << cap << endl;
-  OMapShortKv_t oram = OMapShortKv_t(cap);
+  OMapShortKv_t<KEY_SIZE,VAL_SIZE> oram = OMapShortKv_t<KEY_SIZE,VAL_SIZE>(cap);
   cout << "Initializing ORAM" << endl;
   // oram.Init();
   cout << "ORAM initialized" << endl;
-  OMapShortKv_t::InitContext* init = oram.NewInitContext(20ULL * (1ULL<<30));
+  typename OMapShortKv_t<KEY_SIZE,VAL_SIZE>::InitContext* init = oram.NewInitContext(20ULL * (1ULL<<30));
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {
@@ -35,7 +50,7 @@ int benchmark_umap_shortkv(uint64_t N) {
     {
       BETTER_TEST_LOG("block %zu/%zu", i, N);
     }
-    uint64_t key = i;
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
     Bytes<VAL_SIZE> val;
     val.data[0] = i & 0xff;
     init->Insert(key, val);
@@ -53,14 +68,16 @@ int benchmark_umap_shortkv(uint64_t N) {
   uint64_t start_ns_success = current_time_ns();
   for (uint64_t i=0; i<N; i++) {
     Bytes<VAL_SIZE> val;
-    oram.Find(i, val);
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
+    oram.Find(key, val);
   }
   uint64_t end_ns_success = current_time_ns();
 
   uint64_t start_ns_fail = current_time_ns();
   for (uint64_t i=N; i<cap; i++) {
     Bytes<VAL_SIZE> val;
-    oram.Find(i, val);
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
+    oram.Find(key, val);
   }
   uint64_t end_ns_fail = current_time_ns();
 
@@ -83,7 +100,7 @@ int benchmark_umap_shortkv(uint64_t N) {
   return 0;
 }
 
-
+template<size_t KEY_SIZE, size_t VAL_SIZE>
 int benchmark_umap(uint64_t N) {
   // Create and initialize a hashtable
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
@@ -92,7 +109,7 @@ int benchmark_umap(uint64_t N) {
 
   cout << "N: " << N << endl;
   cout << "Creating ORAM with capacity " << cap << endl;
-  OMap_t oram = OMap_t(cap);
+  OMap_t<KEY_SIZE,VAL_SIZE> oram = OMap_t<KEY_SIZE,VAL_SIZE>(cap);
   cout << "Initializing ORAM" << endl;
   oram.Init();
   cout << "ORAM initialized" << endl;
@@ -104,7 +121,7 @@ int benchmark_umap(uint64_t N) {
     {
       BETTER_TEST_LOG("block %zu/%zu", i, N);
     }
-    uint64_t key = i;
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
     Bytes<VAL_SIZE> val;
     val.data[0] = i & 0xff;
     oram.OInsert(key, val);
@@ -119,15 +136,17 @@ int benchmark_umap(uint64_t N) {
 
   uint64_t start_ns_success = current_time_ns();
   for (uint64_t i=0; i<N; i++) {
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
     Bytes<VAL_SIZE> val;
-    oram.Find(i, val);
+    oram.Find(key, val);
   }
   uint64_t end_ns_success = current_time_ns();
 
   uint64_t start_ns_fail = current_time_ns();
   for (uint64_t i=N; i<cap; i++) {
+    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
     Bytes<VAL_SIZE> val;
-    oram.Find(i, val);
+    oram.Find(key, val);
   }
   uint64_t end_ns_fail = current_time_ns();
 
@@ -153,11 +172,27 @@ int benchmark_umap(uint64_t N) {
 // Should take less then 1h to run
 int main() {
   for (uint64_t i = 10; i<=26; i++) {
-    RUN_TEST_FORKED(benchmark_umap_shortkv(1<<i));
+    RUN_TEST_FORKED((benchmark_umap_shortkv<8,8>(1<<i)));
   }
 
   for (uint64_t i = 10; i<=26; i++) {
-    RUN_TEST_FORKED(benchmark_umap(1<<i));
+    RUN_TEST_FORKED((benchmark_umap_shortkv<32,32>(1<<i)));
+  }
+
+  for (uint64_t i = 10; i<=26; i++) {
+    RUN_TEST_FORKED((benchmark_umap_shortkv<8,56>(1<<i)));
+  }
+
+  for (uint64_t i = 10; i<=26; i++) {
+    RUN_TEST_FORKED((benchmark_umap<8,8>(1<<i)));
+  }
+
+  for (uint64_t i = 10; i<=26; i++) {
+    RUN_TEST_FORKED((benchmark_umap<32,32>(1<<i)));
+  }
+
+  for (uint64_t i = 10; i<=26; i++) {
+    RUN_TEST_FORKED((benchmark_umap<8,56>(1<<i)));
   }
 
   return 0;
