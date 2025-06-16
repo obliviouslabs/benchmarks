@@ -1,0 +1,5 @@
+[build]
+rustflags = [
+  # This is impportant to have avx2 and avx512 enabled. Without this, the code can be up to 3x slower.
+  "-C", "target-cpu=native",
+]

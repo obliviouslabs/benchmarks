@@ -1,0 +1,45 @@
+[package]
+name = "olabs_rostl_benchmark"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+
+aligned-cmov = { path = "./mc-oblivious/aligned-cmov" }
+mc-oblivious-map = { path = "./mc-oblivious/mc-oblivious-map" }
+mc-oblivious-ram = { path = "./mc-oblivious/mc-oblivious-ram" }
+mc-oblivious-traits = { path = "./mc-oblivious/mc-oblivious-traits" }
+mc-rand = { version = "1" }
+test-helper = { path = "./mc-oblivious/test-helper" }
+
+criterion = { version = "0.5", features = ["html_reports"] }
+
+
+ahash = { version = "0.8.11" }
+bytemuck = { version = "1.21.0", features = ["derive"] }
+libc = "0.2"
+prost = "0.13.5"
+rand = "0.9.0"
+seq-macro = "0.3.6"
+sha2 = "0.10.8"
+static_assertions = "1.1.0"
+
+[profile.release]
+codegen-units = 16
+debug = "line-tables-only"
+lto = "thin"
+opt-level = 3
+panic = "unwind"
+strip = true
+
+[profile.maxperf]
+codegen-units = 1
+inherits = "release"
+lto = "fat"
+
+
+[build-dependencies]
+prost-build = "0.13.1"

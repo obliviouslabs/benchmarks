@@ -9,6 +9,8 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
     let mem_start = get_mem_value().unwrap_or(0);
     let start_create_ns = current_time_ns();
 
+    const READ_SAMPLES : u64 = 100_000;
+
     let mut rng = StdRng::seed_from_u64(0);
     let mut oram = DefaultOram::<BlockValue<V>>::new(capacity as Address, &mut rng).unwrap();
 
@@ -17,7 +19,7 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
     let end_create_ns = current_time_ns();
 
     let start_query_ns = current_time_ns();
-    for _ in 0..capacity {
+    for _ in 0..READ_SAMPLES {
         let pos = rng.gen_range(0..(capacity as Address));
         let _ = black_box(oram.read(pos, &mut rng).unwrap());
     }
@@ -26,7 +28,7 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
 
     let mem_diff = mem_end - mem_start;
     let create_time_ns = end_create_ns - start_create_ns;
-    let avg_ns = (end_query_ns - start_query_ns) as f64 / capacity as f64;
+    let avg_ns = (end_query_ns - start_query_ns) as f64 / READ_SAMPLES as f64;
 
     report_line!(
         "RORAM",
@@ -52,7 +54,7 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
         "N := {} | Key_bytes := 8 | Value_bytes := {} | Read_throughput_qps := {}",
         capacity,
         V,
-        (capacity as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
+        (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
     );
 
     report_line!(
@@ -68,6 +70,7 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
 }
 
 
+/// Should take 20 mins to run
 fn main() {
     // 8b key, 8b value
     for i in 10..=26 {
@@ -75,6 +78,15 @@ fn main() {
         let test_name = format!("benchmark_meta_oram<BlockValue<8>>(1<<{})", i);
         run_test_forked(&test_name, || {
             benchmark_default_oram::<8>(val)
+        });
+    }
+
+    // 8b key, 32b value
+    for i in 10..=26 {
+        let val = 1 << i;
+        let test_name = format!("benchmark_meta_oram<BlockValue<32>>(1<<{})", i);
+        run_test_forked(&test_name, || {
+            benchmark_default_oram::<32>(val)
         });
     }
 

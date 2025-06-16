@@ -10,7 +10,7 @@ if [ -d "olabs_oram" ]; then
   rm -rf olabs_oram
 fi
 
-echo "Cloning the Icelake branch of the ContactDiscoveryService"
+echo "Cloning the Oblivious Labs ORAM c++ repository"
 git clone 'git@github.com:obliviouslabs/oram.git' olabs_oram
 
 echo "Copying the benchmark code"

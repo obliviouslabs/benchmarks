@@ -99,7 +99,7 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 }
 
 
-// Should take less then 4h to run
+// UNDONE(): Should take less than 4h to run
 int main() {
   uint64_t batch_sizes[] = {1000,4096,8192};
 

@@ -1,5 +1,5 @@
 [package]
-name = "olabs_rods_benchmark"
+name = "olabs_rostl_benchmark"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,9 +8,9 @@ crate-type = ["lib", "cdylib"]
 
 [dependencies]
 
-rods-oram = { path = "./rods/crates/oram" }
-rods-datastructures = { path = "./rods/crates/datastructures" }
-rods-primitives = { path = "./rods/crates/primitives" }
+rostl-oram = { path = "./rostl/crates/oram" }
+rostl-datastructures = { path = "./rostl/crates/datastructures" }
+rostl-primitives = { path = "./rostl/crates/primitives" }
 
 ahash = { version = "0.8.11" }
 bytemuck = { version = "1.21.0", features = ["derive"] }

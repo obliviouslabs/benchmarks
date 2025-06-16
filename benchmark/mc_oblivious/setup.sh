@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e 
 
-project_name="olabs_rods"
+project_name="mc_oblivious"
 base_dir=$(git rev-parse --show-toplevel)
 echo "$base_dir"
 
@@ -13,8 +13,7 @@ fi
 mkdir -p "$base_dir/build/${project_name}"
 
 
-# git clone 'git@github.com:xtrm0/rods.git' "$base_dir/build/${project_name}/rods"
-cp -r "$base_dir/../rods/." "$base_dir/build/${project_name}/rods"
+git clone 'git@github.com:mobilecoinfoundation/mc-oblivious.git' "$base_dir/build/${project_name}/mc-oblivious"
 
 echo "Copying the benchmark code"
 cp -r "$base_dir/benchmark/${project_name}/benchmark_code/." "$base_dir/build/${project_name}"

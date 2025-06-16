@@ -1,13 +1,13 @@
 #![allow(warnings)]
 use rand::Rng;
-use rods_oram::{
+use rostl_oram::{
   circuit_oram::{Block, Bucket, CircuitORAM}, linear_oram::LinearORAM, recursive_oram::RecursivePositionMap, prelude::PositionType, heap_tree::HeapTree
 };
-use rods_datastructures::array::DynamicArray;
+use rostl_datastructures::array::DynamicArray;
 pub mod common;
 use common::{current_time_ns, get_mem_value, run_test_forked};
 use std::hint::black_box;
-use rods_primitives::{
+use rostl_primitives::{
   cmov_body, cxchg_body, impl_cmov_for_pod,
   traits::{Cmov, _Cmovbase, cswap},
 };

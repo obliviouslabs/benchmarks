@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e 
 
-project_name="meta_oram"
+project_name="olabs_rostl"
 base_dir=$(git rev-parse --show-toplevel)
 echo "$base_dir"
-mkdir -p "$base_dir/build"
+
 cd "$base_dir/build"
 
 if [ -d "${project_name}" ]; then
@@ -13,7 +13,8 @@ fi
 mkdir -p "$base_dir/build/${project_name}"
 
 
-git clone 'git@github.com:facebook/oram.git' "$base_dir/build/${project_name}/meta"
+echo "Cloning the Rust Oblivious Standard Library repository"
+git clone 'git@github.com:obliviouslabs/rostl.git' "$base_dir/build/${project_name}/rostl"
 
 echo "Copying the benchmark code"
 cp -r "$base_dir/benchmark/${project_name}/benchmark_code/." "$base_dir/build/${project_name}"
