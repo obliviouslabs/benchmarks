@@ -70,7 +70,7 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
 }
 
 
-/// Should take 20 mins to run
+/// Should take 4h to run
 fn main() {
     // 8b key, 8b value
     for i in 10..=26 {
