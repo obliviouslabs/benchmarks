@@ -62,7 +62,7 @@ int benchmark_roram_8bk_8bv(uint64_t N) {
 
 
 
-// Should take less then 20 mins to run
+// Should take less than 20 mins to run
 //
 int main() {
   for (uint64_t i = 10; i<=26; i++) {

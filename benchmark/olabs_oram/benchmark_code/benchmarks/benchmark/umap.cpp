@@ -5,26 +5,46 @@ using namespace std;
 #include "odsl/omap_short_kv.hpp"
 
 
-template<size_t KEY_SIZE, size_t VAL_SIZE>
-using OMapShortKv_t = ODSL::OHashMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, ODSL::ObliviousLevel::FULL_OBLIVIOUS, uint32_t>;
-
-template<size_t KEY_SIZE, size_t VAL_SIZE>
-using OMap_t = ODSL::OMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, uint32_t>;
-
-
-template<size_t KEY_SIZE>
-Bytes<KEY_SIZE> key_from_u64(uint64_t origin) {
-  Bytes<KEY_SIZE> key = Bytes<KEY_SIZE>::DUMMY();
-  uint64_t bytes_to_copy = KEY_SIZE;
-  if (bytes_to_copy > 8) {
-    bytes_to_copy = 8;
+template <size_t KEY_SIZE>
+struct BytesHelper
+{
+  using type = Bytes<KEY_SIZE>;
+  
+  static type key_from_u64(uint64_t x) {
+    type key = type::DUMMY();
+    uint64_t bytes_to_copy = KEY_SIZE > 8 ? 8 : KEY_SIZE;
+    for (uint64_t i = 0; i < bytes_to_copy; ++i) {
+      key.data[i] = x & 0xff;
+      x >>= 1;
+    }
+    return key;
   }
-  for (uint64_t i = 0; i < bytes_to_copy; ++i) {
-    key.data[i] = origin & 0xff; // Fill with dummy data
-    origin >>= 1;
+};
+
+template <>
+struct BytesHelper<8> {
+  using type = uint64_t;
+
+  static type key_from_u64(uint64_t origin) {
+    return origin;
   }
-  return key;
-}
+};
+
+template <>
+struct BytesHelper<4> {
+  using type = uint32_t;
+
+  static type key_from_u64(uint64_t origin) {
+    return origin;
+  }
+};
+
+
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+using OMapShortKv_t = ODSL::OHashMap<typename BytesHelper<KEY_SIZE>::type, typename BytesHelper<VAL_SIZE>::type, ODSL::ObliviousLevel::FULL_OBLIVIOUS, uint32_t>;
+
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+using OMap_t = ODSL::OMap<typename BytesHelper<KEY_SIZE>::type, typename BytesHelper<VAL_SIZE>::type, uint32_t>;
 
 // int benchmark_one_with_initializer(uint64_t N);
 
@@ -50,9 +70,8 @@ int benchmark_umap_shortkv(uint64_t N) {
     {
       BETTER_TEST_LOG("block %zu/%zu", i, N);
     }
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
-    Bytes<VAL_SIZE> val;
-    val.data[0] = i & 0xff;
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val = BytesHelper<VAL_SIZE>::key_from_u64(i & 0xff);
     init->Insert(key, val);
     // oram.OInsert(key, val);
   }
@@ -67,16 +86,16 @@ int benchmark_umap_shortkv(uint64_t N) {
 
   uint64_t start_ns_success = current_time_ns();
   for (uint64_t i=0; i<N; i++) {
-    Bytes<VAL_SIZE> val;
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
   uint64_t end_ns_success = current_time_ns();
 
   uint64_t start_ns_fail = current_time_ns();
   for (uint64_t i=N; i<cap; i++) {
-    Bytes<VAL_SIZE> val;
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
   uint64_t end_ns_fail = current_time_ns();
@@ -121,9 +140,8 @@ int benchmark_umap(uint64_t N) {
     {
       BETTER_TEST_LOG("block %zu/%zu", i, N);
     }
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
-    Bytes<VAL_SIZE> val;
-    val.data[0] = i & 0xff;
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val = BytesHelper<VAL_SIZE>::key_from_u64(i & 0xff);
     oram.OInsert(key, val);
   }
 
@@ -136,16 +154,16 @@ int benchmark_umap(uint64_t N) {
 
   uint64_t start_ns_success = current_time_ns();
   for (uint64_t i=0; i<N; i++) {
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
-    Bytes<VAL_SIZE> val;
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
   uint64_t end_ns_success = current_time_ns();
 
   uint64_t start_ns_fail = current_time_ns();
   for (uint64_t i=N; i<cap; i++) {
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
-    Bytes<VAL_SIZE> val;
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
   uint64_t end_ns_fail = current_time_ns();
@@ -169,7 +187,7 @@ int benchmark_umap(uint64_t N) {
   return 0;
 }
 
-// UNDONE(): Should take less then 1h to run
+// UNDONE(): Should take less than 1h to run
 int main() {
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap_shortkv<8,8>(1<<i)));

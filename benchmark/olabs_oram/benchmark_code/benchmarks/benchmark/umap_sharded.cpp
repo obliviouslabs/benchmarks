@@ -6,22 +6,42 @@ using namespace std;
 
 const uint64_t NUM_SHARDS = 15;
 
-template<size_t KEY_SIZE, size_t VAL_SIZE>
-using OMap_t = ODSL::ParOMap<Bytes<KEY_SIZE>, Bytes<VAL_SIZE>, uint32_t>;
+template <size_t KEY_SIZE>
+struct BytesHelper
+{
+  using type = Bytes<KEY_SIZE>;
+  
+  static type key_from_u64(uint64_t x) {
+    type key = type::DUMMY();
+    uint64_t bytes_to_copy = KEY_SIZE > 8 ? 8 : KEY_SIZE;
+    for (uint64_t i = 0; i < bytes_to_copy; ++i) {
+      key.data[i] = x & 0xff;
+      x >>= 1;
+    }
+    return key;
+  }
+};
 
-template<size_t KEY_SIZE>
-Bytes<KEY_SIZE> key_from_u64(uint64_t origin) {
-  Bytes<KEY_SIZE> key = Bytes<KEY_SIZE>::DUMMY();
-  uint64_t bytes_to_copy = KEY_SIZE;
-  if (bytes_to_copy > 8) {
-    bytes_to_copy = 8;
+template <>
+struct BytesHelper<8> {
+  using type = uint64_t;
+
+  static type key_from_u64(uint64_t origin) {
+    return origin;
   }
-  for (uint64_t i = 0; i < bytes_to_copy; ++i) {
-    key.data[i] = origin & 0xff; // Fill with dummy data
-    origin >>= 1;
+};
+
+template <>
+struct BytesHelper<4> {
+  using type = uint32_t;
+
+  static type key_from_u64(uint64_t origin) {
+    return origin;
   }
-  return key;
-}
+};
+
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+using OMap_t = ODSL::ParOMap<typename BytesHelper<KEY_SIZE>::type, typename BytesHelper<VAL_SIZE>::type, uint32_t>;
 
 // int benchmark_one_with_initializer(uint64_t N);
 
@@ -57,9 +77,8 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
     {
       BETTER_TEST_LOG("block %zu/%zu", i, N);
     }
-    Bytes<KEY_SIZE> key = key_from_u64<KEY_SIZE>(i);
-    Bytes<VAL_SIZE> val;
-    val.data[0] = i & 0xff;
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+    typename BytesHelper<VAL_SIZE>::type val = BytesHelper<VAL_SIZE>::key_from_u64(i & 0xff);
     // We don't care about receiving things in batches, we just insert them to the initializer directly
     init->Insert(key, val);
   }
@@ -73,12 +92,12 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   uint64_t end_ns_create = current_time_ns();
 
   uint64_t start_query_time = current_time_ns();
-  std::vector<Bytes<KEY_SIZE>> queries(queries_batch_size);
-  std::vector<Bytes<VAL_SIZE>> results(queries_batch_size);
+  std::vector<typename BytesHelper<KEY_SIZE>::type> queries(queries_batch_size);
+  std::vector<typename BytesHelper<VAL_SIZE>::type> results(queries_batch_size);
   uint64_t curr = N - 1;
   for (uint64_t i=0; i<num_queries; i+=queries_batch_size) {    
     for (uint64_t j=0; j<queries_batch_size; j++) {
-      queries[j] = key_from_u64<KEY_SIZE>(curr);
+      queries[j] = BytesHelper<KEY_SIZE>::key_from_u64(curr);
       curr--;
     }
     std::vector<uint8_t> findExistFlag =
@@ -102,6 +121,20 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 // UNDONE(): Should take less than 4h to run
 int main() {
   uint64_t batch_sizes[] = {1000,4096,8192};
+
+  for (uint64_t j = 10; j<=20; j++) {
+    RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, NUM_SHARDS)));
+  }
+
+  for (uint64_t j = 10; j<=22; j++) {
+      RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, 100)));
+  }
+
+  for (uint64_t i = 0; i<3; i++) {
+      for (uint64_t j = 10; j<=26; j++) {
+          RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_sizes[i])));
+      }
+  }
 
   for (uint64_t j = 10; j<=20; j++) {
     RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, NUM_SHARDS)));
