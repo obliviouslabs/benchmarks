@@ -82,10 +82,9 @@ fn benchmark_umap(n: u64) -> i32 {
 
 
 
-
-/// Should take 10 mins to run
 fn main() {
-  for i in 10..=26 {
+  // Should take 7 mins to run
+  for i in 10..=28 {
     let val = 1 << i;
     let test_name = format!("benchmark_umap<u64,u64>(1<<{})", i);
     run_test_forked(&test_name, || {

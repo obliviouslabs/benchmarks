@@ -187,28 +187,35 @@ int benchmark_umap(uint64_t N) {
   return 0;
 }
 
-// UNDONE(): Should take less than 1h to run
+/// Should take less than 9h to run
+/// UNDONE(): remove unecessary tests
 int main() {
+  // Should take 1h30 to run
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap_shortkv<8,8>(1<<i)));
   }
 
+  // Should take 1h30 to run
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap_shortkv<32,32>(1<<i)));
   }
 
+  // Should take 1h30 to run
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap_shortkv<8,56>(1<<i)));
   }
 
+  // Should take 1h30 to run
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap<8,8>(1<<i)));
   }
 
+  // Should take 1h30 to run
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap<32,32>(1<<i)));
   }
 
+  // Should take 1h30 to run
   for (uint64_t i = 10; i<=26; i++) {
     RUN_TEST_FORKED((benchmark_umap<8,56>(1<<i)));
   }

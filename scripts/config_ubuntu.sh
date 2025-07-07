@@ -15,3 +15,8 @@ sudo apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker $USER
 newgrp docker
+mkdir /tmp/setuprust
+cd /tmp/setuprust
+git clone git@github.com:obliviouslabs/rostl.git
+cd rostl
+sh scripts/setup_dev_end.sh

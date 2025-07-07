@@ -175,20 +175,20 @@ int main()
 {
     // We run the tests up to 40GB of memory usage, and avoid slower tests for non optimal batch sizes
     //
-    for (uint64_t j = 10; j<=22; j++) {
-        RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, NUM_SHARDS));
-    }
-
-    for (uint64_t j = 10; j<=25; j++) {
-        RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, 100));
-    }
-
-    uint64_t batch_sizes[] = {1000,4096,8192};
-    for (uint64_t i = 0; i<3; i++) {
-        for (uint64_t j = 10; j<=26; j++) {
+    // Should take less than 2h to run
+    uint64_t batch_sizes[] = {NUM_SHARDS,100,1000,8192};
+    for (uint64_t i = 0; i<4; i++) {
+        for (uint64_t j = 10; j<=24; j++) {
             RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, batch_sizes[i]));
         }
     }
+
+
+    // Should take less than 6h to run.
+    for (uint64_t j = 10; j<=28; j++) {
+        RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, 4096));
+    }
+
 
     return 0;
 }
