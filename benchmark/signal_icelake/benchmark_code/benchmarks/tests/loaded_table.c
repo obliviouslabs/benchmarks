@@ -116,10 +116,8 @@ int loaded_table_8_56(size_t N)
 
     double avg_ns_avg = (avg_ns_success + avg_ns_fail) / 2.0;
 
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 56 | fill:=0.8 | Initialization_time_us := %.2f", N, (end_ns_create - start_ns_create) / 1000.0);
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 56 | fill:=0.8 | Get_latency_us := %.2f", N, avg_ns_avg / 1000.0);
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 56 | fill:=0.8 | Get_throughput_qps := %.2f", N, 1000000000.0 / avg_ns_avg);
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 56 | fill:=0.8 | Memory_kb := %d", N, memAfter - memBefore);
+    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 56 | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d",
+                N, (end_ns_create - start_ns_create) / 1000.0, avg_ns_avg / 1000.0, 1000000000.0 / avg_ns_avg, memAfter - memBefore);
 
     return err_SUCCESS;
 }
@@ -190,10 +188,8 @@ int loaded_table_8_8(size_t N)
 
     double avg_ns_avg = (avg_ns_success + avg_ns_fail) / 2.0;
 
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | fill:=0.8 | Initialization_time_us := %.2f", N, (end_ns_create - start_ns_create) / 1000.0);
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | fill:=0.8 | Get_latency_us := %.2f", N, avg_ns_avg / 1000.0);
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | fill:=0.8 | Get_throughput_qps := %.2f", N, 1000000000.0 / avg_ns_avg);
-    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | fill:=0.8 | Memory_kb := %d", N, memAfter - memBefore);
+    REPORT_LINE("UnorderedMap", "Signal", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d",
+                N, (end_ns_create - start_ns_create) / 1000.0, avg_ns_avg / 1000.0, 1000000000.0 / avg_ns_avg, memAfter - memBefore);
 
     return err_SUCCESS;
 }

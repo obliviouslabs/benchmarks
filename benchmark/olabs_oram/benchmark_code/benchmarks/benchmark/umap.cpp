@@ -111,10 +111,7 @@ int benchmark_umap_shortkv(uint64_t N) {
   double avg_ns_fail      = total_ns_fail / (double)failCount;
   double avg_ns_avg = (avg_ns_success + avg_ns_fail) / 2.0;
 
-  REPORT_LINE("UnorderedMap", "olabs_umap_shortkv", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Initialization_time_us := %.2f", N, KEY_SIZE, VAL_SIZE, (end_ns_create - start_ns_create) / 1000.0);
-  REPORT_LINE("UnorderedMap", "olabs_umap_shortkv", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Get_latency_us := %.2f", N, KEY_SIZE, VAL_SIZE, avg_ns_avg / 1000.0);
-  REPORT_LINE("UnorderedMap", "olabs_umap_shortkv", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Get_throughput_qps := %.2f", N, KEY_SIZE, VAL_SIZE, 1000000000.0 / avg_ns_avg);
-  REPORT_LINE("UnorderedMap", "olabs_umap_shortkv", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, memAfter - memBefore);
+  REPORT_LINE("UnorderedMap", "olabs_umap_shortkv", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, (end_ns_create - start_ns_create) / 1000.0, avg_ns_avg / 1000.0, 1000000000.0 / avg_ns_avg, memAfter - memBefore);
 
   return 0;
 }
@@ -179,10 +176,7 @@ int benchmark_umap(uint64_t N) {
   double avg_ns_fail      = total_ns_fail / (double)failCount;
   double avg_ns_avg = (avg_ns_success + avg_ns_fail) / 2.0;
 
-  REPORT_LINE("UnorderedMap", "olabs_umap", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Initialization_time_us := %.2f", N, KEY_SIZE, VAL_SIZE, (end_ns_create - start_ns_create) / 1000.0);
-  REPORT_LINE("UnorderedMap", "olabs_umap", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Get_latency_us := %.2f", N, KEY_SIZE, VAL_SIZE, avg_ns_avg / 1000.0);
-  REPORT_LINE("UnorderedMap", "olabs_umap", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Get_throughput_qps := %.2f", N, KEY_SIZE, VAL_SIZE, 1000000000.0 / avg_ns_avg);
-  REPORT_LINE("UnorderedMap", "olabs_umap", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, memAfter - memBefore);
+  REPORT_LINE("UnorderedMap", "olabs_umap", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, (end_ns_create - start_ns_create) / 1000.0, avg_ns_avg / 1000.0, 1000000000.0 / avg_ns_avg, memAfter - memBefore);
 
   return 0;
 }

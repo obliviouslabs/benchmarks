@@ -42,32 +42,11 @@ fn benchmark_nroram(n: usize) -> i32 {
   report_line!(
     "NRORAM",
     "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {} | Read_latency_us := {} | Read_throughput_qps := {} | Memory_kb := {}",
     n,
-    create_time_ns / 1_000
-  );
-
-  report_line!(
-    "NRORAM",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
-    n,
-    avg_ns / 1_000.0
-  );
-
-  report_line!(
-    "NRORAM",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
-    n,
-    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
-  );
-
-  report_line!(
-    "NRORAM",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
-    n,
+    create_time_ns / 1_000,
+    avg_ns / 1_000.0,
+    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9,
     mem_diff
   );
 
@@ -100,32 +79,11 @@ fn benchmark_roram(n: usize) -> i32 {
   report_line!(
     "RORAM",
     "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := {} | Read_latency_us := {} | Read_throughput_qps := {} | Memory_kb := {}",
     n,
-    create_time_ns / 1_000
-  );
-
-  report_line!(
-    "RORAM",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := {}",
-    n,
-    avg_ns / 1_000.0
-  );
-
-  report_line!(
-    "RORAM",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := {}",
-    n,
-    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
-  );
-
-  report_line!(
-    "RORAM",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := {}",
-    n,
+    create_time_ns / 1_000,
+    avg_ns / 1_000.0,
+    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9,
     mem_diff
   );
 
@@ -171,31 +129,14 @@ fn benchmark_umap(n: usize) -> i32 {
   report_line!(
     "UnorderedMap",
     "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Initialization_zeroed_time_us := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Initialization_zeroed_time_us := {} | Get_latency_us := {} | Get_throughput_qps := {} | Memory_kb := {}",
     n,
-    create_time_ns / 1_000
-  );
-  report_line!(
-    "UnorderedMap",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Get_latency_us := {}",
-    n,
-    avg_ns / 1_000.0
-  );
-  report_line!(
-    "UnorderedMap",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Get_throughput_qps := {}",
-    n,
-    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
-  );
-  report_line!(
-    "UnorderedMap",
-    "olabs_rostl",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Memory_kb := {}",
-    n,
+    create_time_ns / 1_000,
+    avg_ns / 1_000.0,
+    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9,
     mem_diff
   );
+
   0
 }
 
@@ -234,35 +175,15 @@ fn benchmark_sharded_umap<const B: usize, const queries_per_batch: usize>(n: usi
   report_line!(
     "UnorderedMap",
     "olabs_rostl_sharded",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Batch_size := {} | Shards := 15 | Initialization_zeroed_time_us := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Batch_size := {} | Shards := 15 | Initialization_zeroed_time_us := {} | Get_latency_us := {} | Get_throughput_qps := {} | Memory_kb := {}",
     n,
     queries_per_batch,
-    create_time_ns / 1_000
-  );
-  report_line!(
-    "UnorderedMap",
-    "olabs_rostl_sharded",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Batch_size := {} | Shards := 15 | Get_latency_us := {}",
-    n,
-    queries_per_batch,
-    avg_latency_ns / 1_000.0
-  );
-  report_line!(
-    "UnorderedMap",
-    "olabs_rostl_sharded",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Batch_size := {} | Shards := 15 | Get_throughput_qps := {}",
-    n,
-    queries_per_batch,
-    throughput_qps
-  );
-  report_line!(
-    "UnorderedMap",
-    "olabs_rostl_sharded",
-    "N := {} | Key_bytes := 8 | Value_bytes := 56 | fill := 0.8 | Batch_size := {} | Shards := 15 | Memory_kb := {}",
-    n,
-    queries_per_batch,
+    create_time_ns / 1_000,
+    avg_latency_ns / 1_000.0,
+    throughput_qps,
     mem_diff
   );
+
   0
 }
 

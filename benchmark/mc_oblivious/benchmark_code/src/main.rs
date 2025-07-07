@@ -52,31 +52,14 @@ fn benchmark_umap(n: u64) -> i32 {
   report_line!(
     "UnorderedMap",
     "mc_oblivious",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | fill := 0.8 | Initialization_zeroed_time_us := {}",
+    "N := {} | Key_bytes := 8 | Value_bytes := 8 | fill := 0.8 | Initialization_zeroed_time_us := {} | Get_latency_us := {} | Get_throughput_qps := {} | Memory_kb := {}",
     n,
-    create_time_ns / 1_000
-  );
-  report_line!(
-    "UnorderedMap",
-    "mc_oblivious",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | fill := 0.8 | Get_latency_us := {}",
-    n,
-    avg_ns / 1_000.0
-  );
-  report_line!(
-    "UnorderedMap",
-    "mc_oblivious",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | fill := 0.8 | Get_throughput_qps := {}",
-    n,
-    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
-  );
-  report_line!(
-    "UnorderedMap",
-    "mc_oblivious",
-    "N := {} | Key_bytes := 8 | Value_bytes := 8 | fill := 0.8 | Memory_kb := {}",
-    n,
+    create_time_ns / 1_000,
+    avg_ns / 1_000.0,
+    (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9,
     mem_diff
   );
+
   0
 }
 

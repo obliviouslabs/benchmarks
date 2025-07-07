@@ -151,10 +151,7 @@ int test_loaded_sharded_table(size_t N, size_t batch_size)
 
   double avg_ns_success = (double)(end_query_time - start_query_time) / num_queries;
 
-  REPORT_LINE("UnorderedMap", "Signal_Sharded", "N:=%zu | Batch_size:=%zu | Key_bytes := 8 | Value_bytes := 56 | Shards:= %d | fill:=0.8 | Initialization_time_us := %.2f", N, batch_size, NUM_SHARDS, (end_ns_create - start_ns_create) / 1000.0);
-  REPORT_LINE("UnorderedMap", "Signal_Sharded", "N:=%zu | Batch_size:=%zu | Key_bytes := 8 | Value_bytes := 56 | Shards:= %d | fill:=0.8 | Get_throughput_qps := %.2f", N, batch_size, NUM_SHARDS, 1000000000.0 / avg_ns_success);
-  REPORT_LINE("UnorderedMap", "Signal_Sharded", "N:=%zu | Batch_size:=%zu | Key_bytes := 8 | Value_bytes := 56 | Shards:= %d | fill:=0.8 | Get_latency_us := %.2f", N, batch_size, NUM_SHARDS, avg_ns_success / 1000.0 * batch_size);
-  REPORT_LINE("UnorderedMap", "Signal_Sharded", "N:=%zu | Batch_size:=%zu | Key_bytes := 8 | Value_bytes := 56 | Shards:= %d | fill:=0.8 | Memory_kb := %d", N, batch_size, NUM_SHARDS, memAfter - memBefore);
+  REPORT_LINE("UnorderedMap", "Signal_Sharded", "N:=%zu | Batch_size:=%zu | Key_bytes := 8 | Value_bytes := 56 | Shards:= %d | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, batch_size, NUM_SHARDS, (end_ns_create - start_ns_create) / 1000.0, avg_latency_ns / 1000.0, throughput_qps, memAfter - memBefore);
   LOG_INFO("Of which creating the thread: %.2f ms\n", (intermediate_ns_create - start_ns_create) / 1e6);
 
 

@@ -32,10 +32,7 @@ int benchmark_nroram(uint64_t N) {
 
   double avg_ns = (double)(end_ns_query - start_ns_query) / NUM_ACCESSES;
   
-  REPORT_LINE("NRORAM", "olabs_oram", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Initialization_zeroed_time_us := %.2f", N, sizeof(K), sizeof(V), (end_ns_create - start_ns_create) / 1000.0);
-  REPORT_LINE("NRORAM", "olabs_oram", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Read_latency_us := %.2f", N, sizeof(K), sizeof(V), avg_ns / 1000.0);
-  REPORT_LINE("NRORAM", "olabs_oram", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Read_throughput_qps := %.2f", N, sizeof(K), sizeof(V), 1000000000.0 / avg_ns);
-  REPORT_LINE("NRORAM", "olabs_oram", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Memory_kb := %d", N, sizeof(K), sizeof(V), memAfter - memBefore);
+  REPORT_LINE("NRORAM", "olabs_oram", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Initialization_zeroed_time_us := %.2f | Read_latency_us := %.2f | Read_throughput_qps := %.2f | Memory_kb := %d", N, sizeof(K), sizeof(V), (end_ns_create - start_ns_create) / 1000.0, avg_ns / 1000.0, 1000000000.0 / avg_ns, memAfter - memBefore);
   return 0;  
 }
 
@@ -53,10 +50,8 @@ int benchmark_roram_8bk_8bv(uint64_t N) {
   uint64_t end_ns_query = current_time_ns();
   int memAfter = getMemValue();
   double avg_ns = (double)(end_ns_query - start_ns_query) / NUM_ACCESSES;
-  REPORT_LINE("RORAM", "olabs_oram", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := %.2f", N, (end_ns_create - start_ns_create) / 1000.0);
-  REPORT_LINE("RORAM", "olabs_oram", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | Read_latency_us := %.2f", N, avg_ns / 1000.0);
-  REPORT_LINE("RORAM", "olabs_oram", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | Read_throughput_qps := %.2f", N, 1000000000.0 / avg_ns);
-  REPORT_LINE("RORAM", "olabs_oram", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | Memory_kb := %d", N, memAfter - memBefore);
+  REPORT_LINE("RORAM", "olabs_oram", "N:=%zu | Key_bytes := 8 | Value_bytes := 8 | Initialization_zeroed_time_us := %.2f | Read_latency_us := %.2f | Read_throughput_qps := %.2f | Memory_kb := %d", N, (end_ns_create - start_ns_create) / 1000.0, avg_ns / 1000.0, 1000000000.0 / avg_ns, memAfter - memBefore);
+
   return 0;
 }
 

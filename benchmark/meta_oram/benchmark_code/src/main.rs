@@ -33,36 +33,12 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
     report_line!(
         "RORAM",
         "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := {} | Initialization_zeroed_time_us := {}",
+        "N := {} | Key_bytes := 8 | Value_bytes := {} | Initialization_zeroed_time_us := {} | Read_latency_us := {} | Read_throughput_qps := {} | Memory_kb := {}",
         capacity,
         V,
-        create_time_ns / 1_000
-    );
-
-    report_line!(
-        "RORAM",
-        "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := {} | Read_latency_us := {}",
-        capacity,
-        V,
-        avg_ns / 1_000.0
-    );
-
-    report_line!(
-        "RORAM",
-        "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := {} | Read_throughput_qps := {}",
-        capacity,
-        V,
-        (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9
-    );
-
-    report_line!(
-        "RORAM",
-        "meta_oram",
-        "N := {} | Key_bytes := 8 | Value_bytes := {} | Memory_kb := {}",
-        capacity,
-        V,
+        create_time_ns / 1_000,
+        avg_ns / 1_000.0,
+        (READ_SAMPLES as f64 / (end_query_ns - start_query_ns) as f64) * 1e9,
         mem_diff
     );
 
