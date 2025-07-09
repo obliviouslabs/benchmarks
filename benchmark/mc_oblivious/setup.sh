@@ -17,3 +17,4 @@ git clone 'git@github.com:mobilecoinfoundation/mc-oblivious.git' "$base_dir/buil
 
 echo "Copying the benchmark code"
 cp -r "$base_dir/benchmark/${project_name}/benchmark_code/." "$base_dir/build/${project_name}"
+cp "$base_dir/benchmark/common/common.rs" "$base_dir/build/${project_name}/src"

@@ -69,6 +69,24 @@ macro_rules! better_test_log {
     }};
 }
 
+pub fn version_string() -> String {
+    let mut sys = sysinfo::System::new();
+    sys.refresh_memory();
+    sys.refresh_cpu_all();
+    let sn = sysinfo::System::name().unwrap_or("".into()).replace("|","").replace("=","");
+    let hn = sysinfo::System::host_name().unwrap_or("".into()).replace("|","").replace("=","");
+
+    let lcores = sys.cpus().len();
+    let pcores = num_cpus::get_physical();
+    let total_mem = sys.total_memory();
+    let used_mem = sys.used_memory();
+    let total_swap = sys.total_swap();
+    let used_swap = sys.used_swap();
+
+
+    format!(" sys_name := {} | sys_hostname := {} | sys_lcores := {} | sys_pcores := {} | sys_total_mem_b := {} | sys_used_mem_b := {} | sys_total_swap_b := {} | sys_used_swap_b := {} ", sn, hn, lcores, pcores, total_mem, used_mem, total_swap, used_swap)
+}
+
 /// Rough equivalent of
 /// ```c
 /// #define REPORT_LINE(BENCH, IMPL, S, ...)
@@ -77,18 +95,22 @@ macro_rules! better_test_log {
 #[macro_export]
 macro_rules! report_line {
     ($bench:expr, $impl:expr, $s:expr $(, $args:expr)*) => {{
+        use common::version_string;
         $crate::better_test_log!(
-            "\nREPORT_123{}|{}|{}REPORT_123\n",
+            "\nREPORT_123{}|{}|{}| {}REPORT_123\n",
             $bench,
             $impl,
+            version_string(),
             format!($s, $($args),*)
         );
     }};
     ($bench:expr, $impl:expr, $s:expr) => {{
+        use common::version_string;
         $crate::better_test_log!(
-            "\nREPORT_123{}|{}|{}REPORT_123\n",
+            "\nREPORT_123{}|{}|{}| {}REPORT_123\n",
             $bench,
             $impl,
+            version_string(),
             $s
         );
     }};

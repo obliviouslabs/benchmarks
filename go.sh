@@ -9,7 +9,7 @@ sh ./scripts/setup.sh
 # 4) Make sure you have docker running
 
 sh ./benchmark/olabs_oram/run.sh
+sh ./benchmark/signal_icelake/run.sh
 sh ./benchmark/mc_oblivious/run.sh
 sh ./benchmark/meta_oram/run.sh
 sh ./benchmark/olabs_rostl/run.sh
-sh ./benchmark/signal_icelake/run.sh

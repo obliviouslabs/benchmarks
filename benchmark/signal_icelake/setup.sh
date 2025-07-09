@@ -19,6 +19,7 @@ cd ..
 
 echo "Copying the benchmark code"
 cp -r $base_dir'/benchmark/signal_icelake/benchmark_code/.' $base_dir/build/ContactDiscoveryService-Icelake/c/
+cp $base_dir'/benchmark/common/common.h' $base_dir/build/ContactDiscoveryService-Icelake/c/benchmarks/tests
 
 echo "Patching the build script"
 sed -i 's/^##TESTS$/##TESTS\nTESTS=benchmarks\/loaded_sharded_table.test benchmarks\/loaded_table.test/' $base_dir/build/ContactDiscoveryService-Icelake/c/Makefile
