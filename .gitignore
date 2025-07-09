@@ -4,3 +4,4 @@ results/
 figures/
 .vscode/
 .DS_Store
+__pycache__/
