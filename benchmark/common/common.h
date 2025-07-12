@@ -1,98 +1,111 @@
 #include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
-#include "string.h"
 #include <unistd.h>
+#include <sys/sysinfo.h>
+#include <sys/utsname.h>
 #include <sys/wait.h>
-
-
-#include <algorithm>
-#include <fstream>
-#include <iomanip>
-#include <numeric>
-#include <set>
-#include <sstream>
-#include <thread>
-#include <sys/sysinfo.h>   // memory + swap
-#include <sys/utsname.h>   // system / host name
 
 // ----- helpers ---------------------------------------------------------------
 
 // Count distinct (physical-id, core-id) pairs in /proc/cpuinfo.
 // Falls back to logical-cores if parsing fails.
-static std::uint32_t get_physical_cores()
+static uint32_t get_physical_cores(void)
 {
-    std::ifstream cpuinfo("/proc/cpuinfo");
-    if (!cpuinfo) return std::thread::hardware_concurrency();
+    FILE *fp = fopen("/proc/cpuinfo", "r");
+    if (!fp)
+        return (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
 
-    std::set<std::pair<int, int>> cores;
-    std::string line;
-    int physical_id = -1, core_id = -1;
+    struct { int phys, core; } seen[1024];
+    size_t n_seen = 0;
+    char  *line   = NULL;
+    size_t cap    = 0;
+    int phys_id   = -1, core_id = -1;
 
-    while (std::getline(cpuinfo, line))
-    {
-        if (line.rfind("physical id", 0) == 0)
-            physical_id = std::stoi(line.substr(line.find(':') + 1));
-        else if (line.rfind("core id", 0) == 0)
-            core_id = std::stoi(line.substr(line.find(':') + 1));
+    while (getline(&line, &cap, fp) != -1) {
+        if (strncmp(line, "physical id", 11) == 0)
+            phys_id = (int)strtol(strchr(line, ':') + 1, NULL, 10);
+        else if (strncmp(line, "core id", 7) == 0)
+            core_id = (int)strtol(strchr(line, ':') + 1, NULL, 10);
 
-        if (physical_id >= 0 && core_id >= 0)
-        {
-            cores.emplace(physical_id, core_id);
-            physical_id = core_id = -1;
+        if (phys_id >= 0 && core_id >= 0) {
+            size_t i;
+            for (i = 0; i < n_seen; ++i)
+                if (seen[i].phys == phys_id && seen[i].core == core_id)
+                    break;
+            if (i == n_seen && n_seen < sizeof seen / sizeof *seen) {
+                seen[n_seen].phys = phys_id;
+                seen[n_seen].core = core_id;
+                ++n_seen;
+            }
+            phys_id = core_id = -1;
         }
     }
-    return cores.empty() ? std::thread::hardware_concurrency()
-                         : static_cast<std::uint32_t>(cores.size());
+    free(line);
+    fclose(fp);
+    return n_seen ? (uint32_t)n_seen
+                  : (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 // Strip the characters ‘|’ and ‘=’ (mirrors the Rust .replace() chain).
-static void sanitize(std::string& s)
+static void sanitize(char *s)
 {
-    s.erase(std::remove_if(s.begin(), s.end(),
-              [](char c) { return c == '|' || c == '='; }),
-            s.end());
+    char *dst = s, *src = s;
+    while (*src) {
+        if (*src != '|' && *src != '=')
+            *dst++ = *src;
+        ++src;
+    }
+    *dst = '\0';
 }
 
-// ----- main API --------------------------------------------------------------
-
-std::string version_string()
+const char *version_string(void)
 {
-    // System + host names
-    utsname uts{};
+    static char buf[512];
+
+    /* ---------- system & host names ---------- */
+    struct utsname uts;
     uname(&uts);
-    std::string sys_name  = uts.sysname;
-    std::string host_name = uts.nodename;
-    sanitize(sys_name);
-    sanitize(host_name);
+    sanitize(uts.sysname);
+    sanitize(uts.nodename);
 
-    // Memory + swap
-    struct sysinfo info{};
-    ::sysinfo(&info);
-    const auto mem_unit   = static_cast<std::uint64_t>(info.mem_unit);
-    std::uint64_t total_mem  = info.totalram  * mem_unit;
-    std::uint64_t used_mem   = (info.totalram - info.freeram) * mem_unit;
-    std::uint64_t total_swap = info.totalswap * mem_unit;
-    std::uint64_t used_swap  = (info.totalswap - info.freeswap) * mem_unit;
+    /* ---------- memory & swap --------------- */
+    struct sysinfo info;
+    sysinfo(&info);
+    uint64_t unit       = info.mem_unit;
+    uint64_t total_mem  = info.totalram            * unit;
+    uint64_t used_mem   = (info.totalram - info.freeram)   * unit;
+    uint64_t total_swap = info.totalswap           * unit;
+    uint64_t used_swap  = (info.totalswap - info.freeswap) * unit;
 
-    // CPU counts
-    std::uint32_t lcores = std::thread::hardware_concurrency();
-    std::uint32_t pcores = get_physical_cores();
+    /* ---------- CPU counts ------------------- */
+    uint32_t lcores = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    uint32_t pcores = get_physical_cores();
 
-    // Assemble exactly the same format as the Rust function
-    std::ostringstream out;
-    out << " sys_name := "        << sys_name
-        << " | sys_hostname := "  << host_name
-        << " | sys_lcores := "    << lcores
-        << " | sys_pcores := "    << pcores
-        << " | sys_total_mem_b := "  << total_mem
-        << " | sys_used_mem_b := "   << used_mem
-        << " | sys_total_swap_b := " << total_swap
-        << " | sys_used_swap_b := "  << used_swap
-        << " ";
+    /* ---------- assemble string -------------- */
+    snprintf(buf, sizeof buf,
+             " sys_name := %s"
+             " | sys_hostname := %s"
+             " | sys_lcores := %" PRIu32
+             " | sys_pcores := %" PRIu32
+             " | sys_total_mem_b := %" PRIu64
+             " | sys_used_mem_b := %" PRIu64
+             " | sys_total_swap_b := %" PRIu64
+             " | sys_used_swap_b := %" PRIu64
+             " ",
+             uts.sysname,
+             uts.nodename,
+             lcores,
+             pcores,
+             total_mem,
+             used_mem,
+             total_swap,
+             used_swap);
 
-    return out.str();
+    return buf;
 }
 
 static inline uint64_t current_time_ns(void)
@@ -137,7 +150,7 @@ static uint64_t getMemValue(){ //Note: this value is in KB!
 
 
 #define REPORT_LINE(BENCH, IMPL, S, ...) do { \
-  BETTER_TEST_LOG("\nREPORT_123" BENCH "|" IMPL "|%s| " S "REPORT_123\n", version_string().c_str(), ##__VA_ARGS__); \
+  BETTER_TEST_LOG("\nREPORT_123" BENCH "|" IMPL "|%s| " S "REPORT_123\n", version_string(), ##__VA_ARGS__); \
 } while(0)
 
 
