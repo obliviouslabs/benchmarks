@@ -208,7 +208,11 @@ Contains utility scripts for managing and visualizing benchmarks:
 - **draw_figure.py**: A Python script for generating figures from benchmark data.
 - **draw.sh**: A shell script for automating figure generation, it generates all the images in `figures/` from the log outputs.
 - **setup.sh**: A setup script for preparing the environment.
-- **parse.py**: An auxiliary python script for parsing benchmark logs in `logs/` into the json format in `results/`. 
+- **parse.py**: An auxiliary python script for parsing benchmark logs in `logs/` into the json format in `results/`.
+- **generate_readme_body.sh**: A shell script for generating tables from benchmark data, like the ones in the `README.md`.
+- **config_ubuntu.sh**: A shell script for setting up the environment on Ubuntu systems, including installing dependencies like Rust, Docker, and others.
+- **draw_table.py**: A Python script for automatically generating tables for a given set of parameters.
+- **parse_util.py**: A Python utility script containing helper functions for parsing and filtering benchmark data.
 
 
 ## Contributing
