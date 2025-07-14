@@ -40,10 +40,10 @@ print(f" {args.ylabel} ")
 print("")
 
 # Print the table in markdown format
-print(f"| {args.xlabel} || " + " | ".join(sorted_names) + " |")
+print(f"| {args.xlabel} | " + " | ".join(sorted_names) + " |")
 
-print("| :--- || " + " :---: |" * (len(sorted_names)))
+print("| :--- | " + " :---: |" * (len(sorted_names)))
 for i, x in enumerate(all_xs):
   x_transformed = eval(args.xtransform.format_map(DefaultDict({"x": x})))
-  print(f"| {x_transformed} || " + " | ".join(str(columns[j][i]) for j in range(len(columns))) + " |")
+  print(f"| ${x_transformed}$ | " + " | ".join(str(columns[j][i]) for j in range(len(columns))) + " |")
 

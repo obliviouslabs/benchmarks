@@ -6,7 +6,7 @@ To add a benchmark, please follow the following steps
 
 1) Create a new folder inside of build with the name of the benchmarked test and the test content.
 
-2) Add the `setup.sh` file that should clone the benchmarked test, and a `run.sh` file that should run the benchmarked test.
+2) Add the `setup.sh` file that should clone the benchmarked test, and a `run.sh` file that should run the benchmarked test. Consider using the appropriate `common.h`/`common.rs` to help with test launching and reporting.
 
 3) Add lines to `scripts/setup.sh` and `go.sh` to call your setup and run.
 
