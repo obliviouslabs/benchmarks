@@ -109,10 +109,7 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 
   double avg_ns_success = (double)(end_query_time - start_query_time) / num_queries;
 
-  REPORT_LINE("UnorderedMap", "olabs_umap_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Initialization_time_us := %.2f", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, (end_ns_create - start_ns_create) / 1000.0);
-  REPORT_LINE("UnorderedMap", "olabs_umap_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Get_latency_us := %.2f", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, avg_ns_success / 1000.0 * batch_size);
-  REPORT_LINE("UnorderedMap", "olabs_umap_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Get_throughput_qps := %.2f", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, 1000000000.0 / avg_ns_success);
-  REPORT_LINE("UnorderedMap", "olabs_umap_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, memAfter - memBefore);
+  REPORT_LINE("UnorderedMap", "olabs_oram_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, (end_ns_create - start_ns_create) / 1000.0, avg_ns_success / 1000.0 * batch_size, 1000000000.0 / avg_ns_success, memAfter - memBefore);
 
   return 0;
 }
