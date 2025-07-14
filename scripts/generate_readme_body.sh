@@ -10,6 +10,8 @@ python ./scripts/draw_table.py -f $files -t "RORAM - Latency" -xl "N" -yl "Laten
 
 python ./scripts/draw_table.py -f $files -t "OMAP - Latency" -xl "N" -yl "Latency (us) vs Map number of entries (N), using 8 byte keys, 56 byte values" -c 'Key_bytes=8' 'Value_bytes=56' 'benchmark_type=UnorderedMap' 'Get_latency_us' '!Shards' -x '{N}' -y '{Get_latency_us}' -l '{implementation}' -xt '"2^{{" + str(len(bin({x})[3:])) + "}}"'
 
+python ./scripts/draw_table.py -f $files -t "OMAP - Latency" -xl "N" -yl "Latency (us) vs Map number of entries (N), using 8 byte keys, 8 byte values" -c 'Key_bytes=8' 'Value_bytes=8' 'benchmark_type=UnorderedMap' 'Get_latency_us' '!Shards' -x '{N}' -y '{Get_latency_us}' -l '{implementation}' -xt '"2^{{" + str(len(bin({x})[3:])) + "}}"'
+
 
  
 
