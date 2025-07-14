@@ -174,7 +174,14 @@ To generate figures from benchmark data, use the `draw.sh` script:
 ```bash
 ./scripts/draw.sh
 ```
+Make sure you edit the `files=...` line in `draw.sh` to match the benchmark result files you want to draw.
 
+### Generating tables
+To generate tables from benchmark data, like the ones in the `README.md`, use the `generate_Readme_body.sh` script:
+```bash
+./scripts/generate_readme_body.sh.sh
+```
+Make sure you edit the `files=...` line in `generate_Readme_body.sh` to match the benchmark result files you want to table.
 
 ## Repository Structure
 
