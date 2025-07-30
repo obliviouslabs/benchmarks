@@ -111,8 +111,7 @@ fn benchmark_umap(n: usize) -> i32 {
   let mut rng = rand::rng();
   const READ_SAMPLES :u64 = 500_000;
 
-
-  let mut umap = UnsortedMap::<u64, B448>::new(n*5/4);
+  let mut umap = UnsortedMap::<u64, B448>::new(n);
   umap.insert(0, B448 { a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, g: 0 });
   let end_create_ns = current_time_ns();
 
@@ -150,7 +149,7 @@ fn benchmark_sharded_umap<const B: usize, const queries_per_batch: usize>(n: usi
   let num_batches = READ_SAMPLES.div_ceil(queries_per_batch) as usize;
   let num_queries = num_batches * queries_per_batch;
 
-  let mut umap = ShardedMap::<u64, B448, B>::new(n*5/4);
+  let mut umap = ShardedMap::<u64, B448, B>::new(n);
   let end_create_ns = current_time_ns();
 
   let start_query_ns = current_time_ns();
