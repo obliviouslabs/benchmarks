@@ -200,7 +200,7 @@ fn main() {
   }
 
   // UNDONE(): Should take ___ to run
-  for i in 10..=26 {
+  for i in 10..=28 {
     let val = 1 << i;
     let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);
     run_test_forked(&test_name, || {
