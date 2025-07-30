@@ -18,7 +18,7 @@ ap.add_argument("-xl", "--xlabel", type=str, help="X axis label.")
 # y axis label  
 ap.add_argument("-yl", "--ylabel", type=str, help="Y axis label.")
 ap.add_argument("-xt", '--xtransform', type=str, default="x", help="How to represent x parameter (via eval)")
-ap.add_argument("-yt", '--ytransform', type=str, default="y", help="How to represent y parameter (via eval)")
+ap.add_argument("-yt", '--ytransform', type=str, default='f"{y:.2f}"', help="How to represent y parameter (via eval)")
 
 args = ap.parse_args()
 
