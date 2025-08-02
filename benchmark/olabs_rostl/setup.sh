@@ -14,7 +14,7 @@ mkdir -p "$base_dir/build/${project_name}"
 
 
 echo "Cloning the Rust Oblivious Standard Library repository"
-git clone -b improve_map_memory 'git@github.com:obliviouslabs/rostl.git' "$base_dir/build/${project_name}/rostl"
+git clone 'git@github.com:obliviouslabs/rostl.git' "$base_dir/build/${project_name}/rostl"
 
 echo "Copying the benchmark code"
 cp -r "$base_dir/benchmark/${project_name}/benchmark_code/." "$base_dir/build/${project_name}"
