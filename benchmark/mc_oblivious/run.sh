@@ -3,7 +3,7 @@ set -e
 
 project_name="mc_oblivious"
 base_dir="$(git rev-parse --show-toplevel)"
-commit_hash="$(git -C $base_dir/build/${project_name}/ rev-parse HEAD)"
+commit_hash="$(git -C $base_dir/build/${project_name}/mc-oblivious/ rev-parse HEAD)"
 timestamp="$(date +%s)"
 run_id="${project_name}_${timestamp}_${commit_hash}"
 results_file="$base_dir/results/${run_id}"
