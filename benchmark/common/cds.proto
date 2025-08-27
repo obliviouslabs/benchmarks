@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package bench.cds;
+
+message CDSLoadBatch {
+  bytes records = 1;
+}
+
+message CDSQueryBatch {
+  repeated uint64 e164s = 1;
+  bytes aci_uak_pairs = 2;
+}
