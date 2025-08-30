@@ -232,7 +232,7 @@ fn main() {
     let val = 1 << i;
     let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
     run_test_forked(&test_name, || {
-      benchmark_sharded_umap::<B448, 305, 4096>(val)
+      benchmark_sharded_umap::<B448, 320, 4096>(val)
     });
   }
 
