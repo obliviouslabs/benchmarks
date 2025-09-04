@@ -108,7 +108,6 @@ impl_cmov_for_pod!(B448);
 fn benchmark_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Send>(n: usize) -> i32 {
   let mem_start = get_mem_value().unwrap_or(0);
   let start_create_ns = current_time_ns();
-  let mut rng = rand::rng();
   const READ_SAMPLES :u64 = 500_000;
 
   let mut umap = UnsortedMap::<u64, VT>::new(n);
@@ -141,28 +140,29 @@ fn benchmark_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Send>(n: us
 }
 
 
-fn benchmark_sharded_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Send, const B: usize, const queries_per_batch: usize>(n: usize) -> i32{
+fn benchmark_sharded_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Send, const B: usize, const QUERIES_PER_BATCH: usize>(n: usize) -> i32{
   const READ_SAMPLES :usize = 1_000_000;
 
   let mem_start = get_mem_value().unwrap_or(0);
   let start_create_ns = current_time_ns();
 
-  let num_batches = READ_SAMPLES.div_ceil(queries_per_batch) as usize;
-  let num_queries = num_batches * queries_per_batch;
+  let num_batches = READ_SAMPLES.div_ceil(QUERIES_PER_BATCH) as usize;
+  let num_queries = num_batches * QUERIES_PER_BATCH;
 
-  let mut umap = ShardedMap::<u64, VT, B>::new(n);
+  let mut umap = ShardedMap::<u64, VT>::new(n);
   let end_create_ns = current_time_ns();
 
   let start_query_ns = current_time_ns();
-  let mut keys = [0; queries_per_batch];
+  let mut keys = [0; QUERIES_PER_BATCH];
 
   // let mut rng = rand::rng();
-  for i in 0..queries_per_batch {
+  for i in 0..QUERIES_PER_BATCH {
     keys[i] = i as u64;
   }
 
+  // let batch_size = umap.compute_safe_batch_size(QUERIES_PER_BATCH);
   for _ in 0..num_batches {
-    let _vals = black_box(umap.get_batch_distinct(black_box(&mut keys)));
+    let _vals = black_box(umap.get_batch_distinct(black_box(&mut keys), B));
   }
 
   let end_query_ns = current_time_ns();
@@ -178,7 +178,7 @@ fn benchmark_sharded_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Sen
     "N := {} | Key_bytes := 8 | Value_bytes := {} | fill := 0.8 | Batch_size := {} | Shards := 15 | Initialization_zeroed_time_us := {} | Get_latency_us := {} | Get_throughput_qps := {} | Memory_kb := {}",
     n,
     size_of::<VT>(),
-    queries_per_batch,
+    QUERIES_PER_BATCH,
     create_time_ns / 1_000,
     avg_latency_ns / 1_000.0,
     throughput_qps,
