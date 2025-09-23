@@ -162,7 +162,7 @@ fn benchmark_sharded_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Sen
 
   // let batch_size = umap.compute_safe_batch_size(QUERIES_PER_BATCH);
   for _ in 0..num_batches {
-    let _vals = black_box(umap.get_batch_distinct(black_box(&mut keys), B));
+    let _vals = black_box(umap.get_batch(black_box(&mut keys), B));
   }
 
   let end_query_ns = current_time_ns();
