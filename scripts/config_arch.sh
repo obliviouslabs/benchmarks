@@ -1,3 +1,8 @@
-pacman -S screen cargo rustup cmake ninja clang gcc llvm boost bearssl
+pacman -S screen cargo rustup cmake ninja clang gcc llvm boost bearssl python uv
 rustup default stable
-# Make sure to install the cargo- components from rostl
+
+mkdir /tmp/setuprust
+cd /tmp/setuprust
+git clone git@github.com:obliviouslabs/rostl.git
+cd rostl
+sh scripts/setup_dev_end.sh

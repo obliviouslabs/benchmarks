@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run python3
+# /// script
+# requires-python = ">=3.8"
+# dependencies = [
+#   "matplotlib",
+# ]
+# ///
 import argparse
 import json
 from collections import defaultdict
