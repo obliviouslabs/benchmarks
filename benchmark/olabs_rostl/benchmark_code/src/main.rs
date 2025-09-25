@@ -195,46 +195,46 @@ fn benchmark_sharded_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Sen
 fn main() {
   tracing_subscriber::fmt::init();
   // UNDONE(): Should take ___ to run
-  // for i in 10..=28 {
-  //   let val = 1 << i;    
-  //   let test_name = format!("benchmark_nroram<u64,u64>(1<<{})", i);
-  //   run_test_forked(&test_name, || {
-  //     benchmark_nroram(val)
-  //   });
-  // }
+  for i in 10..=28 {
+    let val = 1 << i;    
+    let test_name = format!("benchmark_nroram<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_nroram(val)
+    });
+  }
 
-  // // UNDONE(): Should take ___ to run
-  // for i in 10..=28 {
-  //   let val = 1 << i;
-  //   let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);
-  //   run_test_forked(&test_name, || {
-  //     benchmark_roram(val)
-  //   });
-  // }
+  // UNDONE(): Should take ___ to run
+  for i in 10..=28 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_roram(val)
+    });
+  }
 
-  // // UNDONE(): Should take ___ to run
-  // for i in 10..=26 {
-  //   let val = 1 << i;
-  //   let test_name = format!("benchmark_umap<u64,B448>(1<<{})", i);
-  //   run_test_forked(&test_name, || {
-  //     benchmark_umap::<B448>(val)
-  //   });
-  // }
+  // UNDONE(): Should take ___ to run
+  for i in 10..=26 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_umap<u64,B448>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_umap::<B448>(val)
+    });
+  }
 
-  // for i in 10..=26 {
-  //   let val = 1 << i;
-  //   let test_name = format!("benchmark_umap<u64,u64>(1<<{})", i);
-  //   run_test_forked(&test_name, || {
-  //     benchmark_umap::<u64>(val)
-  //   });
-  // }
+  for i in 10..=26 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_umap<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_umap::<u64>(val)
+    });
+  }
 
   // UNDONE(): Should take ___ to run
   for i in 10..=28 {
     let val = 1 << i;
     let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
     run_test_forked(&test_name, || {
-      benchmark_sharded_umap::<B448, 320, 4096>(val)
+      benchmark_sharded_umap::<B448, 350, 4096>(val)
     });
   }
 
