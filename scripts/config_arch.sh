@@ -1,4 +1,4 @@
-pacman -S screen cargo rustup cmake ninja clang gcc llvm boost bearssl python uv
+pacman -S screen cargo rustup cmake ninja clang gcc llvm boost bearssl python uv docker-buildx
 rustup default stable
 
 mkdir /tmp/setuprust
