@@ -119,7 +119,6 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 int main() {
   uint64_t batch_sizes[] = {NUM_SHARDS,100,1000,8192};
 
-  // UNDONE(): This test is broken - what():  Initialization failed. Encountered duplicate keys.
   // UNDONE(): Should take ____ to run.
   for (uint64_t j = 10; j<=28; j++) {
       RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, 4096)));
