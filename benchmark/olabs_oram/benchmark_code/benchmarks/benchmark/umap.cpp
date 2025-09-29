@@ -15,7 +15,7 @@ struct BytesHelper
     uint64_t bytes_to_copy = KEY_SIZE > 8 ? 8 : KEY_SIZE;
     for (uint64_t i = 0; i < bytes_to_copy; ++i) {
       key.data[i] = x & 0xff;
-      x >>= 1;
+      x >>= 8;
     }
     return key;
   }
