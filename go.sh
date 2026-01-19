@@ -11,5 +11,6 @@ sh ./scripts/setup.sh
 sh ./benchmark/olabs_rostl/run.sh
 sh ./benchmark/olabs_oram/run.sh
 sh ./benchmark/signal_icelake/run.sh
+sh ./benchmark/h2o2_oram/run.sh
 sh ./benchmark/mc_oblivious/run.sh
 sh ./benchmark/meta_oram/run.sh
