@@ -8,6 +8,7 @@ mkdir -p logs
 
 # Run all inner setups
 #
+sh benchmark/h2o2_oram/setup.sh
 sh benchmark/mc_oblivious/setup.sh
 sh benchmark/meta_oram/setup.sh
 sh benchmark/olabs_oram/setup.sh

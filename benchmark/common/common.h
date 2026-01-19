@@ -5,9 +5,14 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
+#include <poll.h>
+#include <signal.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 
 // ----- helpers ---------------------------------------------------------------
 
@@ -153,11 +158,49 @@ static uint64_t getMemValue(){ //Note: this value is in KB!
   BETTER_TEST_LOG("\nREPORT_123" BENCH "|" IMPL "|%s| " S "REPORT_123\n", version_string(), ##__VA_ARGS__); \
 } while(0)
 
+static int pidfd_open_linux(pid_t pid, unsigned int flags) {
+  return (int)syscall(SYS_pidfd_open, pid, flags);
+}
 
+// returns: 0 = exited, 1 = timeout (child killed), -1 = error
+static int waitpid_timeout_linux(pid_t pid, int *status, int timeout_ms) {
+  int pfd = pidfd_open_linux(pid, 0);
+  if (pfd < 0) return -1;
+
+  struct pollfd fds = { .fd = pfd, .events = POLLIN };
+  int pr = poll(&fds, 1, timeout_ms);
+
+  if (pr == 0) {
+    // Timeout
+    kill(pid, SIGTERM);
+    usleep(200 * 1000);
+    kill(pid, SIGKILL);
+
+    (void)waitpid(pid, status, 0);
+    close(pfd);
+    return 1;
+  }
+
+  if (pr < 0) {
+    // Wait error
+    close(pfd);
+    return -1;
+  }
+
+  // child has exited (or is waitable);
+  if (waitpid(pid, status, 0) < 0) {
+    close(pfd);
+    return -1;
+  }
+
+  close(pfd);
+  return 0;
+}
 
 
 #define RUN_TEST_FORKED(x)                              \
 do {                                                    \
+  const long long timeout_ms = 60LL * 60LL * 1000LL;    \
   pid_t childPid = fork();                              \
   if (childPid == 0) {                                  \
     /* Child process */                                 \
@@ -175,13 +218,17 @@ do {                                                    \
     fprintf(stderr, "FAILED: %s(fork)\n", #x);          \
   } else {                                              \
     int returnStatus;                                   \
-    waitpid(childPid, &returnStatus, 0);                \
-    if (returnStatus == 0) {                            \
-      /* Child process terminated without error */      \
-      BETTER_TEST_LOG("OK\n");                                 \
-    } else {                                            \
-      /* Child process terminated with an error*/       \
-      BETTER_TEST_LOG("FAILED: %s (%d)\n", #x, returnStatus);  \
+    int r = waitpid_timeout_linux(childPid, &returnStatus, timeout_ms);  \
+    if (r == -1) {                                      \
+      BETTER_TEST_LOG("FAILED: %s (wait error: %d)\n", #x, errno); \
+    } else if (r == 1) {                                \
+      BETTER_TEST_LOG("FAILED: %s (timeout after 1h)\n", #x); \
+    } else  {                                           \
+      if (returnStatus == 0) {                          \
+        BETTER_TEST_LOG("OK\n");                        \
+      } else {                                          \
+        BETTER_TEST_LOG("FAILED: %s (%d)\n", #x, returnStatus);  \
+      }                                                 \
     }                                                   \
   }                                                     \
 } while(0)

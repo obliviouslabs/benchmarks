@@ -195,7 +195,7 @@ fn benchmark_sharded_umap<VT: Default + Ord + Cmov + Pod + std::fmt::Debug + Sen
 fn main() {
   tracing_subscriber::fmt::init();
   // UNDONE(): Should take ___ to run
-  for i in 10..=28 {
+  for i in 10..=20 {
     let val = 1 << i;    
     let test_name = format!("benchmark_nroram<u64,u64>(1<<{})", i);
     run_test_forked(&test_name, || {
@@ -204,7 +204,7 @@ fn main() {
   }
 
   // UNDONE(): Should take ___ to run
-  for i in 10..=28 {
+  for i in 10..=20 {
     let val = 1 << i;
     let test_name = format!("benchmark_roram<u64,u64>(1<<{})", i);
     run_test_forked(&test_name, || {
@@ -213,7 +213,7 @@ fn main() {
   }
 
   // UNDONE(): Should take ___ to run
-  for i in 10..=26 {
+  for i in 10..=20 {
     let val = 1 << i;
     let test_name = format!("benchmark_umap<u64,B448>(1<<{})", i);
     run_test_forked(&test_name, || {
@@ -221,7 +221,7 @@ fn main() {
     });
   }
 
-  for i in 10..=26 {
+  for i in 10..=20 {
     let val = 1 << i;
     let test_name = format!("benchmark_umap<u64,u64>(1<<{})", i);
     run_test_forked(&test_name, || {
@@ -230,13 +230,88 @@ fn main() {
   }
 
   // UNDONE(): Should take ___ to run
-  for i in 10..=28 {
+  for i in 10..=20 {
     let val = 1 << i;
     let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
     run_test_forked(&test_name, || {
       benchmark_sharded_umap::<B448, 350, 4096>(val)
     });
   }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<B448, 100, 1024>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<B448, 600, 8192>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<B448, 4800, 65536>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<B448, 70000, 1048576>(val)
+    });
+  }
+
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<u64, 350, 4096>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<u64, 100, 1024>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<u64, 600, 8192>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<u64, 4800, 65536>(val)
+    });
+  }
+
+  for i in 10..=20 {
+    let val = 1 << i;
+    let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
+    run_test_forked(&test_name, || {
+      benchmark_sharded_umap::<u64, 70000, 1048576>(val)
+    });
+  }
+
+
 
   // for i in 10..=24 {
   //   let val = 1 << i;

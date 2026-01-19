@@ -81,7 +81,7 @@ void prepare_queries_and_inserts()
     }
 }
 
-int test_loaded_sharded_table(size_t N, size_t batch_size)
+int test_loaded_sharded_table(size_t N, const size_t batch_size)
 {
 
   size_t num_records_to_add = N;
@@ -173,16 +173,16 @@ int main()
     // We run the tests up to 40GB of memory usage, and avoid slower tests for non optimal batch sizes
     //
     // Should take less than 2h to run
-    uint64_t batch_sizes[] = {NUM_SHARDS,100,1000,8192};
-    for (uint64_t i = 0; i<4; i++) {
-        for (uint64_t j = 10; j<=24; j++) {
+    uint64_t batch_sizes[] = {NUM_SHARDS,1024,8192,65536,1<<20};
+    for (uint64_t i = 0; i<5; i++) {
+        for (uint64_t j = 10; j<=20; j++) {
             RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, batch_sizes[i]));
         }
     }
 
 
     // Should take less than 6h to run.
-    for (uint64_t j = 10; j<=28; j++) {
+    for (uint64_t j = 10; j<=20; j++) {
         RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, 4096));
     }
 

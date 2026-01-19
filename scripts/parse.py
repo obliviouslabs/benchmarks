@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+'''
+Script to parse log files and extract benchmark reports.
+Each line containing 'REPORT_123 x | y | z | ... REPORT_123' is parsed to extract x, y, z.
+Outputs the extracted data in JSON format.
+'''
 
 import re
 import argparse

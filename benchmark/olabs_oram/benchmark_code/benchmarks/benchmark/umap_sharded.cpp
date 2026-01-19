@@ -117,21 +117,12 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 
 // UNDONE(): Should take less than 4h to run
 int main() {
-  uint64_t batch_sizes[] = {NUM_SHARDS,100,1000,8192};
+  uint64_t batch_sizes[] = {NUM_SHARDS,1024,4096,8192,65536,1<<20};
 
-  // UNDONE(): Should take ____ to run.
-  for (uint64_t j = 10; j<=28; j++) {
-      RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, 4096)));
-  }
-
-  // UNDONE(): figure out machine size to not throw OOM.
-  // Should take 30h to run
-  for (uint64_t j = 10; j<=28; j++) {
-      RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, 4096)));
-  }
-
-  for (uint64_t i = 0; i<4; i++) {
-      for (uint64_t j = 10; j<=24; j++) {
+  for (uint64_t i = 0; i<6; i++) {
+      for (uint64_t j = 10; j<=20; j++) {
+          RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_sizes[i])));
+          RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, batch_sizes[i])));
           RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, batch_sizes[i])));
       }
   }
