@@ -202,12 +202,12 @@ int main()
     // We run the tests up to 40GB of memory usage.
     //
     // Should take 35h to run
-    for (uint64_t i = 10; i <= 20; i++) {
+    for (uint64_t i = 10; i <= 28; i++) {
         RUN_TEST_FORKED(loaded_table_8_8(1<<i));
     }
 
     // Should take 33h to run
-    for (uint64_t i = 10; i <= 20; i++) {
+    for (uint64_t i = 10; i <= 28; i++) {
         RUN_TEST_FORKED(loaded_table_8_56(1<<i));
     }
     

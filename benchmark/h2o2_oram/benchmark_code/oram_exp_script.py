@@ -9,7 +9,7 @@ thread_nums = [1, 32]
 
 for threads in thread_nums:
   for b in block_sizes:
-    cnt_ub = 20
+    cnt_ub = 28
     for n_base in range(10, cnt_ub+1):
       repetitions = 3 if threads <= 4 else 5
       n = 2**n_base 

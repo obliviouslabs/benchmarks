@@ -45,7 +45,7 @@ BENCHMARK_DEFINE_F(ORAMInitFixture64, ORAM)
 
 static void CustomizedArgsN(benchmark::internal::Benchmark *b)
 {
-    for (size_t i = 8; i <= 25; i++) // n := 2**i
+    for (size_t i = 8; i <= 28; i++) // n := 2**i
     {
         size_t n = 1ll << i;
         b->Args({(int64_t)n});

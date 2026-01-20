@@ -1,4 +1,4 @@
-pacman -S screen cargo rustup cmake ninja clang gcc llvm boost bearssl python uv docker-buildx benchmark onetbb python-psutil time
+pacman -S screen cargo rustup cmake ninja clang gcc llvm boost bearssl python uv docker-buildx benchmark onetbb python-psutil time nlopt
 rustup default stable
 
 mkdir /tmp/setuprust
