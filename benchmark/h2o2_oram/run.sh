@@ -20,8 +20,8 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
 cd benchmarks
-stdbuf -oL -eL python oram_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_oram.log"
-stdbuf -oL -eL python omap_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_omap.log"
+PYTHONUNBUFFERED=1 stdbuf -oL -eL python oram_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_oram.log"
+PYTHONUNBUFFERED=1 stdbuf -oL -eL python omap_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_omap.log"
 
 # Parse the results
 echo "" > "$results_file"
