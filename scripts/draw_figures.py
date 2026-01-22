@@ -153,7 +153,7 @@ for batch_size in [1024,4096,8192,65536,1048576]:
     ].sort_index().copy()
     w2 = w1.loc[
       (P['Shards'] == 15)
-    & (P['Batch_size'] == 4096)
+    & (P['Batch_size'] == batch_size)
     ]
     w3 = w1.loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)].copy()
     w3['Get_latency_us'] *= batch_size
