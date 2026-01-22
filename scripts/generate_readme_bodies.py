@@ -85,8 +85,7 @@ for value_bytes in [8, 56]:
   
   w2 = w1.loc[(P['Batch_size'] == 4096) & (P['Shards'] == 15)].copy()
   w3 = w1.loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)].copy()
-  w2.loc[w2['implementation'] == 'Signal_Sharded', 'Get_latency_us'] *= 4096
-  w3['Get_latency_us'] *= 4096
+  w3['Get_latency_us'] *= 4096 # adjust for batch size
   w1 = pd.concat([w2, w3], ignore_index=True)
   w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
   draw_table(w1, 'N', 'Get_latency_us')

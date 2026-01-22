@@ -193,3 +193,20 @@ def draw_table(data: pd.DataFrame,
   
   md = tbl.to_markdown(tablefmt="github", stralign="right", numalign="right", disable_numparse=True, preserve_whitespace=True)
   print(md)
+
+
+# For Non-Amortized Hierarchical ORAM percentiles, we calculate them the following way:
+# avg = value in the latency from the average of a lot of accesses
+# We know that for n accesess, n/2 will have cost 0.5, n/2 will have cost 1, n/4 will have cost 2, n/8 will have cost 4...
+# so we use this to compute the percentile and multiply by the average to get the estimated percentile latency
+def get_percentile_factor(p):
+  if p <= 0.5:
+    return 0.5
+  factor = 0.5
+  acc = 0.5
+  curr = 0.5
+  while acc < p:
+    factor *= 2
+    curr /= 2
+    acc += curr
+  return factor

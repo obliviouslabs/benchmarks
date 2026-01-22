@@ -8,7 +8,7 @@
 # ]
 # ///
 import pandas as pd
-from utils import load_df, draw_figure
+from utils import get_percentile_factor, load_df, draw_figure
 
 P = load_df()
 
@@ -103,9 +103,22 @@ for (key_bytes, val_bytes) in [(8,8), (8,56), (32, 32)]:
     & (P['implementation'] != 'mc_oblivious') # too slow, makes graphs ugly
   ].sort_index().copy()
   w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 1)]
-  w2.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (amortized)'
+  w2_avg = w2.copy()
+  # w2_percentile = w2.copy()
+  # w2_percentile['Get_latency_us'] = w2_percentile['Get_latency_us'] * get_percentile_factor(0.90)
+  w2_avg.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (average)'
+  # w2_percentile.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (0.90 percentile)'
   w3 = w1.copy().loc[(P['implementation'] != 'h2o2')]
-  w1 = pd.concat([w2, w3], ignore_index=True)
+
+  # Add Naive Initialization time (N * insertion_time) to olabs_oram
+  w4 = w1.copy().loc[(P['implementation'] == 'olabs_oram') | (P['implementation'] == 'olabs_oram_shortkv')]
+  w4['Initialization_time_us'] = w4['N'] * w4['Get_latency_us'] * 2
+  w4["implementation"] = w4.apply(lambda r: f"{r['implementation']}-naive", axis=1)
+  
+  w1 = pd.concat([w2_avg, w3], ignore_index=True)
+  # w1 = pd.concat([w2_avg, w2_percentile, w3], ignore_index=True)
+  w1_i = pd.concat([w2, w3, w4], ignore_index=True)
+
 
   common_args = {
     "xlabel": 'N',
@@ -122,7 +135,7 @@ for (key_bytes, val_bytes) in [(8,8), (8,56), (32, 32)]:
               ylabel='$\\mu s$',
               **common_args
   )
-  draw_figure(w1, 'N', 'Initialization_time_us',
+  draw_figure(w1_i, 'N', 'Initialization_time_us',
               f"UMAP - Initialization Time ({key_bytes}b key, {val_bytes}b value)",
               ylabel='$\\mu s$',
               **common_args
@@ -214,14 +227,14 @@ for i, implementation in enumerate(['Signal_Sharded', 'olabs_rostl_sharded', 'ol
     }
 
     draw_figure(w1, 'N', 'Get_latency_us',
-      f"UMAP - Batch Get Latency under stress load (8b key, {val_bytes}b value) {i}",
+      f"UMAP - Batch Get Latency vs batch size (8b key, {val_bytes}b value) {i}",
       'name',
       ylabel='$\\mu s$',
       **common_args
     )
 
     draw_figure(w1, 'N', 'Get_throughput_qps',
-      f"UMAP - Batch Get Throughput under stress load (8b key, {val_bytes}b value) {i}",
+      f"UMAP - Batch Get Throughput vs batch size (8b key, {val_bytes}b value) {i}",
       'name',
       False,
       ylabel='Queries per second',
