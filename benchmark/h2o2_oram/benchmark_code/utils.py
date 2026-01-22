@@ -8,6 +8,7 @@ import json
 import platform
 import socket
 import re
+import signal
 
 def check_if_alread_ran(file_name):
   if os.path.exists(file_name):
@@ -20,47 +21,61 @@ def check_if_alread_ran(file_name):
   return False
 
 def run_process_registering_memory(cmd, threads=1, timeout=3600):
-    if threads < 32:
-      target_cmd = f"taskset -c 0-{threads-1} {cmd}"
-    else:
-      target_cmd = cmd
-    
-    with tempfile.NamedTemporaryFile(delete=False, mode="w+") as tf:
-      time_path = tf.name
-    
-    target_cmd = f"/usr/bin/time -v {target_cmd}"
-    process = subprocess.Popen(
-      target_cmd,
-      shell=True,
-      stdout=open(time_path, "w"),
-      stderr=subprocess.STDOUT,
-    )
+  if threads < 32:
+    target_cmd = f"taskset -c 0-{threads-1} {cmd}"
+  else:
+    target_cmd = cmd
+  
+  with tempfile.NamedTemporaryFile(delete=False, mode="w+") as tf:
+    time_path = tf.name
+  
+  target_cmd = f"/usr/bin/time -v {target_cmd}"
+  process = subprocess.Popen(
+    target_cmd,
+    shell=True,
+    stdout=open(time_path, "w"),
+    stderr=subprocess.STDOUT,
+    start_new_session=True,
+  )
 
-    ret = 0
-    max_rss = 0
-    max_vss = 0
-    outlines = []
+  ret = 0
+  max_rss = 0
+  max_vss = 0
+  outlines = []
+
+  try:
+    process.wait(timeout=timeout)
+    ret = process.returncode
+  except subprocess.TimeoutExpired:
+    # First try graceful, then hard kill.
     try:
-      process.wait(timeout=timeout)
-      ret = process.returncode
-      outlines = open(time_path).readlines()
-      print("".join(outlines))
-      os.unlink(time_path)
-      m = re.search(r"Maximum resident set size \(kbytes\):\s*(\d+)", "".join(outlines))
-      if m:
-        max_rss = int(m.group(1)) * 1024
-      m = re.search(r"Maximum virtual memory size \(kbytes\):\s*(\d+)", "".join(outlines))
-      if m:
-        max_vss = int(m.group(1)) * 1024
-    except:
+      os.killpg(process.pid, signal.SIGTERM)
       try:
-        for _ in range(5):
-          process.kill()
-      except:
-        pass
+        process.wait(timeout=2)
+      except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
       pass
+    ret = -signal.SIGKILL  # or whatever you prefer
 
-    return ret, (max_rss, max_vss), outlines
+  try:
+    outlines = open(time_path).readlines()
+  finally:
+    try:
+      os.unlink(time_path)
+    except OSError:
+      pass
+  
+  text = "".join(outlines)
+  print(text)
+  m = re.search(r"Maximum resident set size \(kbytes\):\s*(\d+)", text)
+  if m:
+    max_rss = int(m.group(1)) * 1024
+  m = re.search(r"Maximum virtual memory size \(kbytes\):\s*(\d+)", text)
+  if m:
+    max_vss = int(m.group(1)) * 1024
+
+  return ret, (max_rss, max_vss), outlines
 
 def parse_mean_time_from_outlines(outlines):
     outlines = [line for line in  outlines if "real_time_mean" in line]
