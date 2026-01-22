@@ -117,6 +117,7 @@ def draw_figure(data: pd.DataFrame, x_name='x', y_name='y', title="", columns='i
   plt.title(f"{title}")
   filename = title.replace("(", " ").replace(")", " ").replace(",", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace(" ", "_").replace(":", "-").replace("/", "-")
   plt.savefig(f"figures/{filename}.png")
+  plt.savefig(f"figures/pdf/{filename}.pdf")
 
 def HEADER(title):
   print(f"### {title}\n")
