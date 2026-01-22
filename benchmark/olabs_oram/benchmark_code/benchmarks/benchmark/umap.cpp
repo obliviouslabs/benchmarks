@@ -127,9 +127,7 @@ int benchmark_umap(uint64_t N) {
   cout << "Creating ORAM with capacity " << cap << endl;
   OMap_t<KEY_SIZE,VAL_SIZE> oram = OMap_t<KEY_SIZE,VAL_SIZE>(cap);
   cout << "Initializing ORAM" << endl;
-  oram.Init();
-  cout << "ORAM initialized" << endl;
-  // Intializer_t* init = oram.NewInitContext();
+  typename OMap_t<KEY_SIZE,VAL_SIZE>::InitContext* init = oram.NewInitContext(20ULL * (1ULL<<30));
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {
@@ -139,13 +137,12 @@ int benchmark_umap(uint64_t N) {
     }
     typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
     typename BytesHelper<VAL_SIZE>::type val = BytesHelper<VAL_SIZE>::key_from_u64(i & 0xff);
-    oram.OInsert(key, val);
+    init->Insert(key, val);
   }
-
+  cout << "Finalizing ORAM" << endl;
+  init->Finalize();
+  delete init;
   BETTER_TEST_LOG("ORAM initialition completed");
-
-  // init->Finalize();
-  // delete init;
 
   uint64_t end_ns_create = current_time_ns();
 
@@ -186,21 +183,6 @@ int benchmark_umap(uint64_t N) {
 int main() {
   // Should take 1h30 to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED((benchmark_umap_shortkv<8,8>(1<<i)));
-  }
-
-  // Should take 1h30 to run
-  for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED((benchmark_umap_shortkv<32,32>(1<<i)));
-  }
-
-  // Should take 1h30 to run
-  for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED((benchmark_umap_shortkv<8,56>(1<<i)));
-  }
-
-  // Should take 1h30 to run
-  for (uint64_t i = 10; i<=28; i++) {
     RUN_TEST_FORKED((benchmark_umap<8,8>(1<<i)));
   }
 
@@ -212,6 +194,21 @@ int main() {
   // Should take 1h30 to run
   for (uint64_t i = 10; i<=28; i++) {
     RUN_TEST_FORKED((benchmark_umap<8,56>(1<<i)));
+  }
+
+  // Should take 1h30 to run
+  for (uint64_t i = 10; i<=28; i++) {
+    RUN_TEST_FORKED((benchmark_umap_shortkv<8,8>(1<<i)));
+  }
+
+  // Should take 1h30 to run
+  for (uint64_t i = 10; i<=28; i++) {
+    RUN_TEST_FORKED((benchmark_umap_shortkv<32,32>(1<<i)));
+  }
+
+  // Should take 1h30 to run
+  for (uint64_t i = 10; i<=28; i++) {
+    RUN_TEST_FORKED((benchmark_umap_shortkv<8,56>(1<<i)));
   }
 
   return 0;

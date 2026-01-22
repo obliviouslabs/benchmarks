@@ -56,7 +56,7 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   // Create and initialize a hashtable
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
   size_t num_queries = N;
-  while (num_queries*batch_size > 250_000_000) { // Keep test time reasonable for large batches
+  while (num_queries*batch_size > 250000000) { // Keep test time reasonable for large batches
     num_queries /= 2;
   }
   size_t queries_batch_size = batch_size;
