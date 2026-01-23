@@ -25,6 +25,9 @@ for threads in thread_nums:
       t = parse_mean_time_from_outlines(outlines)
       if t is None:
         print(f"({threads}, {b}, {n}) Could not parse time from output")
+        if n_base > 20:
+          # N' > N ==> fail(N) ==> fail(N')
+          break
         continue
 
       start_init_time = time()
@@ -34,6 +37,9 @@ for threads in thread_nums:
       t_init = parse_mean_time_from_outlines(outlines_init)
       if t_init is None:
         print(f"({threads}, {b}, {n}) Could not parse initialization time from output")
+        if n_base > 20:
+          # N' > N ==> fail(N) ==> fail(N')
+          break
         continue
       end_time = time()
 

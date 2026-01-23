@@ -20,7 +20,7 @@ def check_if_alread_ran(file_name):
         pass
   return False
 
-def run_process_registering_memory(cmd, threads=1, timeout=3600):
+def run_process_registering_memory(cmd, threads=1, timeout=3*3600):
   if threads < 32:
     target_cmd = f"taskset -c 0-{threads-1} {cmd}"
   else:

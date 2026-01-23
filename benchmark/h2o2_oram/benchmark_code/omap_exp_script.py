@@ -22,8 +22,11 @@ for threads in thread_nums:
       ret, mem, outlines = run_process_registering_memory(f"../bin/ORAMBenchmark  --benchmark_out={file_name} --benchmark_filter=OMapDataFixture{b}/OMap/{n}/* --benchmark_repetitions={repetitions}", threads)
       t = parse_mean_time_from_outlines(outlines)
       if t is None:
-            print(f"({threads}, {b}, {n}) Could not parse time from output")
-            continue
+        print(f"({threads}, {b}, {n}) Could not parse time from output")
+        if n_base > 20:
+          # N' > N ==> fail(N) ==> fail(N')
+          break
+        continue
       
       end_time = time()
 
