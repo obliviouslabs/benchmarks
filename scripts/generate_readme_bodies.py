@@ -123,4 +123,10 @@ for implementation in ['Signal_Sharded', 'olabs_rostl_sharded', 'olabs_oram_shar
   w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
   w1["name"] = w1.apply(lambda r: f"{r['implementation']}-{r['Batch_size']:07d}", axis=1)
   draw_table(w1, 'N', 'Get_throughput_qps', columns='name', highlight=1)
+
+  TITLE(f"Unordered Map - Scaling with Batch Size - Read Latency (qps) for 8B keys, 56B Values ({implementation})")
+  draw_table(w1, 'N', 'Get_latency_us', columns='name', highlight=-1)
+
+
+  
   
