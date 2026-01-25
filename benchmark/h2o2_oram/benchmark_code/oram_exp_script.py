@@ -21,6 +21,7 @@ for threads in thread_nums:
 
       start_time = time()
       cmd = f"../bin/ORAMBenchmark  --benchmark_out={file_name} --benchmark_filter=ORAMDataFixture{b}/ORAM/{n}/process_time/* --benchmark_repetitions={repetitions}"
+      
       ret, mem, outlines = run_process_registering_memory(cmd, threads=threads)
       t = parse_mean_time_from_outlines(outlines)
       if t is None:

@@ -21,9 +21,7 @@ ninja -C build
 
 cd benchmarks
 PYTHONUNBUFFERED=1 stdbuf -oL -eL python oram_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_oram.log"
-PYTHONUNBUFFERED=1 stdbuf -oL -eL python omap_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_omap.log"
 
 # Parse the results
 echo "" > "$results_file"
 python "$base_dir/scripts/parse.py" -f "$base_dir/logs/$run_id/bench_oram.log" >> "$results_file"
-python "$base_dir/scripts/parse.py" -f "$base_dir/logs/$run_id/bench_omap.log" >> "$results_file"

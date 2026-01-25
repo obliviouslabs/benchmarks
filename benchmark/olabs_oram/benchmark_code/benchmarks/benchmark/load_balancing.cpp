@@ -171,7 +171,7 @@ class LoadBalancingBenchmark {
     uint32_t batchSize = (uint32_t)(keyEnd - keyBegin);
     // Calculate the max unique element per shard with high probability.
     uint32_t batchSizePerShard = (uint32_t) ParOMapType::maxQueryPerShard(batchSize, shardCount);
-    std::vector<KeyInfo> keyInfoVec(shardCount * batchSizePerShard);
+    std::vector<KeyInfo> keyInfoVec(batchSize + shardCount * batchSizePerShard);
 
     std::vector<uint64_t> counts(shardCount, 0);
     uint64_t total_counts = 0;
@@ -183,41 +183,32 @@ class LoadBalancingBenchmark {
       keyInfoVec[i].shardIdx = getShardByHash(keyInfoVec[i].hash);
     }
 
-    for (uint64_t i=0; i<batchSize; i++) {
-      for (uint64_t j=0; j<shardCount; j++) {
-        uint64_t is_in_shard = (keyInfoVec[i].shardIdx == j);
-        obliMove(is_in_shard, total_counts, total_counts + 1);
-        obliMove(is_in_shard, counts[j], counts[j] + 1);
-      }
-    }
-
-    for (uint64_t i=batchSize; i<shardCount * batchSizePerShard; i++) {
+    for (uint64_t i=batchSize; i< batchSize + shardCount * batchSizePerShard; i++) {
       bool available = true;
-      for (uint32_t j=0; j<shardCount; j++) {
-        bool use = available * (counts[j] > 0);
-        obliMove(use, keyInfoVec[i].shardIdx, j);
-        obliMove(use, counts[j], counts[j] - 1);
-        obliMove(use, available, false);
-      }
+      keyInfoVec[i].shardIdx = (i-batchSize)/batchSizePerShard; // dummy key, fixed Index
     }
     
-    std::vector<uint32_t> recoveryArr(shardCount * batchSizePerShard);
-    for (uint32_t i = 0; i < shardCount * batchSizePerShard; ++i) {
+    std::vector<uint32_t> recoveryArr(batchSize + shardCount * batchSizePerShard);
+    for (uint32_t i = 0; i < recoveryArr.size(); ++i) {
       recoveryArr[i] = i;
     }
       
     Algorithm::ParBitonicSortSepPayload(keyInfoVec.begin(), keyInfoVec.end(),
                                         recoveryArr.begin(),
                                         (int)shardCount * 2);
-    std::vector<uint32_t> compactionPrefixSum(shardCount * batchSizePerShard + 1);
+    std::vector<uint32_t> compactionPrefixSum(batchSize + shardCount * batchSizePerShard + 1);
     compactionPrefixSum[0] = 0;
-    for (uint32_t i = 0; i < shardCount * batchSizePerShard; ++i) {
+
+    for (uint32_t i = 0; i < batchSize + shardCount * batchSizePerShard; ++i) {
       compactionPrefixSum[i + 1] = compactionPrefixSum[i] + 1;
+      // This is missing some extra logic here for computing duplicates.
+
       bool isDummy = keyInfoVec[i].hash == 0;
       obliMove(isDummy, compactionPrefixSum[i + 1], compactionPrefixSum[i]); 
     }
     Algorithm::OrCompactSeparateMark(keyInfoVec.begin(), keyInfoVec.end(), 
                                      compactionPrefixSum.begin());
+    keyInfoVec.resize(shardCount * batchSizePerShard);
 
     // At this point we would perform the queries to the shards, but we skip that
     // since we don't want to measure the time of queries here.
@@ -302,7 +293,7 @@ int benchmark_load_balancing(uint64_t B, uint64_t p) {
 int main() {
   for (uint64_t i = 10; i<=20; i++) {
     RUN_TEST_FORKED( (benchmark_load_balancing<uint64_t,uint64_t>(1<<i, NUM_SHARDS)) );    
-   // RUN_TEST_FORKED( (benchmark_load_balancing<uint64_t,Bytes<56>>(1<<i, NUM_SHARDS)) );
+   RUN_TEST_FORKED( (benchmark_load_balancing<uint64_t,Bytes<56>>(1<<i, NUM_SHARDS)) );
   }
 
   return 0;

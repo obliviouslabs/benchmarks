@@ -133,7 +133,6 @@ for implementation in ['Signal_Sharded', 'olabs_rostl_sharded', 'olabs_oram_shar
   
 SUBHEADER("Unordered Map - Query cost breakdown")
 
-
 TITLE(f"Unordered Map - olabs_sharded - Load balance percentage for 8B keys, 56B Values")
 key_bytes = 8
 value_bytes = 56
@@ -150,3 +149,18 @@ w1 = P.loc[
 w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
 w1['Batch_sz'] = w1['Batch_size'].apply(lambda x: f"{x:07d}")
 draw_table(w1, 'N', 'Percentage_lb_time', columns='Batch_sz',highlight=0)
+
+
+HEADER("Load Balancer")
+key_bytes = 8
+value_bytes = 8
+w1 = P.loc[
+  (P['Key_bytes'] == key_bytes)
+  & (P['Value_bytes'] == value_bytes)
+  # & (P['Shards'] == 15)
+  & (P['benchmark_type'] == 'LOADBALANCE')
+  & (P['Latency_us'].notna())
+  & (P['B'] >= (1<<10)) & (P['B'] <= (1<<26))
+].sort_index().copy()
+w1['B'] = w1['B'].apply(lambda x: f"{x:05d}")
+draw_table(w1, 'B', 'Latency_us', highlight=-1)

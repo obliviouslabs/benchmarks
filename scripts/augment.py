@@ -1,0 +1,62 @@
+import pandas as pd
+
+def augmentP(P):
+  # For olabs_oram_sharded, use LOADBALANCE benchmark to compute cost of load balancing.
+  for idx, row in P.loc[
+        (P['benchmark_type'] == 'UnorderedMap') 
+      & (P['implementation'] == 'olabs_oram_sharded')
+      & (P['Key_bytes'] == 8)
+      & (P['Batch_size'] > 15)
+    ].iterrows():
+    lb_row = P.loc[
+      (P['benchmark_type'] == 'LOADBALANCE')
+      & (P['implementation'] == 'olabs_oram')
+      & (P['Key_bytes'] == row['Key_bytes'])
+      # & (P['Value_bytes'] == row['Value_bytes'])
+      # & (P['Shards'] == row['Shards'])
+      & (P['B'] == row['Batch_size'])
+    ]
+    if not lb_row.empty:
+      lb_time = lb_row.iloc[0]['Latency_us']
+      P.at[idx, 'Get_lb_latency_us'] = lb_time
+      P.at[idx, 'Percentage_lb_time'] = lb_time / row['Get_latency_us']
+    else:
+      assert False, f"Missing LOADBALANCE row for olabs_oram_sharded umap: {row.to_dict()}"
+  
+  # Insert computed rows for h2o2 map cost from h2o2 oram cost
+  for idx, row in P.loc[
+      (P['benchmark_type'] == 'RORAM')
+    & (P['implementation'] == 'h2o2')
+    & (P['Key_bytes'] == 8)
+  ].iterrows():
+    new_row = row.copy()
+    new_row['benchmark_type'] = 'UnorderedMap'
+    new_row['Get_latency_us'] = row['Read_latency_us']
+    new_row['Get_max_latency_us'] = row['Read_max_latency_us']
+    new_row['Get_throughput_qps'] = row['Read_throughput_qps']
+    new_row['Initialization_time_us'] = row['Initialization_zeroed_time_us'] + row['N'] * row['Read_latency_us']
+
+    P = pd.concat([P, pd.DataFrame([new_row])], ignore_index=True)
+    new_row = new_row.copy()
+    if row['Value_bytes'] == 56:
+      new_row['Value_bytes'] = 32
+      new_row['Key_bytes'] = 32
+      # Rough optimistic estimate of memory usage:
+      new_row['Memory_kb'] = row['Memory_kb'] * (8 + 32) // (8 + 56)
+    P = pd.concat([P, pd.DataFrame([new_row])], ignore_index=True)
+
+  # Insert computed rows for signal icelake cost for 32b keys/values
+  for idx, row in P.loc[
+      (P['benchmark_type'] == 'UnorderedMap')
+    & (
+      (P['implementation'] == 'Signal')
+      | (P['implementation'] == 'Signal_Sharded')
+    )
+    & (P['Key_bytes'] == 8)
+    & (P['Value_bytes'] == 56)
+  ].iterrows():
+    new_row = row.copy()
+    new_row['Key_bytes'] = 32
+    new_row['Value_bytes'] = 32
+    P = pd.concat([P, pd.DataFrame([new_row])], ignore_index=True)
+  return P

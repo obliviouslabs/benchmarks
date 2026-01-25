@@ -24,12 +24,14 @@ public:
         for (size_t i = 0; i < n; i++)
                 raw_data[i].id = i;
         std::shuffle(raw_data.begin(), raw_data.end(), gen);
+        oram = new ORAM::ObliviousRAM<size_t, ORAM::Block<IndexType, 16 - sizeof(IndexType)>>(raw_data.begin(), raw_data.end());
     }
 
     void TearDown(const ::benchmark::State &) override
     {
         raw_data.clear();
         raw_data.shrink_to_fit();
+        delete oram;
     }
 };
 
@@ -39,6 +41,8 @@ BENCHMARK_DEFINE_F(ORAMInitFixture16, ORAM)
     for (auto _ : state)
     {
         oram = new ORAM::ObliviousRAM<size_t, ORAM::Block<IndexType, 16 - sizeof(IndexType)>>(raw_data.begin(), raw_data.end());
+        (*oram)[0];
+        (*oram)[1];
         delete oram;
     }
 }

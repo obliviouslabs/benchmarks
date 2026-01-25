@@ -39,6 +39,8 @@ BENCHMARK_DEFINE_F(ORAMInitFixture64, ORAM)
     for (auto _ : state)
     {
         oram = new ORAM::ObliviousRAM<size_t, ORAM::Block<IndexType, 64 - sizeof(IndexType)>>(raw_data.begin(), raw_data.end());
+        (*oram)[0];
+        (*oram)[1];
         delete oram;
     }
 }

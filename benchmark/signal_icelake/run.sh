@@ -16,10 +16,10 @@ make docker_tests
 # Parse the results
 mkdir -p "$base_dir/logs/$run_id"
 cp "$run_folder/benchmarks/path_oram.test.out" "$base_dir/logs/$run_id/path_oram.test.out"
-cp "$run_folder/benchmarks/loaded_table.test.out" "$base_dir/logs/$run_id/loaded_table.test.out"
-cp "$run_folder/benchmarks/loaded_sharded_table.test.out" "$base_dir/logs/$run_id/loaded_sharded_table.test.out"
+# cp "$run_folder/benchmarks/loaded_table.test.out" "$base_dir/logs/$run_id/loaded_table.test.out"
+# cp "$run_folder/benchmarks/loaded_sharded_table.test.out" "$base_dir/logs/$run_id/loaded_sharded_table.test.out"
 
 echo "" > "$results_file"
 python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/path_oram.test.out" >> "$results_file"
-python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/loaded_table.test.out" >> "$results_file"
-python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/loaded_sharded_table.test.out" >> "$results_file"
+# python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/loaded_table.test.out" >> "$results_file"
+# python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/loaded_sharded_table.test.out" >> "$results_file"
