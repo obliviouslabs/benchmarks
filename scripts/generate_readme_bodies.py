@@ -10,8 +10,10 @@
 # ///
 import pandas as pd
 from utils import load_df, draw_table, HEADER, SUBHEADER, TITLE, NL, NOTES, HORIZONTAL_LINE
+from augment import augmentP
 
 P = load_df()
+P = augmentP(P.copy())
 
 HEADER("ORAM")
 SUBHEADER("NRORAM")
@@ -129,4 +131,22 @@ for implementation in ['Signal_Sharded', 'olabs_rostl_sharded', 'olabs_oram_shar
 
 
   
-  
+SUBHEADER("Unordered Map - Query cost breakdown")
+
+
+TITLE(f"Unordered Map - olabs_sharded - Load balance percentage for 8B keys, 56B Values")
+key_bytes = 8
+value_bytes = 56
+
+w1 = P.loc[
+  (P['Key_bytes'] == key_bytes)
+  & (P['Value_bytes'] == value_bytes)
+  & (P['benchmark_type'] == 'UnorderedMap')
+  & (P['implementation'] == 'olabs_oram_sharded')
+  & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
+  & (P['Shards'] == 15)
+].sort_index().copy()
+
+w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
+w1['Batch_sz'] = w1['Batch_size'].apply(lambda x: f"{x:07d}")
+draw_table(w1, 'N', 'Percentage_lb_time', columns='Batch_sz',highlight=0)

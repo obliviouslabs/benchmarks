@@ -9,8 +9,11 @@
 # ///
 import pandas as pd
 from utils import get_percentile_factor, load_df, draw_figure
+from augment import augmentP
 
 P = load_df()
+P = augmentP(P.copy())
+
 
 # NRORAM plots
 w1 = P.loc[

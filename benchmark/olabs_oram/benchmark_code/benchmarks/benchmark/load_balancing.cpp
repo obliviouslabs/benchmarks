@@ -293,9 +293,9 @@ int benchmark_load_balancing(uint64_t B, uint64_t p) {
   double avg_time_ns = (double)total_time_ns / (double)repetitions;
   double avg_time_snoopy_ns = (double)total_time_snoopy_ns / (double)repetitions;
   
-  REPORT_LINE("LOADBALANCE", "olabs_oram", "B := %zu | Key_bytes := %zu | Value_bytes := %zu |  Latency_us := %.2f | Throughput_qps := %.2f", B, sizeof(K), sizeof(V), avg_time_ns / 1000.0, B * (1000000000.0 / avg_time_ns));
+  REPORT_LINE("LOADBALANCE", "olabs_oram", "B := %zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %zu | Latency_us := %.2f | Throughput_qps := %.2f", B, sizeof(K), sizeof(V), p, avg_time_ns / 1000.0, B * (1000000000.0 / avg_time_ns));
 
-  REPORT_LINE("LOADBALANCE", "snoopy", "B := %zu | Key_bytes := %zu | Value_bytes := %zu |  Latency_us := %.2f | Throughput_qps := %.2f", B, sizeof(K), sizeof(V), avg_time_snoopy_ns / 1000.0, B * (1000000000.0 / avg_time_snoopy_ns));
+  REPORT_LINE("LOADBALANCE", "snoopy", "B := %zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %zu | Latency_us := %.2f | Throughput_qps := %.2f", B, sizeof(K), sizeof(V), p, avg_time_snoopy_ns / 1000.0, B * (1000000000.0 / avg_time_snoopy_ns));
   return 0;  
 }
 

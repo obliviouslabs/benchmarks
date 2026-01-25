@@ -49,7 +49,9 @@ def simplify_columns(df: pd.DataFrame) -> pd.DataFrame:
 def gather_points_from_files(files) -> pd.DataFrame:
   lines = []
   for file in files:
-    with open(file, "r") as f:
+    filename = __file__.split('/')[:-1] + ["..", file]
+    filename = '/'.join(filename)
+    with open(filename, "r") as f:
       lines += f.readlines()
   
   pts = list()
@@ -57,7 +59,6 @@ def gather_points_from_files(files) -> pd.DataFrame:
     try:
       if line.startswith("#") or line.strip() == "": continue
       pt = json.loads(line)
-      assert 'N' in pt.keys(), f"N not in pt keys: {pt.keys()}"
       assert 'implementation' in pt.keys(), f"implementation not in pt keys: {pt.keys()}"
       assert 'benchmark_type' in pt.keys(), f"benchmark_type not in pt keys: {pt.keys()}"
     except Exception as e:
@@ -182,13 +183,14 @@ def draw_table(data: pd.DataFrame,
       for c2 in tbl.columns:
         if c2 in used:
           continue
-        if c in c2:
+        if c in str(c2):
           cur.append(c2)
           used.add(c2)
       cur = sorted(cur)
       for c in cur:
         present.append(c)
     rest = [c for c in tbl.columns if c not in present]
+    rest = sorted(rest)
     tbl = tbl.reindex(columns=present + rest)
   
   md = tbl.to_markdown(tablefmt="github", stralign="right", numalign="right", disable_numparse=True, preserve_whitespace=True)
