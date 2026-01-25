@@ -30,27 +30,28 @@ draw_table(w1, 'N', 'Read_latency_us')
 NL(2)
 
 SUBHEADER("RORAM")
-TITLE("RORAM - Sequential Read Latency (us) for 8B Values")
-w1 = P.loc[
-  (P['Key_bytes'] == 8)
-  & (P['Value_bytes'] == 8) 
-  & (P['benchmark_type'] == 'RORAM') 
-  & (P['Read_latency_us'].notna()) 
-  & (P['N'] >= (1<<10)) & (P['N'] <= (1<<28))
-].sort_index().copy()
-w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 1)]
-w3 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)]
-w3.loc[w3['implementation'] == 'h2o2', 'implementation'] = 'h2o2-32'
-w1 = w1.loc[(P['implementation'] != 'h2o2')]
-w1 = pd.concat([w1, w2, w3], ignore_index=True)
-w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-draw_table(w1, 'N', 'Read_latency_us')
-NOTES("""
-> [!info]
-> All implementations are sequential, except H2O2-32c which runs with 32 cores. 
-> H2O2 latency is amortized over N operations, the maximum latency is `N * avg_latency`.
->
-""")
+for value_bytes in [8, 56]:
+  TITLE(f"RORAM - Sequential Read Latency (us) for {value_bytes}B Values")
+  w1 = P.loc[
+    (P['Key_bytes'] == 8)
+    & (P['Value_bytes'] == value_bytes) 
+    & (P['benchmark_type'] == 'RORAM') 
+    & (P['Read_latency_us'].notna()) 
+    & (P['N'] >= (1<<10)) & (P['N'] <= (1<<28))
+  ].sort_index().copy()
+  w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 1)]
+  w3 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)]
+  w3.loc[w3['implementation'] == 'h2o2', 'implementation'] = 'h2o2-32'
+  w1 = w1.loc[(P['implementation'] != 'h2o2')]
+  w1 = pd.concat([w1, w2, w3], ignore_index=True)
+  w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
+  draw_table(w1, 'N', 'Read_latency_us')
+  NOTES("""
+  > [!info]
+  > All implementations are sequential, except H2O2-32c which runs with 32 cores. 
+  > H2O2 latency is amortized over N operations, the maximum latency is `N * avg_latency`.
+  >
+  """)
 
 HORIZONTAL_LINE()
 

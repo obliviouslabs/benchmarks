@@ -16,8 +16,8 @@ int path_oram_8_8(size_t N)
     size_t cap = N; 
     size_t blocks = (N+BLOCK_DATA_SIZE_QWORDS-1)/BLOCK_DATA_SIZE_QWORDS;
     size_t QUERIES = N;
-    if (QUERIES > 1000000) {
-      QUERIES = 1000000;
+    if (QUERIES > 10000000) {
+      QUERIES = 10000000;
     }
 
     int memBefore = getMemValue();
