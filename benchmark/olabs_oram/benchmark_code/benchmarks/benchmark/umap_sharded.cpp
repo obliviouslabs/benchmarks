@@ -1,8 +1,10 @@
 #include "./common.h"
 using namespace std;
 
-#include "odsl/par_omap.hpp"
 #include "odsl/omap_short_kv.hpp"
+#define private public
+#include "odsl/par_omap.hpp"
+#undef private
 
 const uint64_t NUM_SHARDS = 15;
 
@@ -55,11 +57,16 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
       new EM::Backend::MemServerBackend(BackendSize);
   // Create and initialize a hashtable
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
-  size_t num_queries = N;
-  while (num_queries*batch_size > 250000000) { // Keep test time reasonable for large batches
-    num_queries /= 2;
+  uint64_t repetitions = 1000;
+
+  if (batch_size > 8192) {
+    repetitions = 100;
   }
-  size_t queries_batch_size = batch_size;
+  if (N > (1ULL<<20)) {
+    repetitions /= 2;
+  }
+
+  size_t num_queries = repetitions * batch_size;
   
   int memBefore = getMemValue();
   uint64_t start_ns_create = current_time_ns();
@@ -94,26 +101,35 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 
   uint64_t end_ns_create = current_time_ns();
 
+  uint64_t main_timer = 0;
+  uint64_t writeback_timer = 0;
   uint64_t start_query_time = current_time_ns();
-  std::vector<typename BytesHelper<KEY_SIZE>::type> queries(queries_batch_size);
-  std::vector<typename BytesHelper<VAL_SIZE>::type> results(queries_batch_size);
+  std::vector<typename BytesHelper<KEY_SIZE>::type> queries(batch_size);
+  std::vector<typename BytesHelper<VAL_SIZE>::type> results(batch_size);
   uint64_t curr = N - 1;
-  for (uint64_t i=0; i<num_queries; i+=queries_batch_size) {    
-    for (uint64_t j=0; j<queries_batch_size; j++) {
+  for (uint64_t i=0; i<repetitions; i++) {
+    for (uint64_t j=0; j<batch_size; j++) {
       queries[j] = BytesHelper<KEY_SIZE>::key_from_u64(curr);
       curr--;
     }
+    uint64_t start_timer = current_time_ns();
     std::vector<uint8_t> findExistFlag =
-      oram.FindBatch(queries.begin(), queries.end(), results.begin());
+      oram.FindBatchDeferWriteBack(queries.begin(), queries.end(), results.begin());
+    uint64_t mid_timer = current_time_ns();
+    oram.WriteBack();
+    uint64_t end_timer = current_time_ns();
+    main_timer += (mid_timer - start_timer);
+    writeback_timer += (end_timer - mid_timer);
   }
   uint64_t end_query_time = current_time_ns();
 
   int memAfter = getMemValue();
 
   double avg_ns_success = (double)(end_query_time - start_query_time) / num_queries;
+  double avg_ns_main = (double)main_timer / num_queries;
+  double avg_ns_writeback = (double)writeback_timer / num_queries;
 
-  REPORT_LINE("UnorderedMap", "olabs_oram_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, (end_ns_create - start_ns_create) / 1000.0, avg_ns_success / 1000.0 * batch_size, 1000000000.0 / avg_ns_success, memAfter - memBefore);
-
+  REPORT_LINE("UnorderedMap_Burst", "olabs_oram_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Get_burst_latency_us := %.2f | Get_burst_throughput_qps := %.2f | Get_writeback_latency_us := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, (end_ns_create - start_ns_create) / 1000.0, avg_ns_success / 1000.0 * batch_size, 1000000000.0 / avg_ns_success, avg_ns_main / 1000.0 * batch_size, 1000000000.0 / avg_ns_main, avg_ns_writeback / 1000.0 * batch_size, memAfter - memBefore);
   return 0;
 }
 
