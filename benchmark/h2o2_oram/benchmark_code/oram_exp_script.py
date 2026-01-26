@@ -7,7 +7,7 @@ target_dir = sys.argv[1]
 block_sizes = [16, 64]
 thread_nums = [1, 32]
 
-for threads in thread_nums:
+for threads in thread_nums[::-1]:
   for b in block_sizes:
     cnt_ub = 28
     if threads == 1:
