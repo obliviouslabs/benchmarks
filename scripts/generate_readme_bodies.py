@@ -149,7 +149,7 @@ w1 = P.loc[
 
 w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
 w1['Batch_sz'] = w1['Batch_size'].apply(lambda x: f"{x:07d}")
-draw_table(w1, 'N', 'Percentage_lb_time', columns='Batch_sz',highlight=0)
+draw_table(w1, 'N', 'Percentage_batch_lb', columns='Batch_sz',highlight=0)
 
 
 HEADER("Load Balancer")

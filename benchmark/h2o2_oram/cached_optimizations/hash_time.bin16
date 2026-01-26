@@ -179,3 +179,5 @@ n: 16777216 op_num: 16777216 bucket_time: 18594.7
 		n: 262144 op_num: 16777216 bucket_time: 2168.17
 		n: 262144 op_num: 16777216 two_tier_time: 275.079, epsilon: 4
 n: 16777216 op_num: 16777216 two_tier_time: 29832.7, epsilon: 64
+n: 33554432 op_num: 33554432 bucket_time: 48225.3
+		n: 16777216 op_num: 33554432 cuckoo_time: 483066

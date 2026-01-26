@@ -92,6 +92,9 @@ def draw_figure(
     sort=False
   ).copy()
   # Sort columns by the value of the highest common point between columns
+  if len(tbl) == 0:
+    print(f"Warning: empty table for figure {title}")
+    return
   common_xs = set.intersection(*[set(tbl.index[~tbl[col].isna()]) for col in tbl.columns])
   col_order = []
   col_values = {}

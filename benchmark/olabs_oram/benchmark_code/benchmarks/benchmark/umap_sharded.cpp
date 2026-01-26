@@ -135,7 +135,7 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   double avg_ns_main = (double)main_timer / num_queries;
   double avg_ns_writeback = (double)writeback_timer / num_queries;
 
-  REPORT_LINE("UnorderedMap_Burst", "olabs_oram_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Get_burst_latency_us := %.2f | Get_burst_throughput_qps := %.2f | Get_writeback_latency_us := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, (end_ns_create - start_ns_create) / 1000.0, avg_ns_success / 1000.0 * batch_size, 1000000000.0 / avg_ns_success, avg_ns_main / 1000.0 * batch_size, 1000000000.0 / avg_ns_main, avg_ns_writeback / 1000.0 * batch_size, memAfter - memBefore);
+  REPORT_LINE("UnorderedMap", "olabs_oram_sharded", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | Shards := %d | Batch_size := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Get_burst_latency_us := %.2f | Get_burst_throughput_qps := %.2f | Get_writeback_latency_us := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, NUM_SHARDS, batch_size, (end_ns_create - start_ns_create) / 1000.0, avg_ns_success / 1000.0 * batch_size, 1000000000.0 / avg_ns_success, avg_ns_main / 1000.0 * batch_size, 1000000000.0 / avg_ns_main, avg_ns_writeback / 1000.0 * batch_size, memAfter - memBefore);
   return 0;
 }
 

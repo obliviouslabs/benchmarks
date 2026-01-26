@@ -18,10 +18,11 @@ def augmentP(P):
     ]
     if not lb_row.empty:
       lb_time = lb_row.iloc[0]['Latency_us']
+      accurate_latency = row['Get_burst_latency_us'] + row['Get_writeback_latency_us']
       P.at[idx, 'Get_lb_latency_us'] = lb_time
-      P.at[idx, 'Percentage_lb_time'] = lb_time / row['Get_latency_us']
-      # P.at[idx, 'Percentage_lb_online'] = (row['Get_burst_latency_us'] / row['Get_latency_us'])
-      # P.at[idx, 'Percentage_lb_offline'] = (row['Get_writeback_latency_us'] / row['Get_latency_us'])
+      P.at[idx, 'Percentage_batch_lb'] = lb_time / accurate_latency
+      P.at[idx, 'Percentage_batch_online'] = (row['Get_burst_latency_us'] / accurate_latency)
+      P.at[idx, 'Percentage_batch_offline'] = (row['Get_writeback_latency_us'] / accurate_latency)
     else:
       assert False, f"Missing LOADBALANCE row for olabs_oram_sharded umap: {row.to_dict()}"
   

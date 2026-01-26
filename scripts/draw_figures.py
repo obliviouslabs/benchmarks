@@ -322,7 +322,7 @@ common_args = {
 
 
 
-draw_figure(w1, 'N', 'Percentage_lb_offline',
+draw_figure(w1, 'N', 'Percentage_batch_lb',
   f"UMAP - Batch Breakdown - Load Balancing (8b key, 56b value)",
   "Batch_size",
   False,
@@ -330,19 +330,19 @@ draw_figure(w1, 'N', 'Percentage_lb_offline',
   **common_args
 )
 
-# draw_figure(w1, 'N', 'Percentage_lb_time',
-#   f"UMAP - Batch Breakdown - Online (8b key, 56b value)",
-#   "Batch_size",
-#   False,
-#   ylabel='Fraction of time spent for query response vs Batch Size',
-#   **common_args
-# )
+draw_figure(w1, 'N', 'Percentage_batch_offline',
+  f"UMAP - Batch Breakdown - Online (8b key, 56b value)",
+  "Batch_size",
+  False,
+  ylabel='Fraction of time spent for query response vs Batch Size',
+  **common_args
+)
 
-# draw_figure(w1, 'N', 'Percentage_lb_online',
-#   f"UMAP - Batch Breakdown - Offline  (8b key, 56b value)",
-#   "Batch_size",
-#   False,
-#   ylabel='Fraction of time spent in maintenance vs Batch Size',
-#   **common_args
-# )
+draw_figure(w1, 'N', 'Percentage_batch_online',
+  f"UMAP - Batch Breakdown - Offline  (8b key, 56b value)",
+  "Batch_size",
+  False,
+  ylabel='Fraction of time spent in maintenance vs Batch Size',
+  **common_args
+)
 
