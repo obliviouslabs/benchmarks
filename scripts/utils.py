@@ -76,7 +76,14 @@ def load_df():
 
 mpl.rcParams['axes.autolimit_mode'] = 'round_numbers'
 
-def draw_figure(data: pd.DataFrame, x_name='x', y_name='y', title="", columns='implementation', sort_asc=True, /, **kwargs):
+def draw_figure(
+    data: pd.DataFrame, 
+    x_name='x',
+    y_name='y',
+    title="",
+    columns='implementation',
+    sort_asc=True,
+    /, **kwargs):
   tbl = data.pivot_table(
     index=x_name,
     columns=columns,

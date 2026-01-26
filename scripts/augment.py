@@ -20,10 +20,13 @@ def augmentP(P):
       lb_time = lb_row.iloc[0]['Latency_us']
       P.at[idx, 'Get_lb_latency_us'] = lb_time
       P.at[idx, 'Percentage_lb_time'] = lb_time / row['Get_latency_us']
+      # P.at[idx, 'Percentage_lb_online'] = (row['Get_burst_latency_us'] / row['Get_latency_us'])
+      # P.at[idx, 'Percentage_lb_offline'] = (row['Get_writeback_latency_us'] / row['Get_latency_us'])
     else:
       assert False, f"Missing LOADBALANCE row for olabs_oram_sharded umap: {row.to_dict()}"
   
   # Insert computed rows for h2o2 map cost from h2o2 oram cost
+  new_rows = []
   for idx, row in P.loc[
       (P['benchmark_type'] == 'RORAM')
     & (P['implementation'] == 'h2o2')
@@ -36,14 +39,18 @@ def augmentP(P):
     new_row['Get_throughput_qps'] = row['Read_throughput_qps']
     new_row['Initialization_time_us'] = row['Initialization_zeroed_time_us'] + row['N'] * row['Read_latency_us']
 
-    P = pd.concat([P, pd.DataFrame([new_row])], ignore_index=True)
+    new_rows.append(new_row)
     new_row = new_row.copy()
     if row['Value_bytes'] == 56:
       new_row['Value_bytes'] = 32
       new_row['Key_bytes'] = 32
       # Rough optimistic estimate of memory usage:
       new_row['Memory_kb'] = row['Memory_kb'] * (8 + 32) // (8 + 56)
-    P = pd.concat([P, pd.DataFrame([new_row])], ignore_index=True)
+    new_rows.append(new_row)
+
+  add = pd.DataFrame(new_rows).dropna(axis=1, how="all")
+  P = pd.concat([P.copy(), add], ignore_index=True)
+  new_rows = []
 
   # Insert computed rows for signal icelake cost for 32b keys/values
   for idx, row in P.loc[
@@ -58,5 +65,8 @@ def augmentP(P):
     new_row = row.copy()
     new_row['Key_bytes'] = 32
     new_row['Value_bytes'] = 32
-    P = pd.concat([P, pd.DataFrame([new_row])], ignore_index=True)
+    new_rows.append(new_row)
+
+  add = pd.DataFrame(new_rows).dropna(axis=1, how="all")
+  P = pd.concat([P.copy(), add], ignore_index=True)
   return P

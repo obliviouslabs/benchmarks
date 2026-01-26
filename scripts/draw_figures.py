@@ -55,14 +55,28 @@ draw_figure(w1, 'N', 'Read_throughput_qps',
 
 
 # RORAM plots
-for val_bytes in [8, 56]:
+for val_bytes in [8, 32, 56]:
   w1 = P.loc[
     (P['Key_bytes'] == 8)
     & (P['Value_bytes'] == val_bytes)
     & (P['benchmark_type'] == 'RORAM')
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<28))
-    & ((P['implementation'] != 'h2o2') | (P['sys_lcores'] == 1))
   ].sort_index().copy()
+
+  w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)]
+  w2_avg = w2.copy()
+  w2_percentile = w2.copy()
+  w2_percentile['Read_latency_us'] = w2_percentile['Read_latency_us'] * get_percentile_factor(0.90)
+  w2_avg.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (average)'
+  w2_percentile.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (0.90 percentile)'
+  w3 = w1.copy().loc[(P['implementation'] != 'h2o2')]
+
+  w1 = pd.concat([w2_avg, w2_percentile, w3], ignore_index=True)
+  w1p = pd.concat([w2, w3], ignore_index=True)
+  # w1 = pd.concat([w2_avg, w2_percentile, w3], ignore_index=True)
+  # w1_i = pd.concat([w2, w3, w4], ignore_index=True)
+
+
   common_args = {
     "xlabel": 'N',
     "xscale": 'log',
@@ -78,17 +92,17 @@ for val_bytes in [8, 56]:
               ylabel='$\\mu s$',
               **common_args
   )
-  draw_figure(w1, 'N', 'Initialization_zeroed_time_us',
+  draw_figure(w1p, 'N', 'Initialization_zeroed_time_us',
               f"ORAM - Initialization Time ({val_bytes}b value, Zeroed)",
               ylabel='$\\mu s$',
               **common_args
   )
-  draw_figure(w1, 'N', 'Memory_kb',
+  draw_figure(w1p, 'N', 'Memory_kb',
               f"ORAM - Memory Usage ({val_bytes}b value)",
               ylabel='KB',
               **common_args
   )
-  draw_figure(w1, 'N', 'Read_throughput_qps',
+  draw_figure(w1p, 'N', 'Read_throughput_qps',
               f"ORAM - Read Throughput ({val_bytes}b value)",
               ylabel='Queries per second',
               **common_args
@@ -105,12 +119,12 @@ for (key_bytes, val_bytes) in [(8,8), (8,56), (32, 32)]:
     & (P['Shards'].isna())
     & (P['implementation'] != 'mc_oblivious') # too slow, makes graphs ugly
   ].sort_index().copy()
-  w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 1)]
+  w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)]
   w2_avg = w2.copy()
-  # w2_percentile = w2.copy()
-  # w2_percentile['Get_latency_us'] = w2_percentile['Get_latency_us'] * get_percentile_factor(0.90)
+  w2_percentile = w2.copy()
+  w2_percentile['Get_latency_us'] = w2_percentile['Get_latency_us'] * get_percentile_factor(0.90)
   w2_avg.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (average)'
-  # w2_percentile.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (0.90 percentile)'
+  w2_percentile.loc[w2['implementation'] == 'h2o2', 'implementation'] = 'h2o2 (0.90 percentile)'
   w3 = w1.copy().loc[(P['implementation'] != 'h2o2')]
 
   # Add Naive Initialization time (N * insertion_time) to olabs_oram
@@ -118,9 +132,10 @@ for (key_bytes, val_bytes) in [(8,8), (8,56), (32, 32)]:
   w4['Initialization_time_us'] = w4['N'] * w4['Get_latency_us'] * 2
   w4["implementation"] = w4.apply(lambda r: f"{r['implementation']}-naive", axis=1)
   
-  w1 = pd.concat([w2_avg, w3], ignore_index=True)
-  # w1 = pd.concat([w2_avg, w2_percentile, w3], ignore_index=True)
-  w1_i = pd.concat([w2, w3, w4], ignore_index=True)
+  # w1 = pd.concat([w2_avg, w3], ignore_index=True)
+  w1 = pd.concat([w2_avg, w2_percentile, w3], ignore_index=True)
+  w1i = pd.concat([w2, w3, w4], ignore_index=True)
+  w1p = pd.concat([w2, w3], ignore_index=True)
 
 
   common_args = {
@@ -138,17 +153,17 @@ for (key_bytes, val_bytes) in [(8,8), (8,56), (32, 32)]:
               ylabel='$\\mu s$',
               **common_args
   )
-  draw_figure(w1_i, 'N', 'Initialization_time_us',
+  draw_figure(w1i, 'N', 'Initialization_time_us',
               f"UMAP - Initialization Time ({key_bytes}b key, {val_bytes}b value)",
               ylabel='$\\mu s$',
               **common_args
   )
-  draw_figure(w1, 'N', 'Memory_kb',
+  draw_figure(w1p, 'N', 'Memory_kb',
               f"UMAP - Memory Usage ({key_bytes}b key, {val_bytes}b value)",
               ylabel='KB',
               **common_args
   )
-  draw_figure(w1, 'N', 'Get_throughput_qps',
+  draw_figure(w1p, 'N', 'Get_throughput_qps',
               f"UMAP - Get Throughput ({key_bytes}b key, {val_bytes}b value)",
               ylabel='Queries per second',
               **common_args
@@ -282,3 +297,52 @@ for val_bytes in [8, 56]:
     ylabel='Queries per second',
     **common_args
   )
+
+w1 = P.loc[
+  (P['Key_bytes'] == 8)
+  & (P['Value_bytes'] == 56)
+  & (P['benchmark_type'] == 'UnorderedMap')
+  & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
+  & (
+    (P['Shards'] == 15)
+   |((P['implementation'] == 'olabs_oram_sharded'))
+  )
+].sort_index().copy()
+
+common_args = {
+  "xlabel": 'N',
+  "xscale": 'log',
+  # "yscale": 'log',
+  "xlim": (1000, 100_000_000),
+  "ylim": (0, 1),
+  "tight_layout": {},
+  "legend": {},
+  "grid": True
+}
+
+
+
+draw_figure(w1, 'N', 'Percentage_lb_offline',
+  f"UMAP - Batch Breakdown - Load Balancing (8b key, 56b value)",
+  "Batch_size",
+  False,
+  ylabel='Fraction of time spent in load balancing vs Batch Size',
+  **common_args
+)
+
+# draw_figure(w1, 'N', 'Percentage_lb_time',
+#   f"UMAP - Batch Breakdown - Online (8b key, 56b value)",
+#   "Batch_size",
+#   False,
+#   ylabel='Fraction of time spent for query response vs Batch Size',
+#   **common_args
+# )
+
+# draw_figure(w1, 'N', 'Percentage_lb_online',
+#   f"UMAP - Batch Breakdown - Offline  (8b key, 56b value)",
+#   "Batch_size",
+#   False,
+#   ylabel='Fraction of time spent in maintenance vs Batch Size',
+#   **common_args
+# )
+
