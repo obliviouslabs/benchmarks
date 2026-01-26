@@ -59,8 +59,14 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
   uint64_t repetitions = 1000;
 
-  if (batch_size > 8192) {
+  if (batch_size >= 8192) {
     repetitions = 100;
+  }
+  if (batch_size >= 65536) {
+    repetitions = 50;
+  }
+  if (batch_size >= (1ULL<<20)) {
+    repetitions = 30;
   }
   if (N > (1ULL<<20)) {
     repetitions /= 2;
