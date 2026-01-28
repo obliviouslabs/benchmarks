@@ -166,3 +166,48 @@ n: 16777216 op_num: 16777216 bucket_time: 52369.6
 		n: 8388608 op_num: 16777216 two_tier_time: 25516.5, epsilon: 64
 		n: 4194304 op_num: 16777216 cuckoo_time: 88957.4
 n: 16777216 op_num: 16777216 bucket_time: 99427.7
+n: 16777216 op_num: 16777216 bucket_time: 47606.6
+		n: 4194304 op_num: 16777216 cuckoo_time: 92915
+		n: 4194304 op_num: 16777216 bucket_time: 17058.4
+		n: 4194304 op_num: 16777216 two_tier_time: 13381.8, epsilon: 32
+		n: 2097152 op_num: 16777216 cuckoo_time: 42581.5
+		n: 2097152 op_num: 16777216 bucket_time: 11652.1
+		n: 2097152 op_num: 16777216 two_tier_time: 6056.21, epsilon: 32
+		n: 1048576 op_num: 16777216 cuckoo_time: 22346.4
+		n: 1048576 op_num: 16777216 bucket_time: 8800.91
+		n: 1048576 op_num: 16777216 two_tier_time: 2890.02, epsilon: 16
+		n: 524288 op_num: 16777216 cuckoo_time: 12567.3
+n: 16777216 op_num: 16777216 bucket_time: 99483.5
+n: 16777216 op_num: 16777216 bucket_time: 47221.2
+		n: 524288 op_num: 16777216 cuckoo_time: 12443.6
+		n: 524288 op_num: 16777216 bucket_time: 7077.4
+		n: 524288 op_num: 16777216 two_tier_time: 1186.68, epsilon: 4
+		n: 262144 op_num: 16777216 cuckoo_time: 7136.3
+		n: 262144 op_num: 16777216 bucket_time: 4754.79
+		n: 262144 op_num: 16777216 two_tier_time: 397.947, epsilon: 4
+n: 16777216 op_num: 16777216 two_tier_time: 61280, epsilon: 64
+n: 33554432 op_num: 33554432 bucket_time: 108781
+		n: 16777216 op_num: 33554432 cuckoo_time: 464228
+		n: 16777216 op_num: 33554432 bucket_time: 65128.7
+		n: 16777216 op_num: 33554432 two_tier_time: 61204.2, epsilon: 64
+		n: 8388608 op_num: 33554432 cuckoo_time: 203087
+		n: 8388608 op_num: 33554432 bucket_time: 37480.5
+		n: 8388608 op_num: 33554432 two_tier_time: 25504.8, epsilon: 64
+		n: 4194304 op_num: 33554432 cuckoo_time: 95138.1
+		n: 4194304 op_num: 33554432 bucket_time: 25181.9
+		n: 4194304 op_num: 33554432 two_tier_time: 13013.4, epsilon: 32
+		n: 2097152 op_num: 33554432 cuckoo_time: 50150.5
+n: 33554432 op_num: 33554432 bucket_time: 109059
+		n: 2097152 op_num: 33554432 cuckoo_time: 49308.7
+		n: 2097152 op_num: 33554432 bucket_time: 19137.1
+		n: 2097152 op_num: 33554432 two_tier_time: 6006.3, epsilon: 32
+		n: 1048576 op_num: 33554432 cuckoo_time: 28306.4
+		n: 1048576 op_num: 33554432 bucket_time: 15673.4
+		n: 1048576 op_num: 33554432 two_tier_time: 2793.39, epsilon: 4
+		n: 524288 op_num: 33554432 cuckoo_time: 17160.4
+		n: 524288 op_num: 33554432 bucket_time: 13437.1
+		n: 524288 op_num: 33554432 two_tier_time: 1164.42, epsilon: 4
+		n: 262144 op_num: 33554432 cuckoo_time: 10604.8
+		n: 262144 op_num: 33554432 bucket_time: 9556.96
+		n: 262144 op_num: 33554432 two_tier_time: 404.161, epsilon: 4
+n: 33554432 op_num: 33554432 two_tier_time: 135898, epsilon: 128

@@ -5,15 +5,16 @@ from utils import parse_mean_time_from_outlines, report, run_process_registering
 
 target_dir = sys.argv[1]
 block_sizes = [16, 64]
-thread_nums = [1, 32]
+# thread_nums = [1, 32]
+thread_nums = [32]
 
-for threads in thread_nums[::-1]:
+for threads in thread_nums:
   for b in block_sizes:
-    cnt_ub = 28
+    cnt_ub = 26
     if threads == 1:
       cnt_ub = 24
     for n_base in range(10, cnt_ub+1):
-      repetitions = 3 if threads <= 4 else 5
+      repetitions = 3
       n = 2**n_base 
       file_name = f"{target_dir}/results/results_{n}_{b}_{threads}.json"
       if check_if_alread_ran(file_name):

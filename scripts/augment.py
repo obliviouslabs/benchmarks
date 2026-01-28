@@ -1,5 +1,7 @@
 import pandas as pd
 
+from utils import get_percentile_factor
+
 def augmentP(P):
   # For olabs_oram_sharded, use LOADBALANCE benchmark to compute cost of load balancing.
   for idx, row in P.loc[
@@ -52,6 +54,15 @@ def augmentP(P):
   add = pd.DataFrame(new_rows).dropna(axis=1, how="all")
   P = pd.concat([P.copy(), add], ignore_index=True)
   new_rows = []
+
+  # Insert computed 90% percentiles for h2o2
+  for idx, row in P.loc[
+    (P['implementation'] == 'h2o2')
+  ].iterrows():
+    if not pd.isna(row['Get_latency_us']):
+      P.at[idx, 'Get_90pct_latency_us'] = row['Get_latency_us'] * get_percentile_factor(0.90)
+    if not pd.isna(row['Read_latency_us']):
+      P.at[idx, 'Read_90pct_latency_us'] = row['Read_latency_us'] * get_percentile_factor(0.90)
 
   # Insert computed rows for signal icelake cost for 32b keys/values
   for idx, row in P.loc[

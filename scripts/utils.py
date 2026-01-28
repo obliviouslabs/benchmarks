@@ -14,7 +14,7 @@ def simplify_columns(df: pd.DataFrame) -> pd.DataFrame:
       try:
         if pd.isna(row):
           continue
-        if row is None or row.strip() == "":
+        if row is None or row.__class__ == str and row.strip() == "":
           assert False 
         w = int(row)
         if str(int(row)) != str(row):
@@ -32,7 +32,7 @@ def simplify_columns(df: pd.DataFrame) -> pd.DataFrame:
       try:
         if pd.isna(row):
           continue
-        if row is None or row.strip() == "":
+        if row is None or row.__class__ == str and row.strip() == "":
           assert False
         w = float(row)
       except Exception as e:
@@ -76,44 +76,68 @@ def load_df():
 
 mpl.rcParams['axes.autolimit_mode'] = 'round_numbers'
 
+def get_lines(
+  data: pd.DataFrame,
+  x_name='x',
+  y_name='y',
+  columns='implementation',
+  sort=-1, # -1 for desc, 1 for asc, 'a' for alphabetical asc, 'd' for alphabetical desc
+):
+  tbl = data.pivot_table(
+    index=x_name,
+    columns=columns,
+    values=y_name,
+    aggfunc='mean',
+    sort=None
+  ).copy()
+
+  if len(tbl) == 0:
+    return []
+
+  ret = []
+  for name, col in tbl.items():
+    line = {}
+    for idx in tbl.index:
+      if pd.isna(col.loc[idx]):
+        continue
+      line[idx] = col.loc[idx]
+    ret.append((name, line))
+
+  if sort == 'a':
+    ret = sorted(ret, key=lambda x: x[0])
+  elif sort == 'd':
+    ret = sorted(ret, key=lambda x: x[0], reverse=True)
+  elif sort == 1 or sort == -1:
+    common_xs = ret[0][1].keys()
+    for name, line in ret:
+      common_xs = common_xs.intersection(line.keys())
+    max_common_x = max(common_xs)
+    if sort == 1:
+      ret = sorted(ret, key=lambda x: x[1][max_common_x])
+    else: # sort ==-1:
+      ret = sorted(ret, key=lambda x: x[1][max_common_x], reverse=True)
+  
+  return ret
+
 def draw_figure(
     data: pd.DataFrame, 
     x_name='x',
     y_name='y',
     title="",
     columns='implementation',
-    sort_asc=True,
+    sort=None,
     /, **kwargs):
-  tbl = data.pivot_table(
-    index=x_name,
+  lines = get_lines(
+    data,
+    x_name=x_name,
+    y_name=y_name,
     columns=columns,
-    values=y_name,
-    aggfunc='mean',
-    sort=False
-  ).copy()
-  # Sort columns by the value of the highest common point between columns
-  if len(tbl) == 0:
-    print(f"Warning: empty table for figure {title}")
-    return
-  common_xs = set.intersection(*[set(tbl.index[~tbl[col].isna()]) for col in tbl.columns])
-  col_order = []
-  col_values = {}
-  for col in tbl.columns:
-    vals = tbl.loc[list(common_xs), col]
-    avg_val = vals.mean()
-    col_values[col] = avg_val
-  sorted_names = sorted(col_values.keys(), key=lambda c: col_values[c], reverse=not sort_asc)
+    sort=sort
+  )
 
   plt.close('all')
-  for name in sorted_names:
-    col = tbl[name]
-    xs = []
-    ys = []
-    for idx in tbl.index:
-      if pd.isna(col.loc[idx]):
-        continue
-      xs.append(idx)
-      ys.append(col.loc[idx])
+  for name, line in lines:
+    xs, ys = line.keys(), line.values()
     plt.plot(xs, ys, label=name)
 
 
@@ -127,8 +151,8 @@ def draw_figure(
 
   plt.title(f"{title}")
   filename = title.replace("(", " ").replace(")", " ").replace(",", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace(" ", "_").replace(":", "-").replace("/", "-")
-  plt.savefig(f"figures/{filename}.png")
   plt.savefig(f"figures/pdf/{filename}.pdf")
+  plt.savefig(f"figures/{filename}.png")
 
 def HEADER(title):
   print(f"### {title}\n")
