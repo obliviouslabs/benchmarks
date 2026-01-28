@@ -1,24 +1,20 @@
 #!/bin/bash
 set -e 
 
-project_name="meta_oram"
-base_dir="$(git rev-parse --show-toplevel)"
-commit_hash="$(git -C $base_dir/build/${project_name}/meta/ rev-parse HEAD)"
-timestamp="$(date +%s)"
-run_id="${project_name}_${timestamp}_${commit_hash}"
-results_file="$base_dir/results/${run_id}"
-run_folder="$base_dir/build/${project_name}/"
+proj_name="meta_oram"
+repo_path="/meta/"
+base_dir=$(git rev-parse --show-toplevel)
+source "${base_dir}/scripts/gen_args.sh"
 
-# Create folders if they don't exist
-mkdir -p "$base_dir/logs/$run_id"
-mkdir -p "$base_dir/results"
+# Create the logs folder
+mkdir -p "${logs_folder}"
 
 # Run the tests
 cd "$run_folder"
-echo "Running benchmark for $project_name..."
+echo "Running benchmark for $proj_name..."
 cargo build --profile=maxperf
-cargo run --profile=maxperf 2>&1 | tee "$base_dir/logs/$run_id/meta_bench.log"
+cargo run --profile=maxperf 2>&1 | tee "${logs_folder}/meta_bench.log"
 
 # Parse the results
 echo "" > "$results_file"
-python "$base_dir/scripts/parse.py" -f "$base_dir/logs/$run_id/meta_bench.log" >> "$results_file"
+python "$base_dir/scripts/parse.py" -f "${logs_folder}/meta_bench.log" >> "$results_file"

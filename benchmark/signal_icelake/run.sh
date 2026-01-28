@@ -1,25 +1,21 @@
 #!/bin/bash
 set -e 
 
-base_dir="$(git rev-parse --show-toplevel)"
-commit_hash="$(git -C $base_dir/build/ContactDiscoveryService-Icelake/ rev-parse HEAD)"
-timestamp="$(date +%s)"
-run_id="signal_icelake_${timestamp}_${commit_hash}"
-results_file="$base_dir/results/$run_id"
-run_folder="$base_dir/build/ContactDiscoveryService-Icelake/c"
+proj_name="signal_icelake"
+base_dir=$(git rev-parse --show-toplevel)
+source "${base_dir}/scripts/gen_args.sh"
 
-
-# Run the tests
-cd "$run_folder"
-make docker_tests
-
-# Parse the results
-mkdir -p "$base_dir/logs/$run_id"
-cp "$run_folder/benchmarks/path_oram.test.out" "$base_dir/logs/$run_id/path_oram.test.out"
-cp "$run_folder/benchmarks/loaded_table.test.out" "$base_dir/logs/$run_id/loaded_table.test.out"
-cp "$run_folder/benchmarks/loaded_sharded_table.test.out" "$base_dir/logs/$run_id/loaded_sharded_table.test.out"
-
+mkdir -p "${logs_folder}"
 echo "" > "$results_file"
-python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/path_oram.test.out" >> "$results_file"
-python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/loaded_table.test.out" >> "$results_file"
-python "$base_dir/scripts/parse.py" -f "$run_folder/benchmarks/loaded_sharded_table.test.out" >> "$results_file"
+
+cd "${build_folder}/c/benchmarks/"
+
+./path_oram.test 2>&1 | stdbuf -oL tee "${logs_folder}/path_oram.out"
+python "$base_dir/scripts/parse.py" -f "${logs_folder}/path_oram.out" >> "$results_file"
+
+./loaded_table.test 2>&1 | stdbuf -oL tee "${logs_folder}/loaded_table.out"
+python "$base_dir/scripts/parse.py" -f "${logs_folder}/loaded_table.out" >> "$results_file"
+
+./loaded_sharded_table.test 2>&1 | stdbuf -oL tee "${logs_folder}/loaded_sharded_table.out"
+python "$base_dir/scripts/parse.py" -f "${logs_folder}/loaded_sharded_table.out" >> "$results_file"
+

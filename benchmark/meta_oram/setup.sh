@@ -1,20 +1,19 @@
 #!/bin/bash
 set -e 
 
-project_name="meta_oram"
+proj_name="meta_oram"
+repo_path="/meta/"
 base_dir=$(git rev-parse --show-toplevel)
-echo "$base_dir"
-mkdir -p "$base_dir/build"
+source "${base_dir}/scripts/gen_args.sh"
+
 cd "$base_dir/build"
-
-if [ -d "${project_name}" ]; then
-  rm -rf "./${project_name}"
+if [ -d "${proj_name}" ]; then
+  rm -rf "./${proj_name}"
 fi
-mkdir -p "$base_dir/build/${project_name}"
+mkdir -p "${build_folder}"
 
-
-git clone 'git@github.com:facebook/oram.git' "$base_dir/build/${project_name}/meta"
+git clone 'git@github.com:facebook/oram.git' "${build_folder}/meta"
 
 echo "Copying the benchmark code"
-cp -r "$base_dir/benchmark/${project_name}/benchmark_code/." "$base_dir/build/${project_name}"
-cp "$base_dir/benchmark/common/common.rs" "$base_dir/build/${project_name}/src"
+cp -r "${sources_folder}/benchmark_code/." "${build_folder}"
+cp "$base_dir/benchmark/common/common.rs" "${build_folder}/src"

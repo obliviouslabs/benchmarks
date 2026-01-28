@@ -5,8 +5,9 @@ from utils import parse_mean_time_from_outlines, report, run_process_registering
 
 target_dir = sys.argv[1]
 block_sizes = [16, 64]
-# thread_nums = [1, 32]
-thread_nums = [32]
+thread_nums = [1, 32]
+# block_sizes = [64]
+# thread_nums = [32]
 
 for threads in thread_nums:
   for b in block_sizes:

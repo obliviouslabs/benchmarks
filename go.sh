@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+
 sh ./scripts/setup.sh
 
 ### Checklist before this:
@@ -8,9 +9,14 @@ sh ./scripts/setup.sh
 # 3) Make sure you have installed all the c++ packages required for signal_icelake and olabs_rostl
 # 4) Make sure you have docker running
 
-# sh ./benchmark/olabs_oram/run.sh
-# sh ./benchmark/signal_icelake/run.sh
+sh ./benchmark/olabs_oram/run.sh
+sh ./benchmark/signal_icelake/run.sh
 sh ./benchmark/h2o2_oram/run.sh
-# sh ./benchmark/olabs_rostl/run.sh
-# sh ./benchmark/mc_oblivious/run.sh
-# sh ./benchmark/meta_oram/run.sh
+# sudo systemd-run --scope -p MemoryMax=2G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/h2o2_oram/run.sh
+sh ./benchmark/olabs_rostl/run.sh
+sh ./benchmark/mc_oblivious/run.sh
+sh ./benchmark/meta_oram/run.sh
+
+
+# To run this script with memory limits: 
+# sudo systemd-run --scope -p MemoryMax=8G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/__TARGET__/run.sh

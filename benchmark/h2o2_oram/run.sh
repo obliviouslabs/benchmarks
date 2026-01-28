@@ -1,26 +1,17 @@
 #!/bin/bash
 set -e 
 
+proj_name="h2o2_oram"
 base_dir=$(git rev-parse --show-toplevel)
-commit_hash=$(git -C $base_dir/build/h2o2_oram/ rev-parse HEAD)
-timestamp=$(date +%s)
-run_id=h2o2_oram_${timestamp}_${commit_hash}
-results_file=$base_dir/results/${run_id}
-run_folder=$base_dir/build/h2o2_oram/
+source "${base_dir}/scripts/gen_args.sh"
+
 
 # Create the logs folder
-mkdir -p "$base_dir/logs/$run_id/results"
+mkdir -p "${logs_folder}/results"
 
 # Run the tests
-cd "$run_folder"
-rm -rf build
-export CC=/usr/bin/gcc
-export CXX=/usr/bin/g++
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-ninja -C build
-
 cd benchmarks
-PYTHONUNBUFFERED=1 stdbuf -oL -eL python oram_exp_script.py "$base_dir/logs/$run_id" 2>&1 | stdbuf -oL tee "$base_dir/logs/$run_id/bench_oram.log"
+PYTHONUNBUFFERED=1 stdbuf -oL -eL python oram_exp_script.py "${logs_folder}" 2>&1 | stdbuf -oL tee "${logs_folder}/bench_oram.log"
 
 # Parse the results
 echo "" > "$results_file"
