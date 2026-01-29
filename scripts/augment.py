@@ -40,15 +40,13 @@ def augmentP(P):
     new_row['Get_latency_us'] = row['Read_latency_us']
     new_row['Get_max_latency_us'] = row['Read_max_latency_us']
     new_row['Get_throughput_qps'] = row['Read_throughput_qps']
-    new_row['Initialization_time_us'] = row['Initialization_zeroed_time_us'] + row['N'] * row['Read_latency_us']
+    new_row['Initialization_time_us'] = row['N'] * row['Read_latency_us']
 
     new_rows.append(new_row)
     new_row = new_row.copy()
-    if row['Value_bytes'] == 56:
+    if row['Value_bytes'] == 40:
       new_row['Value_bytes'] = 32
       new_row['Key_bytes'] = 32
-      # Rough optimistic estimate of memory usage:
-      new_row['Memory_kb'] = row['Memory_kb'] * (8 + 32) // (8 + 56)
     new_rows.append(new_row)
 
   add = pd.DataFrame(new_rows).dropna(axis=1, how="all")

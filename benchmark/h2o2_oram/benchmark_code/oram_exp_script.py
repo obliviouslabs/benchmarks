@@ -4,7 +4,7 @@ from time import time
 from utils import parse_mean_time_from_outlines, report, run_process_registering_memory, check_if_alread_ran
 
 target_dir = sys.argv[1]
-block_sizes = [16, 48, 64]
+block_sizes = [16, 40, 48, 64]
 # thread_nums = [1, 32]
 thread_nums = [32]
 
@@ -41,7 +41,7 @@ for threads in thread_nums:
       res["Key_bytes"] = 8
       res["Value_bytes"] = b - 8
       res["Read_latency_us"] = t / n / 1000
-      res["Read_max_latency_us"] = t / 1000
+      res["Read_max_latency_us"] = t / 2 / 1000
       res["Read_throughput_qps"] = n * 1_000_000_000 / t 
       res["Memory_kb"] = mem[0] // 1024
       res["Test_time_s"] = end_time - start_time
