@@ -10,7 +10,7 @@ source "${base_dir}/scripts/gen_args.sh"
 mkdir -p "${logs_folder}/results"
 
 # Run the tests
-cd benchmarks
+cd "${build_folder}/benchmarks"
 PYTHONUNBUFFERED=1 stdbuf -oL -eL python oram_exp_script.py "${logs_folder}" 2>&1 | stdbuf -oL tee "${logs_folder}/bench_oram.log"
 
 # Parse the results
