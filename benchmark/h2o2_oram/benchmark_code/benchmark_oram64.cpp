@@ -6,15 +6,15 @@
 #include "oram.hpp"
 #include "types.hpp"
 
-class ORAMInitFixture16 : public benchmark::Fixture
+class ORAMDataFixture64 : public benchmark::Fixture
 {
 public:
     size_t n;
     using IndexType = size_t;
-    std::vector<ORAM::Block<IndexType, 16 - sizeof(IndexType)>>
+    std::vector<ORAM::Block<IndexType, 64 - sizeof(IndexType)>>
         raw_data;
     std::random_device rd;
-    ORAM::ObliviousRAM<size_t, ORAM::Block<IndexType, 16 - sizeof(IndexType)>> *oram;
+    ORAM::ObliviousRAM<size_t, ORAM::Block<IndexType, 64 - sizeof(IndexType)>> *oram;
     void SetUp(const ::benchmark::State &state) override
     {
         std::mt19937 gen(rd());
@@ -24,34 +24,37 @@ public:
         for (size_t i = 0; i < n; i++)
                 raw_data[i].id = i;
         std::shuffle(raw_data.begin(), raw_data.end(), gen);
+        oram = new ORAM::ObliviousRAM<size_t,
+                                      ORAM::Block<IndexType,
+                                                  64 - sizeof(IndexType)>>(raw_data.begin(),
+                                                                           raw_data.end());
     }
 
     void TearDown(const ::benchmark::State &) override
     {
         raw_data.clear();
         raw_data.shrink_to_fit();
+        delete oram;
     }
 };
 
-BENCHMARK_DEFINE_F(ORAMInitFixture16, ORAM)
+BENCHMARK_DEFINE_F(ORAMDataFixture64, ORAM)
 (benchmark::State &state)
 {
     for (auto _ : state)
     {
-        oram = new ORAM::ObliviousRAM<size_t, ORAM::Block<IndexType, 16 - sizeof(IndexType)>>(raw_data.begin(), raw_data.end());
-        (*oram)[0];
-        (*oram)[1];
-        delete oram;
+        for (uint32_t i = 0; i < n; i++)
+            assert((*oram)[i].id == raw_data[i].id);
     }
 }
 
 static void CustomizedArgsN(benchmark::internal::Benchmark *b)
 {
-    for (size_t i = 8; i <= 28; i++) // n := 2**i
+    for (size_t i = 8; i <= 26; i++) // n := 2**i
     {
         size_t n = 1ll << i;
         b->Args({(int64_t)n});
     }
 }
 
-BENCHMARK_REGISTER_F(ORAMInitFixture16, ORAM)->Apply(CustomizedArgsN)->MeasureProcessCPUTime()->UseRealTime();
+BENCHMARK_REGISTER_F(ORAMDataFixture64, ORAM)->Apply(CustomizedArgsN)->MeasureProcessCPUTime()->UseRealTime();

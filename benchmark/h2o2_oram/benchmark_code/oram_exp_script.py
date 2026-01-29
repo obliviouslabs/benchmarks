@@ -4,10 +4,9 @@ from time import time
 from utils import parse_mean_time_from_outlines, report, run_process_registering_memory, check_if_alread_ran
 
 target_dir = sys.argv[1]
-block_sizes = [16, 64]
-thread_nums = [1, 32]
-# block_sizes = [64]
-# thread_nums = [32]
+block_sizes = [16, 48, 64]
+# thread_nums = [1, 32]
+thread_nums = [32]
 
 for threads in thread_nums:
   for b in block_sizes:
@@ -33,17 +32,6 @@ for threads in thread_nums:
           break
         continue
 
-      start_init_time = time()
-
-      cmd = f"../bin/ORAMBenchmark  --benchmark_out={file_name} --benchmark_filter=ORAMInitFixture{b}/ORAM/{n}/process_time/* --benchmark_repetitions={repetitions}"
-      ret_init, mem_init, outlines_init = run_process_registering_memory(cmd, threads=threads)
-      t_init = parse_mean_time_from_outlines(outlines_init)
-      if t_init is None:
-        print(f"({threads}, {b}, {n}) Could not parse initialization time from output")
-        if n_base > 20:
-          # N' > N ==> fail(N) ==> fail(N')
-          break
-        continue
       end_time = time()
 
       res = {}
@@ -52,13 +40,10 @@ for threads in thread_nums:
       res["N"] = n
       res["Key_bytes"] = 8
       res["Value_bytes"] = b - 8
-      res["Initialization_zeroed_time_us"] = t_init / 1000
       res["Read_latency_us"] = t / n / 1000
       res["Read_max_latency_us"] = t / 1000
       res["Read_throughput_qps"] = n * 1_000_000_000 / t 
       res["Memory_kb"] = mem[0] // 1024
-      res["Test_time_real"] = start_init_time - start_time
-      res["Test_time_init"] = end_time - start_init_time
       res["Test_time_s"] = end_time - start_time
 
       report("RORAM", f"h2o2", mem, res, cores=threads)
