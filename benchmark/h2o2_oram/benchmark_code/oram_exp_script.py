@@ -4,7 +4,7 @@ from time import time
 from utils import parse_mean_time_from_outlines, report, run_process_registering_memory, check_if_alread_ran
 
 target_dir = sys.argv[1]
-block_sizes = [16, 40, 48, 64]
+block_sizes = [48, 64]
 # thread_nums = [1, 32]
 thread_nums = [32]
 
@@ -14,7 +14,7 @@ for threads in thread_nums:
     if threads == 1:
       cnt_ub = 24
     for n_base in range(10, cnt_ub+1):
-      repetitions = 3
+      repetitions = 1
       n = 2**n_base 
       file_name = f"{target_dir}/results/results_{n}_{b}_{threads}.json"
       if check_if_alread_ran(file_name):
