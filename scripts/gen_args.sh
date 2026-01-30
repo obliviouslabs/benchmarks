@@ -6,6 +6,9 @@ sources_folder="${base_dir}/benchmark/${proj_name}"
 
 # These should not be used by build.sh, they are intended for run.sh
 run_id="${proj_name}_${run_timestamp}_${commit_hash}"
-[[ $# -ge 1 ]] && run_id+="_$1"
+
+if [ "$#" -ge 1 ]; then
+  run_id="${run_id}_$1"
+fi
 results_file="${base_dir}/results/${run_id}"
 logs_folder="${base_dir}/logs/${run_id}/"
