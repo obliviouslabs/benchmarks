@@ -17,7 +17,7 @@ sh benchmark/signal_icelake/setup.sh "$@"
 
 # Run all inner builds
 #
-sh benchmark/h2o2_oram/build.sh "$@"
+# sh benchmark/h2o2_oram/build.sh "$@"
 sh benchmark/mc_oblivious/build.sh "$@"
 sh benchmark/meta_oram/build.sh "$@"
 sh benchmark/olabs_oram/build.sh "$@"

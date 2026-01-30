@@ -9,7 +9,6 @@ using namespace std;
 
 #include "odsl/par_omap.hpp"
 #include "odsl/omap_short_kv.hpp"
-#include <format>
 
 const uint64_t NUM_SHARDS = 15;
 
@@ -31,8 +30,8 @@ int benchmark_umap_sharded(uint64_t N, uint64_t Q, size_t batch_size) {
       new EM::Backend::MemServerBackend(BackendSize);
 
   // load_requests_1000000.dat
-  string load_filename = format("../../../signalbench/data/load_requests_{}.dat", N);
-  string query_filename = format("../../../signalbench/data/query_requests_{}_{}.dat", N, Q);
+  std::string load_filename = "../../../signalbench/data/load_requests_" + std::to_string(N) + ".dat";
+  std::string query_filename = "../../../signalbench/data/query_requests_" + std::to_string(N) + "_" + std::to_string(Q) + ".dat";
 
   // Create and initialize a hashtable
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
