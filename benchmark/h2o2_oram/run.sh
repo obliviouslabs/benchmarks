@@ -3,7 +3,7 @@ set -e
 
 proj_name="h2o2_oram"
 base_dir=$(git rev-parse --show-toplevel)
-. " ${base_dir}/scripts/gen_args.sh"
+. "${base_dir}/scripts/gen_args.sh"
 
 
 # Create the logs folder

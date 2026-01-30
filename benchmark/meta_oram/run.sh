@@ -4,7 +4,7 @@ set -e
 proj_name="meta_oram"
 repo_path="/meta/"
 base_dir=$(git rev-parse --show-toplevel)
-. " ${base_dir}/scripts/gen_args.sh"
+. "${base_dir}/scripts/gen_args.sh"
 
 # Create the logs folder
 mkdir -p "${logs_folder}"
