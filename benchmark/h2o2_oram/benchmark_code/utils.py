@@ -78,13 +78,17 @@ def run_process_registering_memory(cmd, threads=1, timeout=3*3600):
   return ret, (max_rss, max_vss), outlines
 
 def parse_mean_time_from_outlines(outlines):
-    outlines = [line for line in  outlines if "real_time_mean" in line]
-    assert len(outlines) in [0, 1], "Expected only one line with real_time_mean"
-    if len(outlines) == 1:
-      line = outlines[0]
+    outlines2 = [line for line in  outlines if "real_time_mean" in line]
+    assert len(outlines2) in [0, 1], "Expected only one line with real_time_mean"
+    if len(outlines2) == 1:
+      line = outlines2[0]
       t = line.split("real_time_mean")[1].strip().split()[0]
-      # line can be an int, a float in decimal notation, or a float in scientific notation (e+{k})
-      # we want to turn it into an int number of nanoseconds
+      t = float(t)
+      return t
+    outlines2 = [line for line in  outlines if "process_time/real_time" in line]
+    if len(outlines2) >= 1:
+      line = outlines2[0]
+      t = line.split("process_time/real_time")[1].strip().split()[0]
       t = float(t)
       return t
     return None
