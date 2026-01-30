@@ -3,7 +3,7 @@ set -e
 
 proj_name="signal_icelake"
 base_dir=$(git rev-parse --show-toplevel)
-source "${base_dir}/scripts/gen_args.sh"
+. " ${base_dir}/scripts/gen_args.sh"
 
 cd $base_dir/build
 if [ -d "${proj_name}" ]; then

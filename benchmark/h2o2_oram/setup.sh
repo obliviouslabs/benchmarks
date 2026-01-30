@@ -3,7 +3,7 @@ set -e
 
 proj_name="h2o2_oram"
 base_dir=$(git rev-parse --show-toplevel)
-source "${base_dir}/scripts/gen_args.sh"
+. " ${base_dir}/scripts/gen_args.sh"
 
 cd "${base_dir}/build"
 

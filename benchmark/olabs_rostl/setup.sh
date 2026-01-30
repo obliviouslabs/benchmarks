@@ -4,7 +4,7 @@ set -e
 proj_name="olabs_rostl"
 repo_path="/rostl/"
 base_dir=$(git rev-parse --show-toplevel)
-source "${base_dir}/scripts/gen_args.sh"
+. " ${base_dir}/scripts/gen_args.sh"
 
 cd "${base_dir}/build"
 if [ -d "${project_name}" ]; then
