@@ -127,7 +127,7 @@ int benchmark_umap(uint64_t N) {
   cout << "Creating ORAM with capacity " << cap << endl;
   OMap_t<KEY_SIZE,VAL_SIZE> oram = OMap_t<KEY_SIZE,VAL_SIZE>(cap);
   cout << "Initializing ORAM" << endl;
-  typename OMap_t<KEY_SIZE,VAL_SIZE>::InitContext* init = oram.NewInitContext(20ULL * (1ULL<<30));
+  typename OMap_t<KEY_SIZE,VAL_SIZE>::InitContext* init = oram.NewInitContext(2000ULL * (1ULL<<20));
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {
@@ -193,7 +193,7 @@ int main() {
 
   // Should take 1h30 to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED((benchmark_umap<8,56>(1<<i)));
+    RUN_TEST_FORKED((benchmark_umap<32,32>(1<<i)));
   }
 
   // Should take 1h30 to run

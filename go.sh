@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-sh ./scripts/reset.sh
-sh ./scripts/setup.sh h2o2_oram
+sh ./scripts/reset.sh olabs_oram
+sh ./scripts/setup.sh olabs_oram
 
 ### Checklist before this:
 # 1) Make sure you have installed the msrp (rust)
@@ -12,7 +12,7 @@ sh ./scripts/setup.sh h2o2_oram
 
 # sh ./benchmark/olabs_oram/run.sh
 # sh ./benchmark/signal_icelake/run.sh
-sh ./benchmark/h2o2_oram/run.sh
+# sh ./benchmark/h2o2_oram/run.sh
 # sh ./benchmark/olabs_rostl/run.sh
 # sh ./benchmark/mc_oblivious/run.sh
 # sh ./benchmark/meta_oram/run.sh
@@ -24,7 +24,7 @@ sh ./benchmark/h2o2_oram/run.sh
 # sudo swapoff -a
 # sudo swapon /data/swapfile_test
 
-# sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/olabs_oram/run.sh SWAP1G
+sudo systemd-run --scope -p MemoryMax=2G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/olabs_oram/run.sh SWAP2G
 
 # sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_icelake/run.sh SWAP1G
 
