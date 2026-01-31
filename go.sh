@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# sh ./scripts/reset.sh
-# sh ./scripts/setup.sh h2o2_oram signal_icelake
+sh ./scripts/reset.sh
+sh ./scripts/setup.sh h2o2_oram
 
 ### Checklist before this:
 # 1) Make sure you have installed the msrp (rust)
@@ -12,7 +12,7 @@ set -e
 
 # sh ./benchmark/olabs_oram/run.sh
 # sh ./benchmark/signal_icelake/run.sh
-# sh ./benchmark/h2o2_oram/run.sh
+sh ./benchmark/h2o2_oram/run.sh
 # sh ./benchmark/olabs_rostl/run.sh
 # sh ./benchmark/mc_oblivious/run.sh
 # sh ./benchmark/meta_oram/run.sh
@@ -24,10 +24,12 @@ set -e
 # sudo swapoff -a
 # sudo swapon /data/swapfile_test
 
+# sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/olabs_oram/run.sh SWAP1G
 
-sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_icelake/run.sh SWAP1G
+# sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_icelake/run.sh SWAP1G
 
 # sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/h2o2_oram/run.sh SWAP1G
+
 
 
 # To run this script with memory limits: 
