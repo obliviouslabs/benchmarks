@@ -1,0 +1,124 @@
+n: 128 op_num: 128 bucket_time: 0.290986
+n: 128 op_num: 128 linear_time: 0.014338
+n: 128 op_num: 128 two_tier_time: 1.79769e+308, epsilon: 2
+n: 256 op_num: 256 bucket_time: 0.334507
+n: 256 op_num: 256 linear_time: 0.059776
+n: 256 op_num: 256 two_tier_time: 1.79769e+308, epsilon: 2
+n: 512 op_num: 512 bucket_time: 0.618341
+n: 512 op_num: 512 linear_time: 0.237952
+n: 512 op_num: 512 two_tier_time: 1.79769e+308, epsilon: 2
+n: 1024 op_num: 1024 bucket_time: 1.11991
+n: 1024 op_num: 1024 linear_time: 0.924804
+n: 1024 op_num: 1024 two_tier_time: 1.79769e+308, epsilon: 2
+n: 2048 op_num: 2048 bucket_time: 2.01089
+n: 2048 op_num: 2048 linear_time: 2.41847
+n: 2048 op_num: 2048 two_tier_time: 1.79769e+308, epsilon: 2
+n: 4096 op_num: 4096 bucket_time: 3.86851
+n: 4096 op_num: 4096 linear_time: 8.01272
+n: 4096 op_num: 4096 two_tier_time: 1.79769e+308, epsilon: 2
+n: 8192 op_num: 8192 bucket_time: 7.71537
+n: 8192 op_num: 8192 linear_time: 29.7964
+		n: 4096 op_num: 8192 cuckoo_time: 36.0766
+		n: 4096 op_num: 8192 bucket_time: 5.27396
+		n: 4096 op_num: 8192 linear_time: 15.3156
+		n: 4096 op_num: 8192 two_tier_time: 1.79769e+308, epsilon: 2
+n: 8192 op_num: 8192 two_tier_time: 20.6949, epsilon: 2
+n: 16384 op_num: 16384 bucket_time: 14.8566
+n: 16384 op_num: 16384 linear_time: 126.034
+		n: 8192 op_num: 16384 cuckoo_time: 78.2123
+		n: 8192 op_num: 16384 bucket_time: 9.10038
+		n: 8192 op_num: 16384 linear_time: 59.1693
+		n: 8192 op_num: 16384 two_tier_time: 17.9298, epsilon: 2
+n: 16384 op_num: 16384 two_tier_time: 30.8131, epsilon: 2
+n: 32768 op_num: 32768 bucket_time: 29.3212
+n: 32768 op_num: 32768 linear_time: 488.447
+		n: 16384 op_num: 32768 cuckoo_time: 164.394
+		n: 16384 op_num: 32768 bucket_time: 17.9367
+		n: 16384 op_num: 32768 linear_time: 241.818
+		n: 16384 op_num: 32768 two_tier_time: 32.5782, epsilon: 2
+		n: 8192 op_num: 32768 cuckoo_time: 80.8293
+		n: 8192 op_num: 32768 bucket_time: 10.4594
+		n: 8192 op_num: 32768 linear_time: 116.608
+		n: 8192 op_num: 32768 two_tier_time: 21.484, epsilon: 2
+n: 32768 op_num: 32768 two_tier_time: 50.4185, epsilon: 4
+n: 65536 op_num: 65536 bucket_time: 61.8344
+		n: 32768 op_num: 65536 cuckoo_time: 345.528
+		n: 32768 op_num: 65536 bucket_time: 35.1536
+		n: 32768 op_num: 65536 linear_time: 990.513
+		n: 32768 op_num: 65536 two_tier_time: 57.6757, epsilon: 4
+		n: 16384 op_num: 65536 cuckoo_time: 171.982
+		n: 16384 op_num: 65536 bucket_time: 23.0242
+		n: 16384 op_num: 65536 linear_time: 510.8
+		n: 16384 op_num: 65536 two_tier_time: 30.6734, epsilon: 2
+n: 65536 op_num: 65536 two_tier_time: 96.2589, epsilon: 4
+n: 131072 op_num: 131072 bucket_time: 121.336
+		n: 65536 op_num: 131072 cuckoo_time: 745.585
+		n: 65536 op_num: 131072 bucket_time: 70.7669
+		n: 65536 op_num: 131072 two_tier_time: 94.0875, epsilon: 4
+		n: 32768 op_num: 131072 cuckoo_time: 355.563
+		n: 32768 op_num: 131072 bucket_time: 46.0589
+		n: 32768 op_num: 131072 linear_time: 1982.28
+		n: 32768 op_num: 131072 two_tier_time: 50.1555, epsilon: 4
+		n: 16384 op_num: 131072 cuckoo_time: 177.521
+		n: 16384 op_num: 131072 bucket_time: 32.6698
+		n: 16384 op_num: 131072 linear_time: 925.988
+		n: 16384 op_num: 131072 two_tier_time: 30.2425, epsilon: 2
+n: 131072 op_num: 131072 two_tier_time: 178.367, epsilon: 4
+n: 262144 op_num: 262144 bucket_time: 233.857
+		n: 131072 op_num: 262144 cuckoo_time: 1652.54
+		n: 131072 op_num: 262144 bucket_time: 144.489
+		n: 131072 op_num: 262144 two_tier_time: 176.959, epsilon: 4
+		n: 65536 op_num: 262144 cuckoo_time: 777.44
+		n: 65536 op_num: 262144 bucket_time: 92.1911
+		n: 65536 op_num: 262144 two_tier_time: 90.055, epsilon: 4
+		n: 32768 op_num: 262144 cuckoo_time: 383.279
+		n: 32768 op_num: 262144 bucket_time: 65.7403
+		n: 32768 op_num: 262144 linear_time: 3983.54
+		n: 32768 op_num: 262144 two_tier_time: 52.6852, epsilon: 4
+n: 262144 op_num: 262144 two_tier_time: 416.975, epsilon: 4
+n: 524288 op_num: 524288 bucket_time: 583.355
+		n: 262144 op_num: 524288 cuckoo_time: 3526.91
+		n: 262144 op_num: 524288 bucket_time: 303.102
+		n: 262144 op_num: 524288 two_tier_time: 413.898, epsilon: 4
+		n: 131072 op_num: 524288 cuckoo_time: 1674.25
+		n: 131072 op_num: 524288 bucket_time: 187.918
+		n: 131072 op_num: 524288 two_tier_time: 173.13, epsilon: 4
+		n: 65536 op_num: 524288 cuckoo_time: 830.136
+		n: 65536 op_num: 524288 bucket_time: 133.332
+		n: 65536 op_num: 524288 two_tier_time: 94.5434, epsilon: 4
+		n: 32768 op_num: 524288 cuckoo_time: 442.303
+		n: 32768 op_num: 524288 bucket_time: 101.394
+		n: 32768 op_num: 524288 linear_time: 7911.71
+		n: 32768 op_num: 524288 two_tier_time: 50.5526, epsilon: 4
+n: 524288 op_num: 524288 two_tier_time: 918.301, epsilon: 16
+n: 1048576 op_num: 1048576 bucket_time: 1349.94
+		n: 524288 op_num: 1048576 cuckoo_time: 7610.96
+		n: 524288 op_num: 1048576 bucket_time: 795.612
+		n: 524288 op_num: 1048576 two_tier_time: 930.063, epsilon: 16
+		n: 262144 op_num: 1048576 cuckoo_time: 3662.06
+		n: 262144 op_num: 1048576 bucket_time: 397.879
+		n: 262144 op_num: 1048576 two_tier_time: 417.058, epsilon: 4
+		n: 131072 op_num: 1048576 cuckoo_time: 1783.12
+		n: 131072 op_num: 1048576 bucket_time: 270.863
+		n: 131072 op_num: 1048576 two_tier_time: 171.457, epsilon: 4
+		n: 65536 op_num: 1048576 cuckoo_time: 949.087
+		n: 65536 op_num: 1048576 bucket_time: 206.115
+		n: 65536 op_num: 1048576 two_tier_time: 91.0474, epsilon: 4
+n: 1048576 op_num: 1048576 two_tier_time: 2004.39, epsilon: 16
+n: 2097152 op_num: 2097152 bucket_time: 3172.11
+		n: 1048576 op_num: 2097152 cuckoo_time: 16474.3
+		n: 1048576 op_num: 2097152 bucket_time: 1904.36
+		n: 1048576 op_num: 2097152 two_tier_time: 2006.4, epsilon: 16
+		n: 524288 op_num: 2097152 cuckoo_time: 7967.16
+		n: 524288 op_num: 2097152 bucket_time: 1183.17
+		n: 524288 op_num: 2097152 two_tier_time: 955.237, epsilon: 16
+		n: 262144 op_num: 2097152 cuckoo_time: 3893.3
+		n: 262144 op_num: 2097152 bucket_time: 577.325
+		n: 262144 op_num: 2097152 two_tier_time: 414.314, epsilon: 8
+		n: 131072 op_num: 2097152 cuckoo_time: 2005.53
+		n: 131072 op_num: 2097152 bucket_time: 412.899
+		n: 131072 op_num: 2097152 two_tier_time: 170.478, epsilon: 4
+		n: 65536 op_num: 2097152 cuckoo_time: 1139.55
+		n: 65536 op_num: 2097152 bucket_time: 336.762
+		n: 65536 op_num: 2097152 two_tier_time: 92.7089, epsilon: 4
+n: 2097152 op_num: 2097152 two_tier_time: 4203.08, epsilon: 16
