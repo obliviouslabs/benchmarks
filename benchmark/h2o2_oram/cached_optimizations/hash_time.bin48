@@ -139,3 +139,9 @@ n: 4194304 op_num: 4194304 bucket_time: 6890.91
 		n: 131072 op_num: 4194304 bucket_time: 679.794
 		n: 131072 op_num: 4194304 two_tier_time: 170.531, epsilon: 4
 n: 4194304 op_num: 4194304 two_tier_time: 9500.96, epsilon: 32
+n: 8388608 op_num: 8388608 bucket_time: 15568.7
+		n: 4194304 op_num: 8388608 cuckoo_time: 82217.1
+		n: 4194304 op_num: 8388608 bucket_time: 9470.06
+		n: 4194304 op_num: 8388608 two_tier_time: 9753.74, epsilon: 32
+		n: 2097152 op_num: 8388608 cuckoo_time: 38195.2
+		n: 2097152 op_num: 8388608 bucket_time: 6082.44
