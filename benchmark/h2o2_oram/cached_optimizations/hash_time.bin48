@@ -122,3 +122,11 @@ n: 2097152 op_num: 2097152 bucket_time: 3172.11
 		n: 65536 op_num: 2097152 bucket_time: 336.762
 		n: 65536 op_num: 2097152 two_tier_time: 92.7089, epsilon: 4
 n: 2097152 op_num: 2097152 two_tier_time: 4203.08, epsilon: 16
+n: 4194304 op_num: 4194304 bucket_time: 6890.91
+		n: 2097152 op_num: 4194304 cuckoo_time: 36184.5
+		n: 2097152 op_num: 4194304 bucket_time: 4212.05
+		n: 2097152 op_num: 4194304 two_tier_time: 4264.85, epsilon: 16
+		n: 1048576 op_num: 4194304 cuckoo_time: 17188.8
+		n: 1048576 op_num: 4194304 bucket_time: 2743.35
+		n: 1048576 op_num: 4194304 two_tier_time: 2021.3, epsilon: 16
+		n: 524288 op_num: 4194304 cuckoo_time: 8417.24
