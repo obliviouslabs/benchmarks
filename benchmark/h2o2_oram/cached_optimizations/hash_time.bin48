@@ -159,3 +159,11 @@ n: 8388608 op_num: 8388608 bucket_time: 15568.7
 		n: 131072 op_num: 8388608 bucket_time: 1179.88
 		n: 131072 op_num: 8388608 two_tier_time: 171.203, epsilon: 4
 n: 8388608 op_num: 8388608 two_tier_time: 17826.3, epsilon: 64
+n: 16777216 op_num: 16777216 bucket_time: 37256.1
+		n: 8388608 op_num: 16777216 cuckoo_time: 191823
+		n: 8388608 op_num: 16777216 bucket_time: 21011.2
+		n: 8388608 op_num: 16777216 two_tier_time: 17868.2, epsilon: 64
+		n: 4194304 op_num: 16777216 cuckoo_time: 85924.9
+		n: 4194304 op_num: 16777216 bucket_time: 13514.7
+		n: 4194304 op_num: 16777216 two_tier_time: 9636.5, epsilon: 32
+		n: 2097152 op_num: 16777216 cuckoo_time: 41310
