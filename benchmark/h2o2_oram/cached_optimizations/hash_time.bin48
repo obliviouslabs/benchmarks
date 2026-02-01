@@ -167,3 +167,40 @@ n: 16777216 op_num: 16777216 bucket_time: 37256.1
 		n: 4194304 op_num: 16777216 bucket_time: 13514.7
 		n: 4194304 op_num: 16777216 two_tier_time: 9636.5, epsilon: 32
 		n: 2097152 op_num: 16777216 cuckoo_time: 41310
+n: 16777216 op_num: 16777216 bucket_time: 37098.7
+		n: 2097152 op_num: 16777216 cuckoo_time: 41267.3
+		n: 2097152 op_num: 16777216 bucket_time: 9413.34
+		n: 2097152 op_num: 16777216 two_tier_time: 4209.4, epsilon: 16
+		n: 1048576 op_num: 16777216 cuckoo_time: 21486.3
+		n: 1048576 op_num: 16777216 bucket_time: 7214.13
+		n: 1048576 op_num: 16777216 two_tier_time: 2022.69, epsilon: 16
+		n: 524288 op_num: 16777216 cuckoo_time: 11813.1
+		n: 524288 op_num: 16777216 bucket_time: 5796.69
+		n: 524288 op_num: 16777216 two_tier_time: 918.17, epsilon: 16
+		n: 262144 op_num: 16777216 cuckoo_time: 6808.9
+		n: 262144 op_num: 16777216 bucket_time: 3398.36
+		n: 262144 op_num: 16777216 two_tier_time: 401.162, epsilon: 4
+n: 16777216 op_num: 16777216 two_tier_time: 45313.8, epsilon: 64
+n: 33554432 op_num: 33554432 bucket_time: 87794.7
+		n: 16777216 op_num: 33554432 cuckoo_time: 456786
+		n: 16777216 op_num: 33554432 bucket_time: 49128.6
+		n: 16777216 op_num: 33554432 two_tier_time: 45371.9, epsilon: 64
+		n: 8388608 op_num: 33554432 cuckoo_time: 198959
+		n: 8388608 op_num: 33554432 bucket_time: 30105.3
+		n: 8388608 op_num: 33554432 two_tier_time: 17928.5, epsilon: 64
+		n: 4194304 op_num: 33554432 cuckoo_time: 93157.3
+		n: 4194304 op_num: 33554432 bucket_time: 20416.7
+		n: 4194304 op_num: 33554432 two_tier_time: 9562.5, epsilon: 32
+		n: 2097152 op_num: 33554432 cuckoo_time: 47944.5
+		n: 2097152 op_num: 33554432 bucket_time: 15973.4
+		n: 2097152 op_num: 33554432 two_tier_time: 4190.36, epsilon: 16
+		n: 1048576 op_num: 33554432 cuckoo_time: 27295.9
+		n: 1048576 op_num: 33554432 bucket_time: 13157.5
+		n: 1048576 op_num: 33554432 two_tier_time: 2013.8, epsilon: 16
+		n: 524288 op_num: 33554432 cuckoo_time: 15643.7
+		n: 524288 op_num: 33554432 bucket_time: 10911.4
+		n: 524288 op_num: 33554432 two_tier_time: 938.923, epsilon: 16
+		n: 262144 op_num: 33554432 cuckoo_time: 10229.7
+		n: 262144 op_num: 33554432 bucket_time: 6627.13
+		n: 262144 op_num: 33554432 two_tier_time: 404.405, epsilon: 8
+n: 33554432 op_num: 33554432 two_tier_time: 100494, epsilon: 64
