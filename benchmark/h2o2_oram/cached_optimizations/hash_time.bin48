@@ -204,3 +204,5 @@ n: 33554432 op_num: 33554432 bucket_time: 87794.7
 		n: 262144 op_num: 33554432 bucket_time: 6627.13
 		n: 262144 op_num: 33554432 two_tier_time: 404.405, epsilon: 8
 n: 33554432 op_num: 33554432 two_tier_time: 100494, epsilon: 64
+n: 67108864 op_num: 67108864 bucket_time: 199119
+		n: 33554432 op_num: 67108864 cuckoo_time: 1.0896e+06
