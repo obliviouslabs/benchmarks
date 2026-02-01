@@ -211,3 +211,5 @@ n: 33554432 op_num: 33554432 bucket_time: 109059
 		n: 262144 op_num: 33554432 bucket_time: 9556.96
 		n: 262144 op_num: 33554432 two_tier_time: 404.161, epsilon: 4
 n: 33554432 op_num: 33554432 two_tier_time: 135898, epsilon: 128
+n: 67108864 op_num: 67108864 bucket_time: 245485
+		n: 33554432 op_num: 67108864 cuckoo_time: 1.10537e+06

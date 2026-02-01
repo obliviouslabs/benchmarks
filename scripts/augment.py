@@ -8,7 +8,6 @@ def augmentP(P):
         (P['benchmark_type'] == 'UnorderedMap') 
       & (P['implementation'] == 'olabs_oram_sharded')
       & (P['Key_bytes'] == 8)
-      & (P['Batch_size'] > 15)
     ].iterrows():
     lb_row = P.loc[
       (P['benchmark_type'] == 'LOADBALANCE')
@@ -26,7 +25,8 @@ def augmentP(P):
       P.at[idx, 'Percentage_batch_online'] = (row['Get_burst_latency_us'] / accurate_latency)
       P.at[idx, 'Percentage_batch_offline'] = (row['Get_writeback_latency_us'] / accurate_latency)
     else:
-      assert False, f"Missing LOADBALANCE row for olabs_oram_sharded umap: {row.to_dict()}"
+      if row['Batch_size'] != 15:
+        assert False, f"Missing LOADBALANCE row for olabs_oram_sharded umap: {row.to_dict()}"
   
   # Insert computed rows for h2o2 map cost from h2o2 oram cost
   new_rows = []
