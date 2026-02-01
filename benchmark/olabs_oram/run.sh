@@ -12,8 +12,8 @@ mkdir -p "${logs_folder}"
 cd "${build_folder}"
 echo "" > "$results_file"
 
-# ./build/applications/benchmarks/oram_bench 2>&1 | stdbuf -oL tee "${logs_folder}/oram_bench.log"
-# python "$base_dir/scripts/parse.py" -f "${logs_folder}/oram_bench.log" >> "$results_file"
+./build/applications/benchmarks/oram_bench 2>&1 | stdbuf -oL tee "${logs_folder}/oram_bench.log"
+python "$base_dir/scripts/parse.py" -f "${logs_folder}/oram_bench.log" >> "$results_file"
 
 ./build/applications/benchmarks/umap 2>&1 | stdbuf -oL tee "${logs_folder}/umap.log"
 python "$base_dir/scripts/parse.py" -f "${logs_folder}/umap.log" >> "$results_file"

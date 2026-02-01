@@ -74,6 +74,25 @@ int benchmark_roram_8bk_56bv(uint64_t N) {
   return 0;
 }
 
+int benchmark_roram_8bk_32bv(uint64_t N) {
+  uint64_t memBefore = getMemValue();
+  uint64_t start_ns_create = current_time_ns();
+  ODSL::RecursiveORAM<Bytes<32>, uint64_t> oram(N);
+  uint64_t end_ns_create = current_time_ns();
+
+  uint64_t start_ns_query = current_time_ns();
+  for (uint64_t i = 0; i < NUM_ACCESSES; i++) {
+    Bytes<32> val;
+    oram.Read(0, val);
+  }
+  uint64_t end_ns_query = current_time_ns();
+  int memAfter = getMemValue();
+  double avg_ns = (double)(end_ns_query - start_ns_query) / NUM_ACCESSES;
+  REPORT_LINE("RORAM", "olabs_oram", "N:=%zu | Key_bytes := 8 | Value_bytes := 32 | Initialization_zeroed_time_us := %.2f | Read_latency_us := %.2f | Read_throughput_qps := %.2f | Memory_kb := %d", N, (end_ns_create - start_ns_create) / 1000.0, avg_ns / 1000.0, 1000000000.0 / avg_ns, memAfter - memBefore);
+
+  return 0;
+}
+
 
 
 int main() {
