@@ -251,7 +251,7 @@ int benchmark_load_balancing(uint64_t B, uint64_t p) {
   std::vector<K> keys(B);
   std::vector<V> values(B);
   for (uint64_t i = 0; i < B; ++i) {
-    keys[i] = (K)i;
+    keys[i].SetRand();
   }
   LoadBalancingBenchmark<K,V> lbm(p);
 
@@ -292,8 +292,9 @@ int benchmark_load_balancing(uint64_t B, uint64_t p) {
 
 int main() {
   for (uint64_t i = 10; i<=20; i++) {
-    RUN_TEST_FORKED( (benchmark_load_balancing<uint64_t,uint64_t>(1<<i, NUM_SHARDS)) );    
-   RUN_TEST_FORKED( (benchmark_load_balancing<uint64_t,Bytes<56>>(1<<i, NUM_SHARDS)) );
+    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<8>,Bytes<8>>(1<<i, NUM_SHARDS)) );    
+    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<8>,Bytes<56>>(1<<i, NUM_SHARDS)) );
+    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<32>,Bytes<32>>(1<<i, NUM_SHARDS)) );
   }
 
   return 0;

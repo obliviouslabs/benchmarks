@@ -200,7 +200,7 @@ static int waitpid_timeout_linux(pid_t pid, int *status, int timeout_ms) {
 
 #define RUN_TEST_FORKED(x)                              \
 do {                                                    \
-  const long long timeout_ms = 60LL * 60LL * 1000LL;    \
+  const long long timeout_ms = 3LL*60LL * 60LL * 1000LL;    \
   pid_t childPid = fork();                              \
   if (childPid == 0) {                                  \
     /* Child process */                                 \

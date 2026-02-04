@@ -30,7 +30,7 @@ typedef struct
 
 #define NUM_SHARDS 15
 
-#define RECORDS_TO_INSERT 8192
+#define RECORDS_TO_INSERT (1<<20)
 #define RECORD_SIZE_QWORDS 7
 u64 insert_records[RECORD_SIZE_QWORDS * RECORDS_TO_INSERT];
 u64 queries[RECORDS_TO_INSERT];
@@ -173,14 +173,14 @@ int main(int argc, char **argv)
     // We run the tests up to 40GB of memory usage, and avoid slower tests for non optimal batch sizes
     //
     // Should take less than 2h to run
-    uint64_t batch_sizes[] = {NUM_SHARDS,1024,4096,8192};
-    uint64_t BEST_IDX = 3; // 8192 is the best batch size for signal sharded table
+    uint64_t batch_sizes[] = {NUM_SHARDS,1024,4096,8192,65536,1048576};
+    uint64_t BEST_IDX = 4; // 8192 is the best batch size for signal sharded table
     bool run_best_only = false;
 
     if (argc > 1 && strcmp(argv[1], "best") == 0) {
         run_best_only = true;
     }
-    for (uint64_t i = 0; i<4; i++) {
+    for (uint64_t i = 0; i<6; i++) {
         if (run_best_only && i != BEST_IDX) {
             continue;
         }
