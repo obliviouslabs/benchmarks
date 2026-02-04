@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-sh ./scripts/reset.sh olabs_oram
-sh ./scripts/setup.sh olabs_oram
+sh ./scripts/reset.sh h2o2_oram
+sh ./scripts/setup.sh h2o2_oram
 
 ### Checklist before this:
 # 1) Make sure you have installed the msrp (rust)
@@ -10,9 +10,9 @@ sh ./scripts/setup.sh olabs_oram
 # 3) Make sure you have installed all the c++ packages required for signal_icelake and olabs_rostl
 # 4) Make sure you have docker running
 
-sh ./benchmark/olabs_oram/run.sh
+# sh ./benchmark/olabs_oram/run.sh
 # sh ./benchmark/signal_icelake/run.sh
-# sh ./benchmark/h2o2_oram/run.sh
+sh ./benchmark/h2o2_oram/run.sh
 # sh ./benchmark/olabs_rostl/run.sh
 # sh ./benchmark/mc_oblivious/run.sh
 # sh ./benchmark/meta_oram/run.sh
