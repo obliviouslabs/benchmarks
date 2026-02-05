@@ -4,9 +4,9 @@ from time import time
 from utils import parse_mean_time_from_outlines, report, run_process_registering_memory, check_if_alread_ran
 
 target_dir = sys.argv[1]
-block_sizes = [64]
 # block_sizes = [48, 64]
 # thread_nums = [1, 32]
+block_sizes = [48]
 thread_nums = [32]
 
 for threads in thread_nums:
