@@ -239,3 +239,4 @@ n: 67108864 op_num: 67108864 bucket_time: 259018
 		n: 524288 op_num: 67108864 cuckoo_time: 27861.4
 		n: 524288 op_num: 67108864 bucket_time: 28472.7
 		n: 524288 op_num: 67108864 two_tier_time: 1206.25, epsilon: 4
+n: 67108864 op_num: 67108864 bucket_time: 220156
