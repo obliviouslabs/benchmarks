@@ -225,3 +225,39 @@ n: 67108864 op_num: 67108864 bucket_time: 199462
 		n: 1048576 op_num: 67108864 cuckoo_time: 40348.1
 		n: 1048576 op_num: 67108864 bucket_time: 24983.5
 		n: 1048576 op_num: 67108864 two_tier_time: 2026.43, epsilon: 16
+n: 67108864 op_num: 67108864 bucket_time: 178579
+		n: 524288 op_num: 67108864 cuckoo_time: 32442.2
+		n: 524288 op_num: 67108864 bucket_time: 32617.6
+		n: 524288 op_num: 67108864 two_tier_time: 1440.57, epsilon: 16
+n: 67108864 op_num: 67108864 two_tier_time: 296059, epsilon: 16
+n: 134217728 op_num: 134217728 bucket_time: 374211
+		n: 67108864 op_num: 134217728 cuckoo_time: 2.09669e+06
+		n: 67108864 op_num: 134217728 bucket_time: 281820
+		n: 67108864 op_num: 134217728 two_tier_time: 294011, epsilon: 16
+		n: 33554432 op_num: 134217728 cuckoo_time: 1.01624e+06
+		n: 33554432 op_num: 134217728 bucket_time: 245180
+		n: 33554432 op_num: 134217728 two_tier_time: 138334, epsilon: 64
+		n: 16777216 op_num: 134217728 cuckoo_time: 512433
+		n: 16777216 op_num: 134217728 bucket_time: 117799
+		n: 16777216 op_num: 134217728 two_tier_time: 67313, epsilon: 64
+		n: 8388608 op_num: 134217728 cuckoo_time: 310745
+		n: 8388608 op_num: 134217728 bucket_time: 102378
+		n: 8388608 op_num: 134217728 two_tier_time: 27749.5, epsilon: 64
+		n: 4194304 op_num: 134217728 cuckoo_time: 185053
+		n: 4194304 op_num: 134217728 bucket_time: 88390.6
+		n: 4194304 op_num: 134217728 two_tier_time: 14179.5, epsilon: 2
+		n: 2097152 op_num: 134217728 cuckoo_time: 118851
+		n: 2097152 op_num: 134217728 bucket_time: 79820.2
+		n: 2097152 op_num: 134217728 two_tier_time: 6909.61, epsilon: 2
+		n: 1048576 op_num: 134217728 cuckoo_time: 82694.7
+		n: 1048576 op_num: 134217728 bucket_time: 73541.7
+		n: 1048576 op_num: 134217728 two_tier_time: 3283.26, epsilon: 4
+		n: 524288 op_num: 134217728 cuckoo_time: 57997
+		n: 524288 op_num: 134217728 bucket_time: 63780.7
+		n: 524288 op_num: 134217728 two_tier_time: 1758.1, epsilon: 2
+n: 134217728 op_num: 134217728 two_tier_time: 508223, epsilon: 64
+n: 268435456 op_num: 268435456 bucket_time: 785463
+		n: 134217728 op_num: 268435456 cuckoo_time: 4.60625e+06
+		n: 134217728 op_num: 268435456 bucket_time: 580818
+		n: 134217728 op_num: 268435456 two_tier_time: 502261, epsilon: 64
+		n: 67108864 op_num: 268435456 cuckoo_time: 2.20063e+06
