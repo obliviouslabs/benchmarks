@@ -261,3 +261,11 @@ n: 134217728 op_num: 134217728 bucket_time: 458833
 		n: 2097152 op_num: 134217728 bucket_time: 95208.6
 		n: 2097152 op_num: 134217728 two_tier_time: 12125.5, epsilon: 16
 		n: 1048576 op_num: 134217728 cuckoo_time: 84302.3
+n: 134217728 op_num: 134217728 bucket_time: 454071
+		n: 1048576 op_num: 134217728 cuckoo_time: 86718.3
+		n: 1048576 op_num: 134217728 bucket_time: 88356.9
+		n: 1048576 op_num: 134217728 two_tier_time: 5359.89, epsilon: 4
+		n: 524288 op_num: 134217728 cuckoo_time: 60164.5
+		n: 524288 op_num: 134217728 bucket_time: 78154.4
+		n: 524288 op_num: 134217728 two_tier_time: 2262.44, epsilon: 4
+n: 134217728 op_num: 134217728 two_tier_time: 838252, epsilon: 128

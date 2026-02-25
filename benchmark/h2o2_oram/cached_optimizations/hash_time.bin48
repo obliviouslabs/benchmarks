@@ -271,3 +271,16 @@ n: 268435456 op_num: 268435456 bucket_time: 778050
 		n: 16777216 op_num: 268435456 cuckoo_time: 602774
 		n: 16777216 op_num: 268435456 bucket_time: 208464
 		n: 16777216 op_num: 268435456 two_tier_time: 68466.6, epsilon: 64
+		n: 8388608 op_num: 268435456 cuckoo_time: 401425
+		n: 8388608 op_num: 268435456 bucket_time: 186297
+		n: 8388608 op_num: 268435456 two_tier_time: 28648, epsilon: 64
+		n: 4194304 op_num: 268435456 cuckoo_time: 264830
+		n: 4194304 op_num: 268435456 bucket_time: 171527
+		n: 4194304 op_num: 268435456 two_tier_time: 13573.3, epsilon: 2
+		n: 2097152 op_num: 268435456 cuckoo_time: 189619
+		n: 2097152 op_num: 268435456 bucket_time: 154624
+		n: 2097152 op_num: 268435456 two_tier_time: 6882.03, epsilon: 2
+		n: 1048576 op_num: 268435456 cuckoo_time: 141603
+		n: 1048576 op_num: 268435456 bucket_time: 144278
+		n: 1048576 op_num: 268435456 two_tier_time: 3556.37, epsilon: 8
+n: 268435456 op_num: 268435456 two_tier_time: 1.06198e+06, epsilon: 64
