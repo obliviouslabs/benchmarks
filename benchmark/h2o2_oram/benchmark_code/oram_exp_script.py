@@ -11,7 +11,7 @@ thread_nums = [32]
 
 for threads in thread_nums:
   for b in block_sizes:
-    cnt_ub = 28
+    cnt_ub = 32
     if threads == 1:
       cnt_ub = 24
     for n_base in range(10, cnt_ub+1):

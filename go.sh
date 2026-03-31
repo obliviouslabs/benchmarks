@@ -28,7 +28,9 @@ sh ./benchmark/h2o2_oram/run.sh
 
 # sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_icelake/run.sh SWAP1G
 
-# sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/h2o2_oram/run.sh SWAP1G
+# sudo systemd-run --scope -p MemoryMax=512M -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/h2o2_oram/run.sh SWAP512M
+
+# sudo systemd-run --scope -p MemoryMax=64G -p MemorySwapMax=200G sudo -u $(whoami) sh ./benchmark/h2o2_oram/run.sh SWAP64G
 
 
 
