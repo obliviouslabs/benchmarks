@@ -14,7 +14,8 @@ for threads in thread_nums:
     cnt_ub = 32
     if threads == 1:
       cnt_ub = 24
-    for n_base in range(10, cnt_ub+1):
+    # for n_base in range(10, cnt_ub+1):
+    for n_base in range(29, cnt_ub+1):
       repetitions = 1
       n = 2**n_base 
       file_name = f"{target_dir}/results/results_{n}_{b}_{threads}.json"

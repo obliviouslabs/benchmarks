@@ -306,3 +306,11 @@ n: 536870912 op_num: 536870912 bucket_time: 1.62071e+06
 		n: 4194304 op_num: 536870912 cuckoo_time: 425394
 		n: 4194304 op_num: 536870912 bucket_time: 334349
 		n: 4194304 op_num: 536870912 two_tier_time: 13770.2, epsilon: 2
+n: 536870912 op_num: 536870912 bucket_time: 1.60846e+06
+		n: 2097152 op_num: 536870912 cuckoo_time: 335157
+		n: 2097152 op_num: 536870912 bucket_time: 307720
+		n: 2097152 op_num: 536870912 two_tier_time: 7067.36, epsilon: 2
+		n: 1048576 op_num: 536870912 cuckoo_time: 264301
+		n: 1048576 op_num: 536870912 bucket_time: 287934
+		n: 1048576 op_num: 536870912 two_tier_time: 3724.42, epsilon: 2
+n: 536870912 op_num: 536870912 two_tier_time: 2.24873e+06, epsilon: 128
