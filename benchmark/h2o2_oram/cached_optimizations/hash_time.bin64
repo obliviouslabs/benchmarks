@@ -314,3 +314,14 @@ n: 536870912 op_num: 536870912 bucket_time: 1.97715e+06
 		n: 8388608 op_num: 536870912 cuckoo_time: 583522
 		n: 8388608 op_num: 536870912 bucket_time: 421459
 		n: 8388608 op_num: 536870912 two_tier_time: 48181.3, epsilon: 64
+n: 536870912 op_num: 536870912 bucket_time: 1.97763e+06
+		n: 4194304 op_num: 536870912 cuckoo_time: 434331
+		n: 4194304 op_num: 536870912 bucket_time: 397640
+		n: 4194304 op_num: 536870912 two_tier_time: 25046, epsilon: 32
+		n: 2097152 op_num: 536870912 cuckoo_time: 345513
+		n: 2097152 op_num: 536870912 bucket_time: 375846
+		n: 2097152 op_num: 536870912 two_tier_time: 12074.9, epsilon: 16
+		n: 1048576 op_num: 536870912 cuckoo_time: 277903
+		n: 1048576 op_num: 536870912 bucket_time: 353633
+		n: 1048576 op_num: 536870912 two_tier_time: 4968.64, epsilon: 4
+n: 536870912 op_num: 536870912 two_tier_time: 4.08454e+06, epsilon: 512
