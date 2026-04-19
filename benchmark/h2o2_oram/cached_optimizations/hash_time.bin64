@@ -325,3 +325,6 @@ n: 536870912 op_num: 536870912 bucket_time: 1.97763e+06
 		n: 1048576 op_num: 536870912 bucket_time: 353633
 		n: 1048576 op_num: 536870912 two_tier_time: 4968.64, epsilon: 4
 n: 536870912 op_num: 536870912 two_tier_time: 4.08454e+06, epsilon: 512
+n: 1073741824 op_num: 1073741824 bucket_time: 4.19697e+06
+		n: 536870912 op_num: 1073741824 cuckoo_time: 2.25603e+07
+		n: 536870912 op_num: 1073741824 bucket_time: 3.01072e+06
