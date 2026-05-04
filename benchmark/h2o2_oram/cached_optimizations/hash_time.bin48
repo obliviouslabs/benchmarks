@@ -320,3 +320,8 @@ n: 1073741824 op_num: 1073741824 bucket_time: 3.34233e+06
 		n: 536870912 op_num: 1073741824 two_tier_time: 2.30387e+06, epsilon: 64
 n: 1073741824 op_num: 1073741824 bucket_time: 3.3406e+06
 		n: 268435456 op_num: 1073741824 cuckoo_time: 1.04482e+07
+		n: 268435456 op_num: 1073741824 bucket_time: 2.11739e+06
+		n: 268435456 op_num: 1073741824 two_tier_time: 1.05804e+06, epsilon: 64
+		n: 134217728 op_num: 1073741824 cuckoo_time: 5.20622e+06
+		n: 134217728 op_num: 1073741824 bucket_time: 1.88024e+06
+		n: 134217728 op_num: 1073741824 two_tier_time: 515727, epsilon: 64
