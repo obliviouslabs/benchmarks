@@ -1,19 +1,85 @@
-#!/usr/bin/env -S uv run python3
-# /// script
-# requires-python = ">=3.8"
-# dependencies = [
-#   "matplotlib",
-#   "pandas",
-#   "numpy",
-#   "tabulate @ git+https://github.com/astanin/python-tabulate.git"
-# ]
-# ///
+#!/usr/bin/env python3
+import os
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+VENV_PYTHON = REPO_ROOT / ".venv" / "bin" / "python"
+
+if VENV_PYTHON.exists() and Path(sys.executable) != VENV_PYTHON:
+  os.execv(str(VENV_PYTHON), [str(VENV_PYTHON), __file__, *sys.argv[1:]])
+
 import pandas as pd
 from utils import load_df, draw_table, HEADER, SUBHEADER, TITLE, NL, NOTES, HORIZONTAL_LINE
 from augment import augmentP
 
+
+README_IMPLEMENTATION = "readme_implementation"
+SHARDED_IMPLEMENTATIONS = [
+  "Signal_Sharded",
+  "Signal_Jasmine_Sharded",
+  "olabs_rostl_sharded",
+  "olabs_oram_sharded",
+]
+README_SHARD_COUNTS = [15, 16]
+BATCH_SIZES_FOR_4K_README = [4096, 8192, 65536]
+
+
+def format_power_of_two(value):
+  return f"$2^{{{int(value).bit_length() - 1}}}$"
+
+
+def format_batch_size(value):
+  return f"{int(value):07d}"
+
+
+def format_batch_sizes(values):
+  def maybe_k(value):
+    value = int(value)
+    if value % 1024 == 0:
+      return f"{value // 1024}K"
+    return str(value)
+  return ", ".join([maybe_k(value) for value in values])
+
+
+def readme_implementation_label(implementation, benchmark_type=None):
+  if implementation == "Signal":
+    return "Signal-Old"
+  if implementation == "Signal_Sharded":
+    return "Signal-Old-Sharded"
+  if implementation == "Signal_Jasmine":
+    return "Signal-Jasmine"
+  if implementation == "Signal_Jasmine_Sharded":
+    return "Signal-Jasmine-Sharded"
+  if implementation == "olabs_oram" and benchmark_type == "UnorderedMap":
+    return "olabs_umap"
+  if implementation == "olabs_oram_sharded":
+    return "olabs_umap_sharded"
+  if implementation == "olabs_oram_shortkv":
+    return "olabs_umap_shortkv"
+  return implementation
+
+
+def add_readme_columns(df):
+  df = df.copy()
+  df[README_IMPLEMENTATION] = df.apply(
+    lambda row: readme_implementation_label(row["implementation"], row["benchmark_type"]),
+    axis=1,
+  )
+  return df
+
+
+def draw_readme_table(data, x_name, y_name, **kwargs):
+  draw_table(data, x_name, y_name, columns=README_IMPLEMENTATION, **kwargs)
+
+
+def is_readme_sharded_row(df):
+  return df["Shards"].isin(README_SHARD_COUNTS)
+
+
 P = load_df()
 P = augmentP(P.copy())
+P = add_readme_columns(P)
 
 HEADER("ORAM")
 SUBHEADER("NRORAM")
@@ -25,8 +91,8 @@ w1 = P.loc[
   & (P['Read_latency_us'].notna())
   & (P['N'] >= (1<<10)) & (P['N'] <= (1<<28))
 ].sort_index().copy()
-w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-draw_table(w1, 'N', 'Read_latency_us')
+w1['N'] = w1['N'].map(format_power_of_two)
+draw_readme_table(w1, 'N', 'Read_latency_us')
 NL(2)
 
 SUBHEADER("RORAM")
@@ -39,19 +105,8 @@ for value_bytes in [8, 56]:
     & (P['Read_latency_us'].notna()) 
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<28))
   ].sort_index().copy()
-  w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 1)]
-  w3 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)]
-  w3.loc[w3['implementation'] == 'h2o2', 'implementation'] = 'h2o2-32'
-  w1 = w1.loc[(P['implementation'] != 'h2o2')]
-  w1 = pd.concat([w1, w2, w3], ignore_index=True)
-  w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-  draw_table(w1, 'N', 'Read_latency_us')
-  NOTES("""
-  > [!info]
-  > All implementations are sequential, except H2O2-32c which runs with 32 cores. 
-  > H2O2 latency is amortized over N operations, the maximum latency is `N * avg_latency`.
-  >
-  """)
+  w1['N'] = w1['N'].map(format_power_of_two)
+  draw_readme_table(w1, 'N', 'Read_latency_us')
 
 HORIZONTAL_LINE()
 
@@ -67,67 +122,64 @@ for (key_bytes,value_bytes) in [(8, 8), (8, 56), (32, 32)]:
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
     & (P['Shards'].isna())
   ].sort_index().copy()
-  w2 = w1.copy().loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 1)]
-  w1 = w1.loc[(P['implementation'] != 'h2o2')]
-  w1 = pd.concat([w1, w2], ignore_index=True)
-  w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-  draw_table(w1, 'N', 'Get_latency_us')
+  w1['N'] = w1['N'].map(format_power_of_two)
+  draw_readme_table(w1, 'N', 'Get_latency_us')
   NL(2)
 
 
 SUBHEADER("Unordered Map - Batched Queries")
 for value_bytes in [8, 56]:
-  TITLE(f"UnorderedMap - Batch Read Latency (us) for 8B keys, {value_bytes}B Values, 4K queries/batch (32 threads)")
+  title_suffix = format_batch_sizes(BATCH_SIZES_FOR_4K_README)
+  TITLE(f"UnorderedMap - Batch Read Latency (us) for 8B keys, {value_bytes}B Values ({title_suffix} queries/batch, 32 threads)")
   w1 = P.loc[
     (P['Key_bytes'] == 8)
     & (P['Value_bytes'] == value_bytes)
     & (P['benchmark_type'] == 'UnorderedMap')
     & (P['Get_latency_us'].notna())
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
+    & (P['Batch_size'].isin(BATCH_SIZES_FOR_4K_README))
+    & is_readme_sharded_row(P)
   ].copy()
-  
-  w2 = w1.loc[(P['Batch_size'] == 4096) & (P['Shards'] == 15)].copy()
-  w3 = w1.loc[(P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)].copy()
-  w3['Get_latency_us'] *= 4096 # adjust for batch size
-  w1 = pd.concat([w2, w3], ignore_index=True)
-  w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-  draw_table(w1, 'N', 'Get_latency_us')
+  w1['N'] = w1['N'].map(format_power_of_two)
+  w1["name"] = w1[README_IMPLEMENTATION].astype(str) + "-" + w1["Batch_size"].map(format_batch_size)
+  draw_table(w1, 'N', 'Get_latency_us', columns='name')
   NL(1)
 
-  TITLE(f"UnorderedMap - Batch Read Throughput (qps) for 8B keys, {value_bytes}B Values, 4K queries/batch (32 threads)")
+  TITLE(f"UnorderedMap - Batch Read Throughput (qps) for 8B keys, {value_bytes}B Values ({title_suffix} queries/batch, 32 threads)")
   w1 = P.loc[
     (P['Key_bytes'] == 8)
     & (P['Value_bytes'] == value_bytes)
     & (P['benchmark_type'] == 'UnorderedMap')
     & (P['Get_throughput_qps'].notna())
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
-    &(
-      (P['Shards'] == 15) 
-     |((P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32)))
+    & (P['Batch_size'].isin(BATCH_SIZES_FOR_4K_README))
+    & is_readme_sharded_row(P)
   ].sort_index().copy()
-  w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-  draw_table(w1, 'N', 'Get_throughput_qps', highlight=1)
+  w1['N'] = w1['N'].map(format_power_of_two)
+  w1["name"] = w1[README_IMPLEMENTATION].astype(str) + "-" + w1["Batch_size"].map(format_batch_size)
+  draw_table(w1, 'N', 'Get_throughput_qps', columns='name', highlight=1)
   NL(2)
 
 
 
 SUBHEADER("Unordered Map - Scaling with Batch Size")
-for implementation in ['Signal_Sharded', 'olabs_rostl_sharded', 'olabs_oram_sharded']:
-  TITLE(f"Unordered Map - Scaling with Batch Size - Read Throughput (qps) for 8B keys, 56B Values ({implementation})")
+for implementation in SHARDED_IMPLEMENTATIONS:
+  implementation_label = readme_implementation_label(implementation, "UnorderedMap")
+  TITLE(f"Unordered Map - Scaling with Batch Size - Read Throughput (qps) for 8B keys, 56B Values ({implementation_label})")
   w1 = P.loc[
     (P['Key_bytes'] == 8)
     & (P['Value_bytes'] == 56)
     & (P['benchmark_type'] == 'UnorderedMap')
     & (P['Get_throughput_qps'].notna())
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
-    & (P['Shards'] == 15)
+    & is_readme_sharded_row(P)
     & (P['implementation'] == implementation)
   ].sort_index().copy()
-  w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-  w1["name"] = w1.apply(lambda r: f"{r['implementation']}-{r['Batch_size']:07d}", axis=1)
+  w1['N'] = w1['N'].map(format_power_of_two)
+  w1["name"] = w1[README_IMPLEMENTATION].astype(str) + "-" + w1["Batch_size"].map(format_batch_size)
   draw_table(w1, 'N', 'Get_throughput_qps', columns='name', highlight=1)
 
-  TITLE(f"Unordered Map - Scaling with Batch Size - Read Latency (qps) for 8B keys, 56B Values ({implementation})")
+  TITLE(f"Unordered Map - Scaling with Batch Size - Read Latency (us) for 8B keys, 56B Values ({implementation_label})")
   draw_table(w1, 'N', 'Get_latency_us', columns='name', highlight=-1)
 
 
@@ -147,8 +199,8 @@ w1 = P.loc[
   & (P['Shards'] == 15)
 ].sort_index().copy()
 
-w1['N'] = w1.apply(lambda x: f"$2^{{{len(bin(x['N'])[3:])}}}$", axis=1)
-w1['Batch_sz'] = w1['Batch_size'].apply(lambda x: f"{x:07d}")
+w1['N'] = w1['N'].map(format_power_of_two)
+w1['Batch_sz'] = w1['Batch_size'].map(format_batch_size)
 draw_table(w1, 'N', 'Percentage_batch_lb', columns='Batch_sz',highlight=0)
 
 

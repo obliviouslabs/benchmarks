@@ -1,17 +1,35 @@
 import json
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+
 from plot_config import files
 
 
+def is_collection_value(value):
+  return isinstance(value, (list, tuple, dict, set, np.ndarray))
+
+
+def normalize_numeric_value(value):
+  if is_collection_value(value):
+    return value
+  if pd.isna(value):
+    return value
+  if isinstance(value, str):
+    return value.strip().strip("`")
+  return value
+
 def simplify_columns(df: pd.DataFrame) -> pd.DataFrame:
   for col in df.columns:
+    cleaned = df[col].map(normalize_numeric_value)
+
     # Try turning into integer:
-    for i, row in enumerate(df[col]):
+    for i, row in enumerate(cleaned):
       try:
+        if is_collection_value(row):
+          raise TypeError("collection values are not numeric")
         if pd.isna(row):
           continue
         if row is None or row.__class__ == str and row.strip() == "":
@@ -24,12 +42,14 @@ def simplify_columns(df: pd.DataFrame) -> pd.DataFrame:
         # print(e)
         break
     else:
-      df[col] = df[col].astype(pd.Int64Dtype())
+      df[col] = cleaned.astype(pd.Int64Dtype())
       continue
 
     # Try turning into float64:
-    for row in df[col]:
+    for row in cleaned:
       try:
+        if is_collection_value(row):
+          raise TypeError("collection values are not numeric")
         if pd.isna(row):
           continue
         if row is None or row.__class__ == str and row.strip() == "":
@@ -40,11 +60,90 @@ def simplify_columns(df: pd.DataFrame) -> pd.DataFrame:
         # print(e)
         break
     else:
-      df[col] = df[col].astype(pd.Float64Dtype())
+      df[col] = cleaned.astype(pd.Float64Dtype())
       continue
     df[col] = df[col].astype(str)
     # print(f"Column {col} converted to str")
   return df
+
+def select_best_signal_jasmine_rows(rows):
+  implementations = {
+    "Signal_Jasmine",
+    "Signal_Jasmine_Sharded",
+  }
+  key_fields = (
+    "benchmark_type",
+    "implementation",
+    "N",
+    "Key_bytes",
+    "Value_bytes",
+    "Batch_size",
+    "Shards",
+  )
+
+  def to_float_or_none(v):
+    try:
+      if pd.isna(v):
+        return None
+      return float(v)
+    except (TypeError, ValueError):
+      return None
+
+  def is_signal_jasmine_path_row(row):
+    try:
+      return row.get("implementation") in implementations and row.get("Path_length") is not None
+    except Exception:
+      return False
+
+  def path_key(row):
+    return tuple(row.get(field) for field in key_fields)
+
+  def row_priority(row):
+    metrics = [
+      ("Get_latency_us", 1, True),
+      ("Read_latency_us", 1, True),
+      ("Latency_us", 1, True),
+      ("Get_throughput_qps", 2, False),
+      ("Read_throughput_qps", 2, False),
+      ("Insertion_latency_us", 1, True),
+      ("Insertion_throughput_qps", 2, False),
+    ]
+
+    for metric, metric_rank, lower_is_better in metrics:
+      value = to_float_or_none(row.get(metric))
+      if value is None:
+        continue
+      return (metric_rank, value, lower_is_better)
+    return (99, 0.0, True)
+
+  def is_better(candidate, current):
+    if current is None:
+      return True
+    c_rank, c_value, c_lower_better = current
+    n_rank, n_value, n_lower_better = candidate
+    if c_rank != n_rank:
+      return n_rank < c_rank
+    if n_lower_better:
+      return n_value < c_value
+    return n_value > c_value
+
+  best_by_key = {}
+
+  for index, row in enumerate(rows):
+    if not is_signal_jasmine_path_row(row):
+      continue
+
+    key = path_key(row)
+    candidate = row_priority(row)
+    best = best_by_key.get(key)
+    if best is None or is_better(candidate, best[0]):
+      best_by_key[key] = (candidate, index)
+
+  selected_indices = {index for _, index in best_by_key.values()}
+  return [
+    row for index, row in enumerate(rows)
+    if not is_signal_jasmine_path_row(row) or index in selected_indices
+  ]
 
 def gather_points_from_files(files) -> pd.DataFrame:
   lines = []
@@ -65,6 +164,7 @@ def gather_points_from_files(files) -> pd.DataFrame:
       print(f"Error decoding JSON: {e} (line: {line})")
       raise e
     pts.append(pt)
+  pts = select_best_signal_jasmine_rows(pts)
   ret = pd.DataFrame(pts).replace({np.nan: pd.NA})
   ret = simplify_columns(ret)
   ret = ret.sort_values(by=['N']).reset_index(drop=True)
@@ -182,7 +282,15 @@ def draw_table(data: pd.DataFrame,
                highlight=-1, # 0 for none, -1 for min, 1 for max
                columns='implementation',
                col_order=[
-  "olabs_rostl", "olabs_oram", "olabs_umap", "olabs_umap_shortkv", "Signal", "h2o2", "meta_oram",
+  "mc_oblivious",
+  "Signal-Old",
+  "Signal-Jasmine",
+  "olabs_rostl",
+  "olabs_oram",
+  "olabs_umap_shortkv",
+  "olabs_umap",
+  "meta_oram",
+  "snoopy",
 ]):
   tbl = data.pivot_table(
     index=x_name,

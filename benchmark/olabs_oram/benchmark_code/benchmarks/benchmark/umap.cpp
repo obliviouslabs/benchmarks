@@ -46,6 +46,23 @@ using OMapShortKv_t = ODSL::OHashMap<typename BytesHelper<KEY_SIZE>::type, typen
 template<size_t KEY_SIZE, size_t VAL_SIZE>
 using OMap_t = ODSL::OMap<typename BytesHelper<KEY_SIZE>::type, typename BytesHelper<VAL_SIZE>::type, uint32_t>;
 
+static constexpr uint64_t UNSHARDED_MAX_LOOKUPS = 2000000;
+static constexpr uint64_t UNSHARDED_MIN_LOOKUPS = 4096;
+
+static inline void pick_unsharded_query_mix(
+    uint64_t N, uint64_t& success_queries, uint64_t& fail_queries) {
+  const uint64_t capacity = N * 5 / 4;
+  uint64_t total_queries = capacity;
+  if (total_queries > UNSHARDED_MAX_LOOKUPS) {
+    total_queries = UNSHARDED_MAX_LOOKUPS;
+  }
+  if (total_queries < UNSHARDED_MIN_LOOKUPS) {
+    total_queries = capacity;
+  }
+  success_queries = (total_queries * 4) / 5;
+  fail_queries = total_queries - success_queries;
+}
+
 // int benchmark_one_with_initializer(uint64_t N);
 
 template<size_t KEY_SIZE, size_t VAL_SIZE>
@@ -84,17 +101,23 @@ int benchmark_umap_shortkv(uint64_t N) {
 
   uint64_t end_ns_create = current_time_ns();
 
+  uint64_t success_queries = 0;
+  uint64_t fail_queries = 0;
+  pick_unsharded_query_mix(N, success_queries, fail_queries);
+
+  uint64_t total_queries = success_queries + fail_queries;
+
   uint64_t start_ns_success = current_time_ns();
-  for (uint64_t i=0; i<N; i++) {
-    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+  for (uint64_t i=0; i<success_queries; i++) {
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i % N);
     typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
   uint64_t end_ns_success = current_time_ns();
 
   uint64_t start_ns_fail = current_time_ns();
-  for (uint64_t i=N; i<cap; i++) {
-    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+  for (uint64_t i=0; i<fail_queries; i++) {
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(N + (i % (cap - N)));
     typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
@@ -104,12 +127,11 @@ int benchmark_umap_shortkv(uint64_t N) {
   int memAfter = getMemValue();
 
   double total_ns_success = (double)(end_ns_success - start_ns_success);
-  double avg_ns_success   = total_ns_success / (double)N;
+  double avg_ns_success = total_ns_success / (double)success_queries;
 
-  size_t failCount        = cap - N;
-  double total_ns_fail    = (double)(end_ns_fail - start_ns_fail);
-  double avg_ns_fail      = total_ns_fail / (double)failCount;
-  double avg_ns_avg = (avg_ns_success + avg_ns_fail) / 2.0;
+  double total_ns_fail = (double)(end_ns_fail - start_ns_fail);
+  double avg_ns_fail = total_ns_fail / (double)fail_queries;
+  double avg_ns_avg = (total_ns_success + total_ns_fail) / (double)total_queries;
 
   REPORT_LINE("UnorderedMap", "olabs_oram_shortkv", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, (end_ns_create - start_ns_create) / 1000.0, avg_ns_avg / 1000.0, 1000000000.0 / avg_ns_avg, memAfter - memBefore);
 
@@ -146,17 +168,22 @@ int benchmark_umap(uint64_t N) {
 
   uint64_t end_ns_create = current_time_ns();
 
+  uint64_t success_queries = 0;
+  uint64_t fail_queries = 0;
+  pick_unsharded_query_mix(N, success_queries, fail_queries);
+  uint64_t total_queries = success_queries + fail_queries;
+
   uint64_t start_ns_success = current_time_ns();
-  for (uint64_t i=0; i<N; i++) {
-    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+  for (uint64_t i=0; i<success_queries; i++) {
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i % N);
     typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
   uint64_t end_ns_success = current_time_ns();
 
   uint64_t start_ns_fail = current_time_ns();
-  for (uint64_t i=N; i<cap; i++) {
-    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(i);
+  for (uint64_t i=0; i<fail_queries; i++) {
+    typename BytesHelper<KEY_SIZE>::type key = BytesHelper<KEY_SIZE>::key_from_u64(N + (i % (cap - N)));
     typename BytesHelper<VAL_SIZE>::type val;
     oram.Find(key, val);
   }
@@ -166,12 +193,11 @@ int benchmark_umap(uint64_t N) {
   int memAfter = getMemValue();
 
   double total_ns_success = (double)(end_ns_success - start_ns_success);
-  double avg_ns_success   = total_ns_success / (double)N;
+  double avg_ns_success = total_ns_success / (double)success_queries;
 
-  size_t failCount        = cap - N;
   double total_ns_fail    = (double)(end_ns_fail - start_ns_fail);
-  double avg_ns_fail      = total_ns_fail / (double)failCount;
-  double avg_ns_avg = (avg_ns_success + avg_ns_fail) / 2.0;
+  double avg_ns_fail      = total_ns_fail / (double)fail_queries;
+  double avg_ns_avg       = (total_ns_success + total_ns_fail) / (double)total_queries;
 
   REPORT_LINE("UnorderedMap", "olabs_oram", "N:=%zu | Key_bytes := %zu | Value_bytes := %zu | fill:=0.8 | Initialization_time_us := %.2f | Get_latency_us := %.2f | Get_throughput_qps := %.2f | Memory_kb := %d", N, KEY_SIZE, VAL_SIZE, (end_ns_create - start_ns_create) / 1000.0, avg_ns_avg / 1000.0, 1000000000.0 / avg_ns_avg, memAfter - memBefore);
 

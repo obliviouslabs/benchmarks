@@ -7,6 +7,8 @@ using namespace std;
 #undef private
 
 const uint64_t NUM_SHARDS = 15;
+static constexpr uint64_t SHARDED_MAX_LOOKUPS = 2000000;
+static constexpr uint64_t SHARDED_MIN_BATCHES = 4;
 
 template <size_t KEY_SIZE>
 struct BytesHelper
@@ -45,18 +47,7 @@ struct BytesHelper<4> {
 template<size_t KEY_SIZE, size_t VAL_SIZE>
 using OMap_t = ODSL::ParOMap<typename BytesHelper<KEY_SIZE>::type, typename BytesHelper<VAL_SIZE>::type, uint32_t>;
 
-// int benchmark_one_with_initializer(uint64_t N);
-
-template<size_t KEY_SIZE, size_t VAL_SIZE>
-int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
-  if (EM::Backend::g_DefaultBackend) {
-    delete EM::Backend::g_DefaultBackend;
-  }
-  size_t BackendSize = 20ULL * (1ULL<<30); // Give it a lot of RAM
-  EM::Backend::g_DefaultBackend =
-      new EM::Backend::MemServerBackend(BackendSize);
-  // Create and initialize a hashtable
-  uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
+static inline uint64_t pick_sharded_repetitions(uint64_t N, size_t batch_size) {
   uint64_t repetitions = 1000;
 
   if (batch_size >= 8192) {
@@ -72,6 +63,33 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
     repetitions /= 2;
   }
 
+  const uint64_t budgeted_repetitions = SHARDED_MAX_LOOKUPS / batch_size;
+  if (budgeted_repetitions < repetitions) {
+    repetitions = budgeted_repetitions;
+  }
+  if (repetitions < SHARDED_MIN_BATCHES && N >= batch_size * 4) {
+    repetitions = SHARDED_MIN_BATCHES;
+  }
+  if (repetitions < 1) {
+    repetitions = 1;
+  }
+
+  return repetitions;
+}
+
+// int benchmark_one_with_initializer(uint64_t N);
+
+template<size_t KEY_SIZE, size_t VAL_SIZE>
+int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
+  if (EM::Backend::g_DefaultBackend) {
+    delete EM::Backend::g_DefaultBackend;
+  }
+  size_t BackendSize = 20ULL * (1ULL<<30); // Give it a lot of RAM
+  EM::Backend::g_DefaultBackend =
+      new EM::Backend::MemServerBackend(BackendSize);
+  // Create and initialize a hashtable
+  uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
+  uint64_t repetitions = pick_sharded_repetitions(N, batch_size);
   size_t num_queries = repetitions * batch_size;
   
   int memBefore = getMemValue();
@@ -109,14 +127,19 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 
   uint64_t main_timer = 0;
   uint64_t writeback_timer = 0;
+  const uint64_t hit_queries = (num_queries * 4) / 5;
+  uint64_t query_index = 0;
   uint64_t start_query_time = current_time_ns();
   std::vector<typename BytesHelper<KEY_SIZE>::type> queries(batch_size);
   std::vector<typename BytesHelper<VAL_SIZE>::type> results(batch_size);
-  uint64_t curr = N - 1;
   for (uint64_t i=0; i<repetitions; i++) {
     for (uint64_t j=0; j<batch_size; j++) {
-      queries[j] = BytesHelper<KEY_SIZE>::key_from_u64(curr);
-      curr--;
+      if (query_index < hit_queries) {
+        queries[j] = BytesHelper<KEY_SIZE>::key_from_u64((query_index % N));
+      } else {
+        queries[j] = BytesHelper<KEY_SIZE>::key_from_u64((N + ((query_index - hit_queries) % (cap - N))));
+      }
+      query_index++;
     }
     uint64_t start_timer = current_time_ns();
     std::vector<uint8_t> findExistFlag =

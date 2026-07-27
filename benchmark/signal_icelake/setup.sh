@@ -2,6 +2,7 @@
 set -e 
 
 proj_name="signal_icelake"
+signal_ref="c76f88b4647c78d5fee1fa79cb59867e5906654c"
 base_dir=$(git rev-parse --show-toplevel)
 . "${base_dir}/scripts/gen_args.sh"
 
@@ -11,8 +12,8 @@ if [ -d "${proj_name}" ]; then
 fi
 
 git clone 'https://github.com/signalapp/ContactDiscoveryService-Icelake' "${proj_name}"
-cd ${proj_name}
-git submodule init
+cd "${proj_name}"
+git checkout "${signal_ref}"
 git submodule update --init --recursive
 cd ..
 

@@ -162,6 +162,27 @@ static int pidfd_open_linux(pid_t pid, unsigned int flags) {
   return (int)syscall(SYS_pidfd_open, pid, flags);
 }
 
+static long long benchmark_test_timeout_ms(void)
+{
+  const char *raw = getenv("BENCHMARK_TEST_TIMEOUT_MS");
+  const long long default_timeout_ms = 3LL * 60LL * 60LL * 1000LL;
+
+  if (raw == NULL || raw[0] == '\0')
+  {
+    return default_timeout_ms;
+  }
+
+  errno = 0;
+  char *end = NULL;
+  unsigned long long parsed = strtoull(raw, &end, 10);
+  if (end == raw || *end != '\0' || errno != 0)
+  {
+    return default_timeout_ms;
+  }
+
+  return (long long)parsed;
+}
+
 // returns: 0 = exited, 1 = timeout (child killed), -1 = error
 static int waitpid_timeout_linux(pid_t pid, int *status, int timeout_ms) {
   int pfd = pidfd_open_linux(pid, 0);
@@ -200,7 +221,7 @@ static int waitpid_timeout_linux(pid_t pid, int *status, int timeout_ms) {
 
 #define RUN_TEST_FORKED(x)                              \
 do {                                                    \
-  const long long timeout_ms = 3LL*60LL * 60LL * 1000LL;    \
+  const long long timeout_ms = benchmark_test_timeout_ms(); \
   pid_t childPid = fork();                              \
   if (childPid == 0) {                                  \
     /* Child process */                                 \
@@ -222,7 +243,7 @@ do {                                                    \
     if (r == -1) {                                      \
       BETTER_TEST_LOG("FAILED: %s (wait error: %d)\n", #x, errno); \
     } else if (r == 1) {                                \
-      BETTER_TEST_LOG("FAILED: %s (timeout after 1h)\n", #x); \
+      BETTER_TEST_LOG("FAILED: %s (timeout after %.3fs)\n", #x, (double)timeout_ms / 1000.0); \
     } else  {                                           \
       if (returnStatus == 0) {                          \
         BETTER_TEST_LOG("OK\n");                        \

@@ -11,6 +11,10 @@ Signal-icelake has the following implementations that we want to benchmark:
 
 The goal of this project is to be able to easily benchmark both implementation on various settings, at any given commit fromt ContactDiscoveryService-Icelake.
 
+If you need to push deeper `N` values in table-scan workloads, set
+`BENCHMARK_TEST_TIMEOUT_MS` (milliseconds) before running `run.sh`.
+The scripts default this to 4h (`14400000`).
+
 We want to benchmark these things:
 
 + Initialization time - how fast can a server be initialized
@@ -22,4 +26,3 @@ We want to benchmark these things:
 + Insertion time - What is the latency of a point insertion
 
 + Batched insertion time - What is the latency of a batched insertion
-

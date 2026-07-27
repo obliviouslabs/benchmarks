@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-sh ./scripts/reset.sh h2o2_oram
-sh ./scripts/setup.sh h2o2_oram
+sh ./scripts/reset.sh
+sh ./scripts/setup.sh
 
 ### Checklist before this:
 # 1) Make sure you have installed the msrp (rust)
@@ -11,11 +11,13 @@ sh ./scripts/setup.sh h2o2_oram
 # 4) Make sure you have docker running
 
 # sh ./benchmark/olabs_oram/run.sh
-# sh ./benchmark/signal_icelake/run.sh
-sh ./benchmark/h2o2_oram/run.sh
-# sh ./benchmark/olabs_rostl/run.sh
-# sh ./benchmark/mc_oblivious/run.sh
-# sh ./benchmark/meta_oram/run.sh
+sh ./benchmark/signal_icelake/run.sh
+sh ./benchmark/signal_jasmine/run.sh
+# sh ./benchmark/h2o2_oram/run.sh
+sh ./benchmark/olabs_rostl/run.sh
+sh ./benchmark/mc_oblivious/run.sh
+sh ./benchmark/meta_oram/run.sh
+# Comment out the lines you don't want this run to execute.
 
 # To setup swap:
 # sudo dd if=/dev/zero of=/data/swapfile_test bs=1G count=8 status=progress

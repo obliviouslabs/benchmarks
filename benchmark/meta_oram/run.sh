@@ -10,7 +10,7 @@ base_dir=$(git rev-parse --show-toplevel)
 mkdir -p "${logs_folder}"
 
 # Run the tests
-cd "$run_folder"
+cd "$build_folder"
 echo "Running benchmark for $proj_name..."
 cargo build --profile=maxperf
 cargo run --profile=maxperf 2>&1 | tee "${logs_folder}/meta_bench.log"

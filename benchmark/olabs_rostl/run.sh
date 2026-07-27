@@ -10,6 +10,7 @@ base_dir=$(git rev-parse --show-toplevel)
 mkdir -p "${logs_folder}"
 
 # Run the tests
+cd "${build_folder}"
 cargo run --profile=maxperf 2>&1 | stdbuf -oL tee "${logs_folder}/rostl_bench.log"
 
 # Parse the results

@@ -20,7 +20,8 @@ Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONT
 | Name | Description | Language | Types |
 | :-   | :-          | :-       | :-:   |
 | [**olabs_oram**](https://github.com/obliviouslabs/oram) | Oblivious Labs's SGX implementation of ORAM and UMAP | C++ | NRORAM, RORAM, UMAP, Sharded-UMAP |
-| [**signal_icelake**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's implemenation of ORAM and UMAP for Private Contact Discovery | C++ | UMAP, Sharded-UMAP |
+| [**signal_icelake**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's pre-Jasmin implementation of ORAM and UMAP for Private Contact Discovery | C++ | UMAP, Sharded-UMAP |
+| [**signal_jasmine**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's Jasmin-backed implementation of ORAM and UMAP for Private Contact Discovery | C/Jasmin | UMAP, Sharded-UMAP |
 | [**olabs_rostl**](https://github.com/obliviouslabs/rostl) | Oblivious Labs's Rust Oblivious Standard Library implementation of ORAM and UMAP | Rust |  NRORAM, RORAM, UMAP, Sharded-UMAP |
 | [**mc_oblivious**](https://github.com/mobilecoinfoundation/mc-oblivious) | Mobilecoin's implementation of ORAM and UMAP | Rust | RORAM, UMAP |
 | [**meta_oram**](https://github.com/facebook/oram) | Meta's implementation of RORAM | Rust | RORAM |
@@ -202,11 +203,11 @@ To generate figures from benchmark data, use the `draw.sh` script:
 Make sure you edit the `files=...` line in `draw.sh` to match the benchmark result files you want to draw.
 
 ### Generating tables
-To generate tables from benchmark data, like the ones in the `README.md`, use the `generate_Readme_body.sh` script:
+To generate tables from benchmark data, like the ones in the `README.md`, use the `generate_readme_bodies.py` script:
 ```bash
-./scripts/generate_readme_body.sh.sh
+./scripts/generate_readme_bodies.py
 ```
-Make sure you edit the `files=...` line in `generate_Readme_body.sh` to match the benchmark result files you want to table.
+Make sure you edit the `files` list in `scripts/plot_config.py` to match the benchmark result files you want to table.
 
 ## Repository Structure
 

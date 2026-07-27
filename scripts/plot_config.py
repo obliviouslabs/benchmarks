@@ -1,26 +1,70 @@
-files = ["./results/mc_oblivious_1752453921_48e6ff4906680dcf474a65c64187f7479a911a32", "./results/meta_oram_1752454724_48e6ff4906680dcf474a65c64187f7479a911a32", "./results/olabs_oram_1752076171_bbab52166942eecb604ca86c710b5ecbe592ba26", "./results/olabs_rostl_1753919497_3bcd00e1092e13e73e3266956c55106f1b6e34e5", "./results/signal_icelake_1752350167_51218ad60ca43af639b8cd0fc57814624b898d63", "./results/h2o2_oram_1768692823_66d48b9718555ab0cbbe5c1f172c4aabf6c7d911"]
-files = ["./results/mc_oblivious_1752453921_48e6ff4906680dcf474a65c64187f7479a911a32", "./results/meta_oram_1752454724_48e6ff4906680dcf474a65c64187f7479a911a32", "./results/olabs_oram_1768870666_bbab52166942eecb604ca86c710b5ecbe592ba26", "./results/olabs_rostl_1753919497_3bcd00e1092e13e73e3266956c55106f1b6e34e5",  "./results/h2o2_oram_1768828981_66d48b9718555ab0cbbe5c1f172c4aabf6c7d911", "./results/signal_icelake_1768984987_46540d24ca3437f0100fd53ba2024192d69115f5", "./results/signal_icelake_1769017290_46540d24ca3437f0100fd53ba2024192d69115f5"]
+from pathlib import Path
+import json
+import re
 
-files = [
-# old run, needs reruning:
-"./results/olabs_oram_1768870666_bbab52166942eecb604ca86c710b5ecbe592ba26_nodups",
-# umap_sharded + load_balance:
-"./results/olabs_oram_1769350036_bbab52166942eecb604ca86c710b5ecbe592ba26",
-# # load_balance:
-# "./results/olabs_oram_1769348593_bbab52166942eecb604ca86c710b5ecbe592ba26",
+REPO_ROOT = Path(__file__).resolve().parents[1]
+RESULTS_ROOT = REPO_ROOT / "results"
 
-# omap:
-"./results/signal_icelake_1768984987_46540d24ca3437f0100fd53ba2024192d69115f5",
-# oram:
-"./results/signal_icelake_1769377553_46540d24ca3437f0100fd53ba2024192d69115f5",
-
-# Most recent runs:
-"./results/mc_oblivious_1769213627_42fa076dc69ec61625cbdf23f24c51a51ad7bb95",
-"./results/meta_oram_1769214540_e3ff5149ec0d90e023cffca9ec1d13e0e07730c4",
-"./results/olabs_rostl_1769212711_8c3a12d2febf17b024f2e949428b3bc526d74172",
-
-# Needs reruning:
-# "./results/h2o2_oram_1769113286_66d48b9718555ab0cbbe5c1f172c4aabf6c7d911",
-# "./results/h2o2_oram_1769389155_66d48b9718555ab0cbbe5c1f172c4aabf6c7d911"
-"./results/h2o2_oram_1769932879_66d48b9718555ab0cbbe5c1f172c4aabf6c7d911"
+RESULT_PREFIXES = [
+  "olabs_oram",
+  "signal_icelake",
+  "signal_jasmine",
+  "mc_oblivious",
+  "meta_oram",
+  "olabs_rostl",
 ]
+
+CANONICAL_RESULT_RE = re.compile(
+  r"^(?P<prefix>[a-z0-9_]+)_(?P<timestamp>\d+)_([0-9a-f]{40})(?:_SWAP[0-9A-Za-z]+)?$"
+)
+
+
+def _load_file_signature(file_path: Path):
+  impl_type_pairs = set()
+  try:
+    with open(file_path, "r") as fh:
+      for line in fh:
+        line = line.strip()
+        if not line or line.startswith("#"):
+          continue
+        try:
+          pt = json.loads(line)
+        except json.JSONDecodeError:
+          continue
+        impl = pt.get("implementation")
+        benchmark_type = pt.get("benchmark_type")
+        if impl is None or benchmark_type is None:
+          continue
+        impl_type_pairs.add((impl, benchmark_type))
+  except FileNotFoundError:
+    return set()
+  return impl_type_pairs
+
+
+def _discover_files() -> list[str]:
+  if not RESULTS_ROOT.exists():
+    return []
+
+  selected = {}
+  for prefix in RESULT_PREFIXES:
+    candidates = []
+    for path in RESULTS_ROOT.glob(f"{prefix}_*"):
+      match = CANONICAL_RESULT_RE.fullmatch(path.name)
+      if not match:
+        continue
+      candidates.append((int(match.group("timestamp")), path))
+
+    for timestamp, path in sorted(candidates, key=lambda x: x[0], reverse=True):
+      signature = _load_file_signature(path)
+      if not signature:
+        continue
+      for impl_bt in signature:
+        if impl_bt in selected:
+          continue
+        selected[impl_bt] = (timestamp, path)
+
+  unique_paths = {path for _, path in selected.values()}
+  return [f"./results/{path.name}" for path in sorted(unique_paths)]
+
+
+files = _discover_files()
