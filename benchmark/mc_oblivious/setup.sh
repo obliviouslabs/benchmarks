@@ -20,3 +20,4 @@ git clone 'git@github.com:mobilecoinfoundation/mc-oblivious.git' "${build_folder
 # Copy the benchmark code
 cp -r "${sources_folder}/benchmark_code/." "${build_folder}"
 cp "$base_dir/benchmark/common/common.rs" "${build_folder}/src"
+cp "$base_dir/benchmark/common/ramp_latency.rs" "${build_folder}/src"

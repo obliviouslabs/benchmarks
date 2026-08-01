@@ -14,16 +14,17 @@ Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONT
 | RORAM | Recursive ORAM - Basically an array | Read Latency, Read Throughput, Initialization Time, Memory Usage | N (ORAM size), K (Address size), V (Value size)
 | UMAP | Unordered Map / Key-Value Store (Many disperse keys) | Read Latency, Read Throughput, Initialization Time, Memory Usage | N (ORAM size), K (Key size), V (Value size)
 | Sharded-UMAP | Sharded UMap | Batch Read Latency, Batch Read Throughput, Initialization Time, Memory Usage | N (ORAM size), K (Key size), V (Value size), P (Number of Partitions), B (Queries per batch)
+| Ramp-UMAP | Open-loop point lookups with slowly increasing offered throughput | End-to-end average and tail latency, raw arrival/response timestamps | N (map size), input-rate ramp |
 
 ## Benchmarked Implementations
 
 | Name | Description | Language | Types |
 | :-   | :-          | :-       | :-:   |
-| [**olabs_oram**](https://github.com/obliviouslabs/oram) | Oblivious Labs's SGX implementation of ORAM and UMAP | C++ | NRORAM, RORAM, UMAP, Sharded-UMAP |
-| [**signal_icelake**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's pre-Jasmin implementation of ORAM and UMAP for Private Contact Discovery | C++ | UMAP, Sharded-UMAP |
-| [**signal_jasmine**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's Jasmin-backed implementation of ORAM and UMAP for Private Contact Discovery | C/Jasmin | UMAP, Sharded-UMAP |
-| [**olabs_rostl**](https://github.com/obliviouslabs/rostl) | Oblivious Labs's Rust Oblivious Standard Library implementation of ORAM and UMAP | Rust |  NRORAM, RORAM, UMAP, Sharded-UMAP |
-| [**mc_oblivious**](https://github.com/mobilecoinfoundation/mc-oblivious) | Mobilecoin's implementation of ORAM and UMAP | Rust | RORAM, UMAP |
+| [**olabs_oram**](https://github.com/obliviouslabs/oram) | Oblivious Labs's SGX implementation of ORAM and UMAP | C++ | NRORAM, RORAM, UMAP, Sharded-UMAP, Ramp-UMAP |
+| [**signal_icelake**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's pre-Jasmin implementation of ORAM and UMAP for Private Contact Discovery | C++ | UMAP, Sharded-UMAP, Ramp-UMAP |
+| [**signal_jasmine**](https://github.com/signalapp/ContactDiscoveryService-Icelake) | Signal's Jasmin-backed implementation of ORAM and UMAP for Private Contact Discovery | C/Jasmin | UMAP, Sharded-UMAP, Ramp-UMAP |
+| [**olabs_rostl**](https://github.com/obliviouslabs/rostl) | Oblivious Labs's Rust Oblivious Standard Library implementation of ORAM and UMAP | Rust |  NRORAM, RORAM, UMAP, Sharded-UMAP, Ramp-UMAP |
+| [**mc_oblivious**](https://github.com/mobilecoinfoundation/mc-oblivious) | Mobilecoin's implementation of ORAM and UMAP | Rust | RORAM, UMAP, Ramp-UMAP |
 | [**meta_oram**](https://github.com/facebook/oram) | Meta's implementation of RORAM | Rust | RORAM |
 
 ## Benchmark Results
@@ -194,6 +195,65 @@ Use the `go.sh` script to initiate benchmarking processes:
 ```bash
 ./go.sh
 ```
+
+### Running the throughput-ramp latency benchmark
+
+After setting up and building the implementations, run:
+
+```bash
+./benchmark/run_ramp_latency.sh
+```
+
+The small-scale default uses `N=1024`. It warms and then calibrates each
+implementation with successful lookups, starts arrivals at 25% of the
+calibrated service rate, and raises the offered rate by 2.5% of that rate every
+`N/8` requests (with a
+minimum phase length of 64 requests). A dedicated producer records the actual
+arrival timestep and a single consumer executes synchronous map queries. Thus,
+when a map stalls, subsequent arrivals wait in the queue and their latency
+includes the waiting time.
+
+The workload sends at least `3N` requests. After that point, it stops on two
+consecutive phase boundaries with both a phase-sized backlog and an offered
+rate above the consumer's measured busy response rate. It otherwise stops at
+`8N`. These defaults make overload detection insensitive to the intentional
+idle periods near the start of the ramp.
+
+Each run writes a CSV with:
+
+```text
+query_id,incoming_ns,responded_ns
+```
+
+Both timesteps are relative to the same monotonic-clock origin, and latency is
+`responded_ns - incoming_ns`. The adjacent `.csv.meta.json` contains the ramp
+parameters, stop reason, calibration rate, average latency, and
+p50/p95/p99/p99.9/max latency. All records are preallocated and kept in memory;
+neither file is opened until arrivals have stopped and the request queue has
+fully drained.
+
+The timed record buffer uses 16 bytes per maximum query, so the default `8N`
+ceiling reserves `128N` bytes. After the raw CSV is complete, that same buffer
+is reused in place to compute exact percentiles. For very large maps, lower
+`RAMP_MAX_QUERIES_FACTOR` if necessary, while keeping it at least 3 to preserve
+the intended minimum query count.
+
+Useful controls include:
+
+```bash
+RAMP_MAP_SIZES="1024 4096" ./benchmark/run_ramp_latency.sh
+RAMP_IMPLEMENTATIONS="olabs_rostl mc_oblivious" ./benchmark/run_ramp_latency.sh
+RAMP_OUTPUT_DIR=/data/ramp-results ./benchmark/run_ramp_latency.sh
+```
+
+The ramp can be tuned with `RAMP_START_FRACTION`,
+`RAMP_STEP_FRACTION`, `RAMP_PHASE_QUERIES`,
+`RAMP_MIN_QUERIES_FACTOR`, `RAMP_MAX_QUERIES_FACTOR`,
+`RAMP_CALIBRATION_QUERIES`, and `RAMP_OVERLOAD_PHASES`. Absolute
+`RAMP_MIN_QUERIES` and `RAMP_MAX_QUERIES` values override their corresponding
+factors. The target rate for query `i` can be reconstructed as
+`calibration_qps * (start_fraction + step_fraction * floor(i / phase_queries))`;
+actual arrivals remain authoritative if the producer itself is delayed.
 
 ### Generating Figures
 To generate figures from benchmark data, use the `draw.sh` script:
