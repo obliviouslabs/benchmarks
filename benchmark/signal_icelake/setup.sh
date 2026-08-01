@@ -20,9 +20,10 @@ cd ..
 echo "Copying the benchmark code"
 cp -r "${sources_folder}/benchmark_code/." "${build_folder}/c/"
 cp $base_dir'/benchmark/common/common.h' "${build_folder}/c/benchmarks/tests"
+cp $base_dir'/benchmark/common/ramp_latency.h' "${build_folder}/c/benchmarks/tests"
 
 echo "Patching the build script"
-sed -i 's/^##TESTS$/##TESTS\nTESTS=benchmarks\/path_oram.test benchmarks\/loaded_sharded_table.test benchmarks\/loaded_table.test/' "${build_folder}/c/Makefile"
+sed -i 's/^##TESTS$/##TESTS\nTESTS=benchmarks\/path_oram.test benchmarks\/loaded_sharded_table.test benchmarks\/loaded_table.test benchmarks\/loaded_table_ramp.test/' "${build_folder}/c/Makefile"
 sed -i 's/^tests: $(patsubst %,%.out,$(TESTS)) enclave.test.out constant_time_check.test$/tests: $(patsubst %,%.out,$(TESTS))/' "${build_folder}/c/Makefile"
 
 sed -i '/^[[:space:]]*-g[[:space:]]*\\[[:space:]]*$/d' "${build_folder}/c/Makefile.base"

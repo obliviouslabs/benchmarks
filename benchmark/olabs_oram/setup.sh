@@ -15,8 +15,8 @@ git clone 'git@github.com:obliviouslabs/oram.git' "${proj_name}"
 echo "Copying the benchmark code"
 cp -r "${sources_folder}/benchmark_code/." "${build_folder}/applications/"
 cp "${base_dir}/benchmark/common/common.h" "${build_folder}/applications/benchmarks/benchmark"
+cp "${base_dir}/benchmark/common/ramp_latency.h" "${build_folder}/applications/benchmarks/benchmark"
 cp "${base_dir}/benchmark/common/cds.proto" "${build_folder}/applications/benchmarks/benchmark"
 
 echo "Patching the build script"
 sed -i '/add_subdirectory(tests)/a add_subdirectory(applications/benchmarks)' "${build_folder}/CMakeLists.txt"
-
