@@ -39,7 +39,7 @@ int benchmark_nroram(uint64_t N) {
 int benchmark_roram_8bk_8bv(uint64_t N) {
   uint64_t memBefore = getMemValue();
   uint64_t start_ns_create = current_time_ns();
-  ODSL::RecursiveORAM<uint64_t, uint64_t> oram(N);
+  ODSL::RecursiveORAM<uint64_t> oram(N);
   uint64_t end_ns_create = current_time_ns();
 
   uint64_t start_ns_query = current_time_ns();
@@ -58,7 +58,7 @@ int benchmark_roram_8bk_8bv(uint64_t N) {
 int benchmark_roram_8bk_56bv(uint64_t N) {
   uint64_t memBefore = getMemValue();
   uint64_t start_ns_create = current_time_ns();
-  ODSL::RecursiveORAM<Bytes<56>, uint64_t> oram(N);
+  ODSL::RecursiveORAM<Bytes<56>> oram(N);
   uint64_t end_ns_create = current_time_ns();
 
   uint64_t start_ns_query = current_time_ns();
@@ -77,7 +77,7 @@ int benchmark_roram_8bk_56bv(uint64_t N) {
 int benchmark_roram_8bk_32bv(uint64_t N) {
   uint64_t memBefore = getMemValue();
   uint64_t start_ns_create = current_time_ns();
-  ODSL::RecursiveORAM<Bytes<32>, uint64_t> oram(N);
+  ODSL::RecursiveORAM<Bytes<32>> oram(N);
   uint64_t end_ns_create = current_time_ns();
 
   uint64_t start_ns_query = current_time_ns();
