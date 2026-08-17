@@ -14,7 +14,7 @@ Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONT
 | RORAM | Recursive ORAM - Basically an array | Read Latency, Read Throughput, Initialization Time, Memory Usage | N (ORAM size), K (Address size), V (Value size)
 | UMAP | Unordered Map / Key-Value Store (Many disperse keys) | Read Latency, Read Throughput, Initialization Time, Memory Usage | N (ORAM size), K (Key size), V (Value size)
 | Sharded-UMAP | Sharded UMap | Batch Read Latency, Batch Read Throughput, Initialization Time, Memory Usage | N (ORAM size), K (Key size), V (Value size), P (Number of Partitions), B (Queries per batch)
-| Ramp-UMAP | Open-loop point lookups with slowly increasing offered throughput | End-to-end average and tail latency, raw arrival/response timestamps | N (map size), input-rate ramp |
+| Ramp-UMAP | Open-loop point lookups with ramp, constant, or intermittent input | End-to-end average and tail latency, raw arrival/response timestamps, dynamic caller batch sizes | N (map size), workload and input-rate controls |
 
 ## Benchmarked Implementations
 
@@ -197,7 +197,7 @@ Use the `go.sh` script to initiate benchmarking processes:
 ./go.sh
 ```
 
-### Running the throughput-ramp latency benchmark
+### Running the open-loop latency workloads
 
 After setting up and building the implementations, run:
 
@@ -205,36 +205,60 @@ After setting up and building the implementations, run:
 ./benchmark/run_ramp_latency.sh
 ```
 
-The small-scale default uses `N=1024`. It warms and then calibrates each
-implementation with successful lookups, starts arrivals at 25% of the
-calibrated service rate, and raises the offered rate by 2.5% of that rate every
-`N/8` requests (with a
-minimum phase length of 64 requests). A dedicated producer records the actual
-arrival timestep and a single consumer executes synchronous map queries. Thus,
-when a map stalls, subsequent arrivals wait in the queue and their latency
-includes the waiting time.
+The input generator and map caller run independently. The generator records
+when each request actually enters the pending queue; the caller drains the
+queue synchronously. Thus, when a map call stalls, subsequent arrivals wait in
+the queue and their latency includes that waiting time.
 
-The workload sends at least `3N` requests. After that point, it stops on two
+`RAMP_WORKLOAD` selects one of three generators:
+
+- `ramp` (the default) starts arrivals at 25% of calibrated service rate and
+  raises the offered rate by 2.5% of that rate every `N/8` requests (with a
+  minimum phase length of 64).
+
+- `constant` uses `RAMP_CONSTANT_QPS` when set. Otherwise it uses
+  `RAMP_CONSTANT_FRACTION` times calibrated throughput (default 1.0).
+
+- `intermittent` publishes `RAMP_INTERMITTENT_BATCH_SIZE` arrivals at the same
+  instant (default 1024), waits for the entire burst to complete, then idles
+  for `RAMP_INTERMITTENT_WAIT_MULTIPLIER` times that burst's response duration
+  (default 3.0) before publishing the next burst.
+
+The ramp sends at least `3N` requests. After that point, it stops on two
 consecutive phase boundaries with both a phase-sized backlog and an offered
-rate above the consumer's measured busy response rate. It otherwise stops at
-`8N`. These defaults make overload detection insensitive to the intentional
-idle periods near the start of the ramp.
+rate above the caller's measured busy response rate. It otherwise stops at
+`8N`. Constant and intermittent workloads run to the configured maximum
+request count (also `8N` by default).
+
+The `olabs_oram` entry continues to benchmark the unsharded scalar
+`OMap::Find` API, whose caller batch size is always one. The separate
+`olabs_oram_sharded` entry benchmarks the actual `ParOMap::FindBatch` protocol.
+After every response, its caller snapshots the number of pending requests and
+submits all of them as the next batch, capped by `RAMP_MAX_BATCH_SIZE` (default
+65536). Consequently, its caller batch size changes with offered throughput
+and service time; it is not fixed by the benchmark.
+
+Set `RAMP_CHECK_OUTPUT=1` for `olabs_oram_sharded` to check every returned
+existence flag and value against its requested key. The checking work runs
+inside the timed batch call, so use the same setting for every run being
+compared. The metadata records the mode as `"check_output": true`.
 
 Each run writes a CSV with:
 
 ```text
-query_id,incoming_ns,responded_ns
+query_id,incoming_ns,responded_ns,caller_batch_size
 ```
 
 Both timesteps are relative to the same monotonic-clock origin, and latency is
-`responded_ns - incoming_ns`. The adjacent `.csv.meta.json` contains the ramp
-parameters, stop reason, calibration rate, average latency, and
-p50/p95/p99/p99.9/max latency. All records are preallocated and kept in memory;
-neither file is opened until arrivals have stopped and the request queue has
-fully drained.
+`responded_ns - incoming_ns`. Requests submitted by one caller batch have the
+same `responded_ns` and `caller_batch_size`. The adjacent `.csv.meta.json`
+contains the workload parameters, configured and observed caller batch sizes,
+stop reason, calibration rate, average latency, and p50/p95/p99/p99.9/max
+latency. All records are preallocated and kept in memory; neither file is
+opened until arrivals have stopped and the request queue has fully drained.
 
-The timed record buffer uses 16 bytes per maximum query, so the default `8N`
-ceiling reserves `128N` bytes. After the raw CSV is complete, that same buffer
+The timed record buffer uses 24 bytes per maximum query, so the default `8N`
+ceiling reserves `192N` bytes. After the raw CSV is complete, that same buffer
 is reused in place to compute exact percentiles. For very large maps, lower
 `RAMP_MAX_QUERIES_FACTOR` if necessary, while keeping it at least 3 to preserve
 the intended minimum query count.
@@ -245,9 +269,15 @@ Useful controls include:
 RAMP_MAP_SIZES="1024 4096" ./benchmark/run_ramp_latency.sh
 RAMP_IMPLEMENTATIONS="olabs_rostl mc_oblivious" ./benchmark/run_ramp_latency.sh
 RAMP_OUTPUT_DIR=/data/ramp-results ./benchmark/run_ramp_latency.sh
+RAMP_WORKLOAD=constant RAMP_CONSTANT_QPS=10000 ./benchmark/run_ramp_latency.sh
+RAMP_CHECK_OUTPUT=1 RAMP_IMPLEMENTATIONS=olabs_oram_sharded \
+  ./benchmark/run_ramp_latency.sh
+RAMP_WORKLOAD=intermittent RAMP_INTERMITTENT_BATCH_SIZE=65536 \
+  RAMP_INTERMITTENT_WAIT_MULTIPLIER=3 \
+  RAMP_IMPLEMENTATIONS=olabs_oram_sharded ./benchmark/run_ramp_latency.sh
 ```
 
-The ramp can be tuned with `RAMP_START_FRACTION`,
+The ramp generator can be tuned with `RAMP_START_FRACTION`,
 `RAMP_STEP_FRACTION`, `RAMP_PHASE_QUERIES`,
 `RAMP_MIN_QUERIES_FACTOR`, `RAMP_MAX_QUERIES_FACTOR`,
 `RAMP_CALIBRATION_QUERIES`, and `RAMP_OVERLOAD_PHASES`. Absolute

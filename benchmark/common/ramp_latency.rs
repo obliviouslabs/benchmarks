@@ -1,9 +1,10 @@
-//! Open-loop latency workload shared by the Rust map adapters.
+//! Open-loop latency workloads shared by the Rust map adapters.
 //!
-//! A producer publishes requests on an absolute schedule while the calling
-//! thread performs synchronous lookups. If a lookup stalls, later arrivals
-//! remain queued and their latency includes that queueing delay. Raw records
-//! stay in pre-faulted memory until the timed run and queue drain are complete.
+//! An input-generator thread publishes requests while the calling thread
+//! independently performs synchronous lookups. If a lookup stalls, later
+//! arrivals remain queued and their latency includes that queueing delay. Raw
+//! records stay in pre-faulted memory until the timed run and queue drain are
+//! complete.
 
 use std::cell::UnsafeCell;
 use std::env;
@@ -16,6 +17,35 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+#[derive(Clone, Copy, Debug)]
+pub enum Workload {
+    Ramp,
+    Constant,
+    Intermittent,
+}
+
+impl Workload {
+    fn from_env() -> Self {
+        match env::var("RAMP_WORKLOAD").as_deref() {
+            Ok("constant") => Self::Constant,
+            Ok("intermittent") => Self::Intermittent,
+            Ok("ramp") | Err(_) => Self::Ramp,
+            Ok(value) => {
+                eprintln!("unknown RAMP_WORKLOAD={value}; using ramp");
+                Self::Ramp
+            }
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Ramp => "ramp",
+            Self::Constant => "constant",
+            Self::Intermittent => "intermittent",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Config {
     pub map_size: u64,
@@ -26,6 +56,11 @@ pub struct Config {
     pub overload_phases: u32,
     pub start_fraction: f64,
     pub step_fraction: f64,
+    pub constant_qps: f64,
+    pub constant_fraction: f64,
+    pub intermittent_batch_size: u64,
+    pub intermittent_wait_multiplier: f64,
+    pub workload: Workload,
     pub implementation: String,
     pub csv_path: PathBuf,
 }
@@ -56,6 +91,14 @@ impl Config {
             overload_phases: env_u64("RAMP_OVERLOAD_PHASES", 2).max(1) as u32,
             start_fraction: positive_env_f64("RAMP_START_FRACTION", 0.25),
             step_fraction: positive_env_f64("RAMP_STEP_FRACTION", 0.025),
+            constant_qps: nonnegative_env_f64("RAMP_CONSTANT_QPS", 0.0),
+            constant_fraction: positive_env_f64("RAMP_CONSTANT_FRACTION", 1.0),
+            intermittent_batch_size: env_u64("RAMP_INTERMITTENT_BATCH_SIZE", 1024).max(1),
+            intermittent_wait_multiplier: nonnegative_env_f64(
+                "RAMP_INTERMITTENT_WAIT_MULTIPLIER",
+                3.0,
+            ),
+            workload: Workload::from_env(),
             implementation: implementation.into(),
             csv_path: csv_path.into(),
         }
@@ -66,8 +109,11 @@ impl Config {
 pub struct Summary {
     pub queries: u64,
     pub elapsed_ns: u64,
+    pub caller_batches: u64,
+    pub maximum_caller_batch_size: u64,
     pub calibration_qps: f64,
     pub final_target_qps: f64,
+    pub average_caller_batch_size: f64,
     pub average_latency_ns: f64,
     pub p50_ns: u64,
     pub p95_ns: u64,
@@ -81,6 +127,7 @@ pub struct Summary {
 struct Record {
     incoming_ns: u64,
     responded_ns: u64,
+    caller_batch_size: u64,
 }
 
 struct Records(UnsafeCell<Box<[Record]>>);
@@ -99,6 +146,7 @@ impl Records {
                 Record {
                     incoming_ns: u64::MAX,
                     responded_ns: u64::MAX,
+                    caller_batch_size: 0,
                 };
                 count
             ]
@@ -118,6 +166,7 @@ impl Records {
         // SAFETY: each response field is written once by the sole consumer.
         unsafe {
             (*self.0.get())[index].responded_ns = value;
+            (*self.0.get())[index].caller_batch_size = 1;
         }
     }
 
@@ -174,7 +223,7 @@ where
     if config.max_queries == 0 || !calibration_qps.is_finite() || calibration_qps <= 0.0 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
-            "invalid ramp configuration or calibration throughput",
+            "invalid latency workload configuration or calibration throughput",
         ));
     }
     let record_count = usize::try_from(config.max_queries).map_err(|_| {
@@ -217,11 +266,19 @@ where
                     .write_responded(query_id as usize, responded_ns);
             }
             query_id += 1;
-            if query_id & 63 == 0 {
+            // Intermittent generators need the final response of each burst;
+            // other scalar workloads retain the lower-overhead periodic update.
+            if query_id & 63 == 0
+                || (matches!(config.workload, Workload::Intermittent) && query_id == produced)
+            {
                 shared.service_ns.store(local_service_ns, Ordering::Release);
                 shared.responded.store(query_id, Ordering::Release);
             }
-        } else if shared.producer_done.load(Ordering::Acquire) {
+        // Reload produced after observing done; the final publish may have
+        // raced with the snapshot at the top of this iteration.
+        } else if shared.producer_done.load(Ordering::Acquire)
+            && query_id >= shared.produced.load(Ordering::Acquire)
+        {
             break;
         } else {
             spin_loop();
@@ -240,6 +297,14 @@ where
 }
 
 fn produce(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> ProducerResult {
+    match config.workload {
+        Workload::Ramp => produce_ramp(shared, config, calibration_qps),
+        Workload::Constant => produce_constant(shared, config, calibration_qps),
+        Workload::Intermittent => produce_intermittent(shared, config),
+    }
+}
+
+fn produce_ramp(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> ProducerResult {
     let mut query_id = 0_u64;
     let mut current_phase = u64::MAX;
     let mut overloaded_checks = 0_u32;
@@ -301,6 +366,92 @@ fn produce(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> Produce
     }
 }
 
+fn produce_constant(
+    shared: Arc<Shared>,
+    config: Config,
+    calibration_qps: f64,
+) -> ProducerResult {
+    let mut query_id = 0_u64;
+    let mut scheduled_offset_ns = 0_f64;
+    let target_qps = if config.constant_qps > 0.0 {
+        config.constant_qps
+    } else {
+        calibration_qps * config.constant_fraction
+    };
+
+    while query_id < config.max_queries {
+        scheduled_offset_ns += 1e9 / target_qps;
+        let scheduled = shared.start + Duration::from_nanos(scheduled_offset_ns as u64);
+        wait_until(scheduled);
+        publish_one(&shared, query_id);
+        query_id += 1;
+    }
+
+    shared.producer_done.store(true, Ordering::Release);
+    ProducerResult {
+        queries: query_id,
+        final_target_qps: target_qps,
+        stop_reason: "max_queries",
+    }
+}
+
+fn produce_intermittent(shared: Arc<Shared>, config: Config) -> ProducerResult {
+    let mut query_id = 0_u64;
+    wait_until(shared.start);
+
+    while query_id < config.max_queries {
+        let burst_size = config
+            .intermittent_batch_size
+            .min(config.max_queries - query_id);
+        let burst_end = query_id + burst_size;
+        let dispatch = Instant::now();
+        let incoming_ns = duration_ns(dispatch.duration_since(shared.start));
+
+        for index in query_id..burst_end {
+            // SAFETY: this generator is the sole incoming timestamp writer,
+            // and publishes the whole initialized burst with one release store.
+            unsafe {
+                shared
+                    .records
+                    .write_incoming(index as usize, incoming_ns);
+            }
+        }
+        shared.produced.store(burst_end, Ordering::Release);
+
+        while shared.responded.load(Ordering::Acquire) < burst_end {
+            spin_loop();
+        }
+        query_id = burst_end;
+        if query_id == config.max_queries {
+            break;
+        }
+
+        let final_record = unsafe { shared.records.get((burst_end - 1) as usize) };
+        let response_ns = final_record.responded_ns.saturating_sub(incoming_ns);
+        let idle_ns = scaled_ns(response_ns, config.intermittent_wait_multiplier);
+        wait_until(Instant::now() + Duration::from_nanos(idle_ns));
+    }
+
+    shared.producer_done.store(true, Ordering::Release);
+    ProducerResult {
+        queries: query_id,
+        final_target_qps: 0.0,
+        stop_reason: "max_queries",
+    }
+}
+
+fn publish_one(shared: &Shared, query_id: u64) {
+    let incoming_ns = duration_ns(Instant::now().duration_since(shared.start));
+    // SAFETY: this is the sole producer, and it publishes this index with a
+    // release-store only after the record has been initialized.
+    unsafe {
+        shared
+            .records
+            .write_incoming(query_id as usize, incoming_ns);
+    }
+    shared.produced.store(query_id + 1, Ordering::Release);
+}
+
 fn wait_until(target: Instant) {
     const SLEEP_THRESHOLD: Duration = Duration::from_micros(50);
     const SLEEP_MARGIN: Duration = Duration::from_micros(25);
@@ -327,8 +478,11 @@ fn write_results(
     let count = producer.queries as usize;
     let mut summary = Summary {
         queries: producer.queries,
+        caller_batches: producer.queries,
+        maximum_caller_batch_size: if producer.queries == 0 { 0 } else { 1 },
         calibration_qps,
         final_target_qps: producer.final_target_qps,
+        average_caller_batch_size: if producer.queries == 0 { 0.0 } else { 1.0 },
         stop_reason: producer.stop_reason,
         ..Summary::default()
     };
@@ -339,13 +493,16 @@ fn write_results(
 
     // No file is opened until all timed work and queue draining has finished.
     let mut csv = BufWriter::new(File::create(&config.csv_path)?);
-    writeln!(csv, "query_id,incoming_ns,responded_ns")?;
+    writeln!(
+        csv,
+        "query_id,incoming_ns,responded_ns,caller_batch_size"
+    )?;
     for index in 0..count {
         let record = unsafe { shared.records.get(index) };
         writeln!(
             csv,
-            "{index},{},{}",
-            record.incoming_ns, record.responded_ns
+            "{index},{},{},{}",
+            record.incoming_ns, record.responded_ns, record.caller_batch_size
         )?;
     }
     csv.flush()?;
@@ -372,12 +529,14 @@ fn write_results(
     let meta_path = metadata_path(&config.csv_path);
     let mut meta = BufWriter::new(File::create(meta_path)?);
     writeln!(meta, "{{")?;
-    writeln!(meta, "  \"schema_version\": 1,")?;
+    writeln!(meta, "  \"schema_version\": 2,")?;
     writeln!(
         meta,
         "  \"implementation\": \"{}\",",
         json_escape(&config.implementation)
     )?;
+    writeln!(meta, "  \"workload\": \"{}\",", config.workload.as_str())?;
+    writeln!(meta, "  \"check_output\": false,")?;
     writeln!(meta, "  \"map_size\": {},", config.map_size)?;
     writeln!(meta, "  \"queries\": {},", summary.queries)?;
     writeln!(meta, "  \"minimum_queries\": {},", config.min_queries)?;
@@ -400,6 +559,34 @@ fn write_results(
     )?;
     writeln!(meta, "  \"start_fraction\": {:.9},", config.start_fraction)?;
     writeln!(meta, "  \"step_fraction\": {:.9},", config.step_fraction)?;
+    writeln!(meta, "  \"constant_qps\": {:.9},", config.constant_qps)?;
+    writeln!(
+        meta,
+        "  \"constant_fraction\": {:.9},",
+        config.constant_fraction
+    )?;
+    writeln!(
+        meta,
+        "  \"intermittent_batch_size\": {},",
+        config.intermittent_batch_size
+    )?;
+    writeln!(
+        meta,
+        "  \"intermittent_wait_multiplier\": {:.9},",
+        config.intermittent_wait_multiplier
+    )?;
+    writeln!(meta, "  \"caller_max_batch_size\": 1,")?;
+    writeln!(meta, "  \"caller_batches\": {},", summary.caller_batches)?;
+    writeln!(
+        meta,
+        "  \"average_caller_batch_size\": {:.9},",
+        summary.average_caller_batch_size
+    )?;
+    writeln!(
+        meta,
+        "  \"maximum_caller_batch_size\": {},",
+        summary.maximum_caller_batch_size
+    )?;
     writeln!(
         meta,
         "  \"final_target_qps\": {:.9},",
@@ -424,16 +611,21 @@ fn write_results(
 
 fn print_summary(config: &Config, summary: &Summary) {
     eprintln!(
-        "RAMP_LATENCY implementation={} N={} queries={} stop={} \
-         calibration_qps={:.2} final_input_qps={:.2} avg_us={:.3} \
+        "RAMP_LATENCY implementation={} workload={} N={} queries={} stop={} \
+         calibration_qps={:.2} final_input_qps={:.2} caller_batches={} \
+         avg_batch={:.2} max_batch={} avg_us={:.3} \
          p50_us={:.3} p95_us={:.3} p99_us={:.3} p999_us={:.3} \
          max_us={:.3} raw={}",
         config.implementation,
+        config.workload.as_str(),
         config.map_size,
         summary.queries,
         summary.stop_reason,
         summary.calibration_qps,
         summary.final_target_qps,
+        summary.caller_batches,
+        summary.average_caller_batch_size,
+        summary.maximum_caller_batch_size,
         summary.average_latency_ns / 1000.0,
         summary.p50_ns as f64 / 1000.0,
         summary.p95_ns as f64 / 1000.0,
@@ -446,6 +638,10 @@ fn print_summary(config: &Config, summary: &Summary) {
 
 fn duration_ns(duration: Duration) -> u64 {
     duration.as_nanos().min(u64::MAX as u128) as u64
+}
+
+fn scaled_ns(value: u64, multiplier: f64) -> u64 {
+    (value as f64 * multiplier).min(u64::MAX as f64) as u64
 }
 
 fn percentile(sorted: &[Record], fraction: f64) -> u64 {
@@ -476,6 +672,14 @@ fn positive_env_f64(name: &str, fallback: f64) -> f64 {
         .ok()
         .and_then(|value| value.parse::<f64>().ok())
         .filter(|value| value.is_finite() && *value > 0.0)
+        .unwrap_or(fallback)
+}
+
+fn nonnegative_env_f64(name: &str, fallback: f64) -> f64 {
+    env::var(name)
+        .ok()
+        .and_then(|value| value.parse::<f64>().ok())
+        .filter(|value| value.is_finite() && *value >= 0.0)
         .unwrap_or(fallback)
 }
 
