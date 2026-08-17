@@ -3,7 +3,7 @@ set -eu
 
 base_dir=$(git rev-parse --show-toplevel)
 map_sizes="${RAMP_MAP_SIZES:-65536 131072 262144 524288 1048576 2097152 4194304 8388608}"
-implementations="${RAMP_IMPLEMENTATIONS:-h2o2_oram olabs_oram olabs_rostl mc_oblivious signal_icelake signal_jasmine}"
+implementations="${RAMP_IMPLEMENTATIONS:-h2o2_oram olabs_oram olabs_oram_sharded olabs_rostl mc_oblivious signal_icelake signal_jasmine}"
 run_timestamp=$(date +%s)
 output_dir="${RAMP_OUTPUT_DIR:-${base_dir}/logs/ramp_latency_${run_timestamp}}"
 mkdir -p "$output_dir"
@@ -17,7 +17,7 @@ run_one()
     n=$2
     output="${output_dir}/${implementation}_N${n}.csv"
 
-    echo "Running ramp latency: implementation=${implementation} N=${n}"
+    echo "Running latency workload: implementation=${implementation} N=${n} workload=${RAMP_WORKLOAD:-ramp}"
     case "$implementation" in
         h2o2_oram)
             binary="${base_dir}/build/h2o2_oram/bin/h2o2_oram_ramp"
@@ -30,6 +30,15 @@ run_one()
             ;;
         olabs_oram)
             binary="${base_dir}/build/olabs_oram/build/applications/benchmarks/umap_ramp"
+            if [ ! -x "$binary" ]; then
+                echo "Skipping ${implementation}: build it with benchmark/olabs_oram/build.sh" >&2
+                skipped=$((skipped + 1))
+                return
+            fi
+            "$binary" "$n" "$output"
+            ;;
+        olabs_oram_sharded)
+            binary="${base_dir}/build/olabs_oram/build/applications/benchmarks/umap_sharded_ramp"
             if [ ! -x "$binary" ]; then
                 echo "Skipping ${implementation}: build it with benchmark/olabs_oram/build.sh" >&2
                 skipped=$((skipped + 1))
@@ -100,8 +109,8 @@ for n in $map_sizes; do
 done
 
 if [ "$ran" -eq 0 ]; then
-    echo "No ramp benchmarks ran; set up and build at least one requested implementation." >&2
+    echo "No latency workloads ran; set up and build at least one requested implementation." >&2
     exit 1
 fi
 
-echo "Ramp latency results: ${output_dir} (${ran} run(s), ${skipped} skipped)"
+echo "Latency workload results: ${output_dir} (${ran} run(s), ${skipped} skipped)"
