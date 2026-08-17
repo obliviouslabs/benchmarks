@@ -26,6 +26,7 @@ Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONT
 | [**olabs_rostl**](https://github.com/obliviouslabs/rostl) | Oblivious Labs's Rust Oblivious Standard Library implementation of ORAM and UMAP | Rust |  NRORAM, RORAM, UMAP, Sharded-UMAP, Ramp-UMAP |
 | [**mc_oblivious**](https://github.com/mobilecoinfoundation/mc-oblivious) | Mobilecoin's implementation of ORAM and UMAP | Rust | RORAM, UMAP, Ramp-UMAP |
 | [**meta_oram**](https://github.com/facebook/oram) | Meta's implementation of RORAM | Rust | RORAM |
+| [**h2o2_oram**](https://github.com/55199789/H2O2RAM) | H2O2RAM's high-performance hierarchical doubly oblivious RAM | C++ | RORAM, Ramp-UMAP |
 
 ## Benchmark Results
 
