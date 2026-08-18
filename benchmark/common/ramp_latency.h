@@ -209,7 +209,7 @@ static void ramp_latency_default_config(ramp_latency_config *config, uint64_t ma
     config->csv_path = csv_path;
 }
 
-static void ramp_latency_enable_batching(ramp_latency_config *config,
+static inline void ramp_latency_enable_batching(ramp_latency_config *config,
                                          uint64_t default_max_batch_size) {
     if (default_max_batch_size == 0)
         default_max_batch_size = 1;
