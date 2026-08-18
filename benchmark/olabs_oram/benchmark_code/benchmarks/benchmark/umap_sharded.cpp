@@ -81,12 +81,6 @@ static inline uint64_t pick_sharded_repetitions(uint64_t N, size_t batch_size) {
 
 template<size_t KEY_SIZE, size_t VAL_SIZE>
 int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
-  if (EM::Backend::g_DefaultBackend) {
-    delete EM::Backend::g_DefaultBackend;
-  }
-  size_t BackendSize = 20ULL * (1ULL<<30); // Give it a lot of RAM
-  EM::Backend::g_DefaultBackend =
-      new EM::Backend::MemServerBackend(BackendSize);
   // Create and initialize a hashtable
   uint64_t cap = N * 5 / 4; // So it multiplies to get the 80%;
   uint64_t repetitions = pick_sharded_repetitions(N, batch_size);
@@ -103,7 +97,8 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
   cout << "ORAM initialized" << endl;
   cout << "omp max threads: " << omp_get_max_threads() << endl;
 
-  typename OMap_t<KEY_SIZE, VAL_SIZE>::InitContext* init = oram.NewInitContext(N, 20ULL * (1ULL<<30));
+  typename OMap_t<KEY_SIZE, VAL_SIZE>::InitContext* init =
+      oram.NewInitContext(N, MAX_CACHE_SIZE);
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {

@@ -79,7 +79,8 @@ int benchmark_umap_shortkv(uint64_t N) {
   cout << "Initializing ORAM" << endl;
   // oram.Init();
   cout << "ORAM initialized" << endl;
-  typename OMapShortKv_t<KEY_SIZE,VAL_SIZE>::InitContext* init = oram.NewInitContext(20ULL * (1ULL<<30));
+  typename OMapShortKv_t<KEY_SIZE,VAL_SIZE>::InitContext* init =
+      oram.NewInitContext(MAX_CACHE_SIZE);
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {
@@ -149,7 +150,8 @@ int benchmark_umap(uint64_t N) {
   cout << "Creating ORAM with capacity " << cap << endl;
   OMap_t<KEY_SIZE,VAL_SIZE> oram = OMap_t<KEY_SIZE,VAL_SIZE>(cap);
   cout << "Initializing ORAM" << endl;
-  typename OMap_t<KEY_SIZE,VAL_SIZE>::InitContext* init = oram.NewInitContext(20ULL * (1ULL<<30));
+  typename OMap_t<KEY_SIZE,VAL_SIZE>::InitContext* init =
+      oram.NewInitContext(MAX_CACHE_SIZE);
 
   uint64_t mod = (N / 20) > 0 ? (N / 20) : 1;
   for (uint64_t i = 0; i < N; i++) {

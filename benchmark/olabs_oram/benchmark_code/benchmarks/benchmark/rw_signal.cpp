@@ -22,13 +22,6 @@ using OMap_t = ODSL::ParOMap<uint64_t, Tags, uint32_t>;
 
 
 int benchmark_umap_sharded(uint64_t N, uint64_t Q, size_t batch_size) {
-  if (EM::Backend::g_DefaultBackend) {
-    delete EM::Backend::g_DefaultBackend;
-  }
-  size_t BackendSize = 20ULL * (1ULL<<30); // Give it a lot of RAM
-  EM::Backend::g_DefaultBackend =
-      new EM::Backend::MemServerBackend(BackendSize);
-
   // load_requests_1000000.dat
   std::string load_filename = "../../../signalbench/data/load_requests_" + std::to_string(N) + ".dat";
   std::string query_filename = "../../../signalbench/data/query_requests_" + std::to_string(N) + "_" + std::to_string(Q) + ".dat";
@@ -47,7 +40,8 @@ int benchmark_umap_sharded(uint64_t N, uint64_t Q, size_t batch_size) {
   cout << "ORAM initialized" << endl;
   cout << "omp max threads: " << omp_get_max_threads() << endl;
 
-  typename OMap_t::InitContext* init = oram.NewInitContext(N, 20ULL * (1ULL<<30));
+  typename OMap_t::InitContext* init =
+      oram.NewInitContext(N, MAX_CACHE_SIZE);
 
   std::ifstream ifs(load_filename, std::ios::binary);
   if (!ifs) {

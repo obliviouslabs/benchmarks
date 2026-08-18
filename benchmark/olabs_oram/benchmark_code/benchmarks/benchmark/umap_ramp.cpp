@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
     const uint64_t capacity = n * 5 / 4;
     RampMap map(capacity);
-    RampMap::InitContext *init = map.NewInitContext(20ULL * (1ULL << 30));
+    RampMap::InitContext *init = map.NewInitContext(MAX_CACHE_SIZE);
     for (uint64_t key = 0; key < n; ++key)
         init->Insert(key, key);
     init->Finalize();

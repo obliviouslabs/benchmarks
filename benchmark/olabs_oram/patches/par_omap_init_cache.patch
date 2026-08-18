@@ -1,0 +1,13 @@
+diff --git a/omap/odsl/par_omap.hpp b/omap/odsl/par_omap.hpp
+--- a/omap/odsl/par_omap.hpp
++++ b/omap/odsl/par_omap.hpp
+@@ -489,7 +489,8 @@ struct ParOMap {
+       }
+       for (auto& nonOMapPtr : nonOMaps) {
+         nonOMapPtr = new NonObliviousOHashMap();
+-        nonOMapPtr->SetSize(omap.shardSize, 0);
++        nonOMapPtr->SetSize(omap.shardSize,
++                            cacheBytes / shardCount);
+       }
+       totalBktNeeded = bktPerShard * shardCount;
+       bktRealSize = divRoundUp(
