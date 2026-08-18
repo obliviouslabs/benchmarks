@@ -12,6 +12,10 @@ fi
 
 git clone 'git@github.com:obliviouslabs/oram.git' "${proj_name}"
 
+echo "Patching ParOMap initialization to honor its cache budget"
+git -C "${build_folder}" apply \
+  "${sources_folder}/patches/par_omap_init_cache.patch"
+
 echo "Copying the benchmark code"
 cp -r "${sources_folder}/benchmark_code/." "${build_folder}/applications/"
 cp "${base_dir}/benchmark/common/common.h" "${build_folder}/applications/benchmarks/benchmark"
