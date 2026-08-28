@@ -50,7 +50,7 @@ fn benchmark_default_oram<const V: usize>(capacity: usize) -> i32 {
 fn main() {
     // Should take 2h20min to run
     // 8b key, 8b value
-    for i in 10..=26 {
+    for i in 10..=28 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<8>>(1<<{})", i);
         run_test_forked(&test_name, || {
@@ -60,7 +60,7 @@ fn main() {
 
     // Should take 2h20min to run
     // 8b key, 32b value
-    for i in 10..=26 {
+    for i in 10..=28 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<32>>(1<<{})", i);
         run_test_forked(&test_name, || {
@@ -70,7 +70,7 @@ fn main() {
 
     // Should take 2h20min to run
     // 8b key, 56b value
-    for i in 10..=26 {
+    for i in 10..=28 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<56>>(1<<{})", i);
         run_test_forked(&test_name, || {

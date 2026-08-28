@@ -49,13 +49,15 @@ int main(int argc, char **argv) {
         return EINVAL;
     }
 
+    ramp_latency_config config;
+    ramp_latency_default_config(&config, n, "h2o2_oram", output.c_str());
+    ramp_latency_print_config(&config);
+
     std::vector<ValueType> raw_data(static_cast<IndexType>(n));
     for (IndexType index = 0; index < raw_data.size(); ++index)
         raw_data[index].id = index;
     RampOram oram(raw_data.begin(), raw_data.end());
 
-    ramp_latency_config config;
-    ramp_latency_default_config(&config, n, "h2o2_oram", output.c_str());
     RampContext context{&oram, n};
 
     double calibration_qps = 0.0;
@@ -65,6 +67,7 @@ int main(int argc, char **argv) {
         std::fprintf(stderr, "calibration failed: %d\n", status);
         return status;
     }
+    ramp_latency_print_calibration(&config, calibration_qps);
 
     ramp_latency_summary summary;
     status = ramp_latency_run(&config, calibration_qps, &context, query_oram,

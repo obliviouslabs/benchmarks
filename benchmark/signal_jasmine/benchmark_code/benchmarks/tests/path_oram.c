@@ -74,9 +74,10 @@ int path_oram_8_8(size_t N)
         N = capacity_records;
     }
     size_t blocks = records_to_blocks(N, qwords_per_record);
-    if (blocks > capacity_blocks)
+    if (blocks > capacity_blocks || blocks <= capacity_blocks / 2)
     {
-      LOG_INFO("Skipping N=%zu; Jasmine ORAM capacity is %zu records across %zu blocks\n", N, capacity_records, capacity_blocks);
+      LOG_INFO("Skipping N=%zu (%zu blocks); Jasmine ORAM ideal range is (%zu, %zu] blocks (%zu records capacity)\n",
+               N, blocks, capacity_blocks / 2, capacity_blocks, capacity_records);
       oram_destroy(oram);
       return err_SUCCESS;
     }
@@ -146,9 +147,10 @@ int path_oram_8_56(size_t N)
         N = capacity_records;
     }
     size_t blocks = records_to_blocks(N, qwords_per_record);
-    if (blocks > capacity_blocks)
+    if (blocks > capacity_blocks || blocks <= capacity_blocks / 2)
     {
-      LOG_INFO("Skipping N=%zu; Jasmine ORAM capacity is %zu records across %zu blocks\n", N, capacity_records, capacity_blocks);
+      LOG_INFO("Skipping N=%zu (%zu blocks); Jasmine ORAM ideal range is (%zu, %zu] blocks (%zu records capacity)\n",
+               N, blocks, capacity_blocks / 2, capacity_blocks, capacity_records);
       oram_destroy(oram);
       return err_SUCCESS;
     }

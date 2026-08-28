@@ -57,6 +57,7 @@ typedef struct ramp_latency_config {
     uint32_t overload_phases;
     double start_fraction;
     double step_fraction;
+    double end_fraction;
     double constant_qps;
     double constant_fraction;
     double intermittent_wait_multiplier;
@@ -127,6 +128,32 @@ static uint64_t ramp_latency_saturating_add(uint64_t a, uint64_t b) {
     return a + b;
 }
 
+static uint64_t ramp_latency_ramp_query_limit(const ramp_latency_config *config) {
+    long double intervals;
+    long double tolerance;
+    long double final_phase;
+    uint64_t phase_count;
+
+    if (config == NULL || config->end_fraction <= 0.0 ||
+        config->end_fraction < config->start_fraction || config->step_fraction <= 0.0)
+        return UINT64_MAX;
+
+    intervals = ((long double)config->end_fraction -
+                 (long double)config->start_fraction) /
+                (long double)config->step_fraction;
+    tolerance = fmaxl(1.0L, fabsl(intervals)) * 1e-12L;
+    final_phase = floorl(intervals + tolerance);
+    if (final_phase >= (long double)UINT64_MAX - 1.0L)
+        return UINT64_MAX;
+    phase_count = (uint64_t)final_phase + 1;
+    return ramp_latency_saturating_mul(phase_count, config->phase_queries);
+}
+
+static int ramp_latency_fraction_exceeds(double fraction, double end_fraction) {
+    double tolerance = fmax(1.0, fabs(end_fraction)) * 1e-12;
+    return end_fraction > 0.0 && fraction > end_fraction + tolerance;
+}
+
 static const char *ramp_latency_workload_name(ramp_latency_workload workload) {
     switch (workload) {
     case RAMP_LATENCY_WORKLOAD_CONSTANT:
@@ -189,6 +216,7 @@ static void ramp_latency_default_config(ramp_latency_config *config, uint64_t ma
         config->overload_phases = 1;
     config->start_fraction = ramp_latency_env_double("RAMP_START_FRACTION", 0.25);
     config->step_fraction = ramp_latency_env_double("RAMP_STEP_FRACTION", 0.025);
+    config->end_fraction = ramp_latency_env_double("RAMP_END_FRACTION", 0.0);
     config->constant_qps = ramp_latency_env_double("RAMP_CONSTANT_QPS", 0.0);
     config->constant_fraction = ramp_latency_env_double("RAMP_CONSTANT_FRACTION", 1.0);
     config->intermittent_wait_multiplier =
@@ -197,6 +225,14 @@ static void ramp_latency_default_config(ramp_latency_config *config, uint64_t ma
         config->start_fraction = 0.25;
     if (config->step_fraction <= 0.0)
         config->step_fraction = 0.025;
+    if (config->end_fraction < 0.0)
+        config->end_fraction = 0.0;
+    if (config->end_fraction > 0.0 && config->end_fraction < config->start_fraction) {
+        fprintf(stderr,
+                "RAMP_END_FRACTION must be at least RAMP_START_FRACTION; "
+                "using the start fraction\n");
+        config->end_fraction = config->start_fraction;
+    }
     if (config->constant_qps < 0.0)
         config->constant_qps = 0.0;
     if (config->constant_fraction <= 0.0)
@@ -204,9 +240,48 @@ static void ramp_latency_default_config(ramp_latency_config *config, uint64_t ma
     if (config->intermittent_wait_multiplier < 0.0)
         config->intermittent_wait_multiplier = 3.0;
     config->workload = ramp_latency_workload_from_env();
+    if (config->workload == RAMP_LATENCY_WORKLOAD_RAMP && config->end_fraction > 0.0) {
+        uint64_t ramp_query_limit = ramp_latency_ramp_query_limit(config);
+        if (ramp_query_limit < config->max_queries)
+            config->max_queries = ramp_query_limit;
+        if (config->min_queries > config->max_queries)
+            config->min_queries = config->max_queries;
+    }
     config->check_output = 0;
     config->implementation = implementation;
     config->csv_path = csv_path;
+}
+
+static inline void ramp_latency_print_config(const ramp_latency_config *config) {
+    fprintf(stdout,
+            "RAMP_CONFIG implementation=%s workload=%s N=%" PRIu64
+            " min_queries=%" PRIu64 " max_queries=%" PRIu64
+            " phase_queries=%" PRIu64 " warmup_queries=%" PRIu64
+            " calibration_queries=%" PRIu64 " overload_phases=%u"
+            " start_fraction=%.6f step_fraction=%.6f end_fraction=%.6f"
+            " caller_max_batch_size=%" PRIu64 " output=%s\n",
+            config->implementation, ramp_latency_workload_name(config->workload),
+            config->map_size, config->min_queries, config->max_queries,
+            config->phase_queries, config->calibration_queries,
+            config->calibration_queries, config->overload_phases,
+            config->start_fraction, config->step_fraction, config->end_fraction,
+            config->caller_max_batch_size, config->csv_path);
+    fflush(stdout);
+}
+
+static inline void ramp_latency_print_calibration(const ramp_latency_config *config,
+                                           double calibration_qps) {
+    double end_target_qps = config->end_fraction > 0.0
+                                ? calibration_qps * config->end_fraction
+                                : 0.0;
+    fprintf(stdout,
+            "RAMP_CALIBRATION implementation=%s warmup_queries=%" PRIu64
+            " calibration_queries=%" PRIu64 " calibration_qps=%.2f"
+            " start_target_qps=%.2f end_target_qps=%.2f\n",
+            config->implementation, config->calibration_queries,
+            config->calibration_queries, calibration_qps,
+            calibration_qps * config->start_fraction, end_target_qps);
+    fflush(stdout);
 }
 
 static inline void ramp_latency_enable_batching(ramp_latency_config *config,
@@ -346,14 +421,19 @@ static void ramp_latency_generate_ramp(ramp_latency_shared *shared) {
     while (query_id < config->max_queries) {
         uint64_t phase = query_id / config->phase_queries;
         if (phase != current_phase) {
+            double target_fraction =
+                config->start_fraction + config->step_fraction * (double)phase;
             uint64_t responded = __atomic_load_n(&shared->responded, __ATOMIC_ACQUIRE);
             uint64_t service_ns = __atomic_load_n(&shared->service_ns, __ATOMIC_ACQUIRE);
             uint64_t backlog = query_id > responded ? query_id - responded : 0;
             double service_qps =
                 service_ns == 0 ? INFINITY : (double)responded * 1e9 / (double)service_ns;
 
-            target_qps = shared->calibration_qps *
-                         (config->start_fraction + config->step_fraction * (double)phase);
+            if (ramp_latency_fraction_exceeds(target_fraction, config->end_fraction)) {
+                shared->stop_reason = "end_fraction";
+                break;
+            }
+            target_qps = shared->calibration_qps * target_fraction;
             current_phase = phase;
             if (query_id >= config->min_queries && backlog >= config->phase_queries &&
                 target_qps > service_qps) {
@@ -364,6 +444,17 @@ static void ramp_latency_generate_ramp(ramp_latency_shared *shared) {
             if (overloaded_checks >= config->overload_phases) {
                 shared->stop_reason = "sustained_overload";
                 break;
+            }
+            {
+                uint64_t total_phases = config->max_queries / config->phase_queries;
+                if (config->max_queries % config->phase_queries != 0)
+                    ++total_phases;
+                fprintf(stdout,
+                        "RAMP_PROGRESS implementation=%s phase=%" PRIu64 "/%" PRIu64
+                        " fraction=%.6f target_qps=%.2f queries=%" PRIu64 "/%" PRIu64 "\n",
+                        config->implementation, phase + 1, total_phases, target_fraction,
+                        target_qps, query_id, config->max_queries);
+                fflush(stdout);
             }
         }
 
@@ -379,8 +470,10 @@ static void ramp_latency_generate_ramp(ramp_latency_shared *shared) {
 
     shared->final_queries = query_id;
     shared->final_target_qps = target_qps;
-    if (query_id == config->max_queries && shared->stop_reason == NULL)
-        shared->stop_reason = "max_queries";
+    if (query_id == config->max_queries && shared->stop_reason == NULL) {
+        uint64_t ramp_query_limit = ramp_latency_ramp_query_limit(config);
+        shared->stop_reason = query_id >= ramp_query_limit ? "end_fraction" : "max_queries";
+    }
 }
 
 static void ramp_latency_generate_constant(ramp_latency_shared *shared) {
@@ -579,6 +672,7 @@ static int ramp_latency_write_results(ramp_latency_shared *shared, ramp_latency_
             "  \"calibration_qps\": %.9f,\n"
             "  \"start_fraction\": %.9f,\n"
             "  \"step_fraction\": %.9f,\n"
+            "  \"end_fraction\": %.9f,\n"
             "  \"constant_qps\": %.9f,\n"
             "  \"constant_fraction\": %.9f,\n"
             "  \"intermittent_batch_size\": %" PRIu64 ",\n"
@@ -600,7 +694,8 @@ static int ramp_latency_write_results(ramp_latency_shared *shared, ramp_latency_
             config->check_output ? "true" : "false", config->map_size, summary->queries,
             config->min_queries, config->max_queries, config->phase_queries,
             config->calibration_queries, config->calibration_queries, summary->calibration_qps,
-            config->start_fraction, config->step_fraction, config->constant_qps,
+            config->start_fraction, config->step_fraction, config->end_fraction,
+            config->constant_qps,
             config->constant_fraction, config->intermittent_batch_size,
             config->intermittent_wait_multiplier, config->caller_max_batch_size,
             summary->caller_batches, summary->average_caller_batch_size,

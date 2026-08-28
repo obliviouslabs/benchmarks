@@ -113,9 +113,10 @@ int test_loaded_sharded_table(size_t N, const size_t batch_size)
 
   sharded_ohtable *table = sharded_ohtable_create(RECORD_SIZE_QWORDS, NUM_SHARDS, hash_key, getentropy);
   size_t table_capacity = sharded_table_capacity_records(table);
-  if (num_records_to_add > table_capacity)
+  if (num_records_to_add > table_capacity || num_records_to_add <= table_capacity / 2)
   {
-      LOG_INFO("Skipping N=%zu; Jasmine table capacity is %zu records\n", num_records_to_add, table_capacity);
+      LOG_INFO("Skipping N=%zu; Jasmine table ideal range is (%zu, %zu] records\n",
+               num_records_to_add, table_capacity / 2, table_capacity);
       sharded_ohtable_destroy(table);
       return err_SUCCESS;
   }
@@ -210,7 +211,7 @@ int main(int argc, char **argv)
     if (argc > 1 && strcmp(argv[1], "best") == 0) {
         run_best_only = true;
     }
-    for (uint64_t i = 0; i<6; i++) {
+    for (uint64_t i = 1; i<6; i++) {
         if (run_best_only && i != BEST_IDX) {
             continue;
         }

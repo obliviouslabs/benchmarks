@@ -56,6 +56,7 @@ pub struct Config {
     pub overload_phases: u32,
     pub start_fraction: f64,
     pub step_fraction: f64,
+    pub end_fraction: f64,
     pub constant_qps: f64,
     pub constant_fraction: f64,
     pub intermittent_batch_size: u64,
@@ -75,22 +76,45 @@ impl Config {
         let max_factor = env_u64("RAMP_MAX_QUERIES_FACTOR", 8);
         let min_default = map_size.saturating_mul(min_factor);
         let max_default = map_size.saturating_mul(max_factor);
-        let min_queries = env_u64("RAMP_MIN_QUERIES", min_default);
+        let mut min_queries = env_u64("RAMP_MIN_QUERIES", min_default);
         let mut max_queries = env_u64("RAMP_MAX_QUERIES", max_default);
         max_queries = max_queries.max(min_queries);
 
         let phase_default = (map_size / 8).max(64);
+        let phase_queries = env_u64("RAMP_PHASE_QUERIES", phase_default).max(1);
         let calibration_default = map_size.clamp(4096, 16384);
+        let start_fraction = positive_env_f64("RAMP_START_FRACTION", 0.25);
+        let step_fraction = positive_env_f64("RAMP_STEP_FRACTION", 0.025);
+        let mut end_fraction = nonnegative_env_f64("RAMP_END_FRACTION", 0.0);
+        if end_fraction > 0.0 && end_fraction < start_fraction {
+            eprintln!(
+                "RAMP_END_FRACTION must be at least RAMP_START_FRACTION; using the start fraction"
+            );
+            end_fraction = start_fraction;
+        }
+        let workload = Workload::from_env();
+        if matches!(workload, Workload::Ramp) {
+            if let Some(limit) = ramp_query_limit(
+                start_fraction,
+                step_fraction,
+                end_fraction,
+                phase_queries,
+            ) {
+                max_queries = max_queries.min(limit);
+                min_queries = min_queries.min(max_queries);
+            }
+        }
 
         Self {
             map_size,
             min_queries,
             max_queries,
-            phase_queries: env_u64("RAMP_PHASE_QUERIES", phase_default).max(1),
+            phase_queries,
             calibration_queries: env_u64("RAMP_CALIBRATION_QUERIES", calibration_default).max(1),
             overload_phases: env_u64("RAMP_OVERLOAD_PHASES", 2).max(1) as u32,
-            start_fraction: positive_env_f64("RAMP_START_FRACTION", 0.25),
-            step_fraction: positive_env_f64("RAMP_STEP_FRACTION", 0.025),
+            start_fraction,
+            step_fraction,
+            end_fraction,
             constant_qps: nonnegative_env_f64("RAMP_CONSTANT_QPS", 0.0),
             constant_fraction: positive_env_f64("RAMP_CONSTANT_FRACTION", 1.0),
             intermittent_batch_size: env_u64("RAMP_INTERMITTENT_BATCH_SIZE", 1024).max(1),
@@ -98,7 +122,7 @@ impl Config {
                 "RAMP_INTERMITTENT_WAIT_MULTIPLIER",
                 3.0,
             ),
-            workload: Workload::from_env(),
+            workload,
             implementation: implementation.into(),
             csv_path: csv_path.into(),
         }
@@ -315,6 +339,8 @@ fn produce_ramp(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> Pr
     while query_id < config.max_queries {
         let phase = query_id / config.phase_queries;
         if phase != current_phase {
+            let target_fraction =
+                config.start_fraction + config.step_fraction * phase as f64;
             let responded = shared.responded.load(Ordering::Acquire);
             let service_ns = shared.service_ns.load(Ordering::Acquire);
             let backlog = query_id.saturating_sub(responded);
@@ -324,8 +350,11 @@ fn produce_ramp(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> Pr
                 responded as f64 * 1e9 / service_ns as f64
             };
 
-            target_qps =
-                calibration_qps * (config.start_fraction + config.step_fraction * phase as f64);
+            if fraction_exceeds(target_fraction, config.end_fraction) {
+                stop_reason = "end_fraction";
+                break;
+            }
+            target_qps = calibration_qps * target_fraction;
             current_phase = phase;
 
             if query_id >= config.min_queries
@@ -341,6 +370,20 @@ fn produce_ramp(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> Pr
                 stop_reason = "sustained_overload";
                 break;
             }
+
+            let total_phases = config.max_queries.div_ceil(config.phase_queries);
+            println!(
+                "RAMP_PROGRESS implementation={} phase={}/{} fraction={:.6} \
+                 target_qps={:.2} queries={}/{}",
+                config.implementation,
+                phase + 1,
+                total_phases,
+                target_fraction,
+                target_qps,
+                query_id,
+                config.max_queries
+            );
+            let _ = io::stdout().flush();
         }
 
         scheduled_offset_ns += 1e9 / target_qps;
@@ -356,6 +399,18 @@ fn produce_ramp(shared: Arc<Shared>, config: Config, calibration_qps: f64) -> Pr
         }
         shared.produced.store(query_id + 1, Ordering::Release);
         query_id += 1;
+    }
+
+    if stop_reason == "max_queries"
+        && ramp_query_limit(
+            config.start_fraction,
+            config.step_fraction,
+            config.end_fraction,
+            config.phase_queries,
+        )
+        .is_some_and(|limit| query_id >= limit)
+    {
+        stop_reason = "end_fraction";
     }
 
     shared.producer_done.store(true, Ordering::Release);
@@ -559,6 +614,7 @@ fn write_results(
     )?;
     writeln!(meta, "  \"start_fraction\": {:.9},", config.start_fraction)?;
     writeln!(meta, "  \"step_fraction\": {:.9},", config.step_fraction)?;
+    writeln!(meta, "  \"end_fraction\": {:.9},", config.end_fraction)?;
     writeln!(meta, "  \"constant_qps\": {:.9},", config.constant_qps)?;
     writeln!(
         meta,
@@ -681,6 +737,26 @@ fn nonnegative_env_f64(name: &str, fallback: f64) -> f64 {
         .and_then(|value| value.parse::<f64>().ok())
         .filter(|value| value.is_finite() && *value >= 0.0)
         .unwrap_or(fallback)
+}
+
+fn ramp_query_limit(
+    start_fraction: f64,
+    step_fraction: f64,
+    end_fraction: f64,
+    phase_queries: u64,
+) -> Option<u64> {
+    if end_fraction <= 0.0 || end_fraction < start_fraction || step_fraction <= 0.0 {
+        return None;
+    }
+    let intervals = (end_fraction - start_fraction) / step_fraction;
+    let tolerance = intervals.abs().max(1.0) * 1e-12;
+    let phase_count = ((intervals + tolerance).floor() as u64).saturating_add(1);
+    Some(phase_count.saturating_mul(phase_queries))
+}
+
+fn fraction_exceeds(fraction: f64, end_fraction: f64) -> bool {
+    let tolerance = end_fraction.abs().max(1.0) * 1e-12;
+    end_fraction > 0.0 && fraction > end_fraction + tolerance
 }
 
 fn json_escape(value: &str) -> String {
