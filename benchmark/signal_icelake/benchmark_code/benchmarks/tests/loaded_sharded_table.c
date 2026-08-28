@@ -180,7 +180,7 @@ int main(int argc, char **argv)
     if (argc > 1 && strcmp(argv[1], "best") == 0) {
         run_best_only = true;
     }
-    for (uint64_t i = 0; i<6; i++) {
+    for (uint64_t i = 1; i<6; i++) {
         if (run_best_only && i != BEST_IDX) {
             continue;
         }

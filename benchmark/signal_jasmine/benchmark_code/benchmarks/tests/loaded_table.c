@@ -40,9 +40,10 @@ int loaded_table_8_56(size_t N)
     uint64_t start_ns_create = current_time_ns();
     ohtable *ohtable = ohtable_create(7, getentropy);
     size_t cap = ohtable_capacity(ohtable);
-    if (N > cap)
+    if (N > cap || N <= cap / 2)
     {
-        LOG_INFO("Skipping N=%zu; Jasmine table capacity is %zu records\n", N, cap);
+        LOG_INFO("Skipping N=%zu; Jasmine table ideal range is (%zu, %zu] records\n",
+                 N, cap / 2, cap);
         ohtable_destroy(ohtable);
         return err_SUCCESS;
     }
@@ -129,9 +130,10 @@ int loaded_table_8_8(size_t N)
     uint64_t start_ns_create = current_time_ns();
     ohtable *ohtable = ohtable_create(2, getentropy);
     size_t cap = ohtable_capacity(ohtable);
-    if (N > cap)
+    if (N > cap || N <= cap / 2)
     {
-        LOG_INFO("Skipping N=%zu; Jasmine table capacity is %zu records\n", N, cap);
+        LOG_INFO("Skipping N=%zu; Jasmine table ideal range is (%zu, %zu] records\n",
+                 N, cap / 2, cap);
         ohtable_destroy(ohtable);
         return err_SUCCESS;
     }

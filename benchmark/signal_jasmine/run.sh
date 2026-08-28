@@ -3,11 +3,9 @@ set -e
 
 proj_name="signal_jasmine"
 base_dir=$(git rev-parse --show-toplevel)
-depths="${SIGNAL_JASMINE_PATH_LENGTHS:-10 12 14 16 18 20 21 22 23 24}"
+depths="${SIGNAL_JASMINE_PATH_LENGTHS:-10 11 12 13 14 15 16 17 18 19 20 21 22 23 24}"
 run_timestamp=$(date +%s)
 run_label="${1:-}"
-BENCHMARK_TEST_TIMEOUT_MS="${BENCHMARK_TEST_TIMEOUT_MS:-14400000}"
-export BENCHMARK_TEST_TIMEOUT_MS
 
 results_file=""
 logs_folder=""

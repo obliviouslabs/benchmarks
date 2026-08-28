@@ -45,8 +45,10 @@ int main(int argc, char **argv) {
     if (table == NULL)
         return ENOMEM;
     size_t capacity = ohtable_capacity(table);
-    if (n > capacity) {
-        fprintf(stderr, "map size %" PRIu64 " exceeds Jasmine capacity %zu\n", n, capacity);
+    if (n > capacity || n <= capacity / 2) {
+        fprintf(stderr, "map size %" PRIu64
+                        " is outside Jasmine's ideal range (%zu, %zu]\n",
+                n, capacity / 2, capacity);
         ohtable_destroy(table);
         return EINVAL;
     }

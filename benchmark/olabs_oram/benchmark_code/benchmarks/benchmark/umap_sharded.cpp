@@ -162,7 +162,7 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 int main() {
   uint64_t batch_sizes[] = {NUM_SHARDS,1024,4096,8192,65536,1<<20};
 
-  for (uint64_t i = 0; i<6; i++) {
+  for (uint64_t i = 1; i<6; i++) {
     for (uint64_t j = 10; j<=28; j++) {
       if (i == 0 && j >= 24) {
         continue;

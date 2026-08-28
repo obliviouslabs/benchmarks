@@ -5,9 +5,6 @@ proj_name="signal_icelake"
 base_dir=$(git rev-parse --show-toplevel)
 . "${base_dir}/scripts/gen_args.sh"
 
-BENCHMARK_TEST_TIMEOUT_MS="${BENCHMARK_TEST_TIMEOUT_MS:-14400000}"
-export BENCHMARK_TEST_TIMEOUT_MS
-
 mkdir -p "${logs_folder}"
 echo "" > "$results_file"
 
