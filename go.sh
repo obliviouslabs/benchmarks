@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+if [ -z "${BENCHMARK_LOG_FILE:-}" ]; then
+  mkdir -p "$PWD/logs/full_runs"
+  BENCHMARK_LOG_FILE=$(mktemp "$PWD/logs/full_runs/$(date +%Y%m%d-%H%M%S)-XXXXXX.jsonl")
+  printf 'Full run log: %s\n' "$BENCHMARK_LOG_FILE" >&2
+fi
+export BENCHMARK_LOG_FILE
+
 sh ./scripts/reset.sh
 sh ./scripts/setup.sh
 
@@ -27,17 +34,15 @@ sh ./benchmark/meta_oram/run.sh
 # sudo swapoff -a
 # sudo swapon /data/swapfile_test
 
-# sudo systemd-run --scope -p MemoryMax=2G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/olabs_oram/run.sh SWAP2G
-# sudo systemd-run --scope -p MemoryMax=1G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_icelake/run.sh SWAP1G
-sudo systemd-run --scope -p MemoryMax=512M -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_jasmine/run.sh SWAP512M
-sudo systemd-run --scope -p MemoryMax=512M -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/h2o2/run.sh SWAP512M
-sudo systemd-run --scope -p MemoryMax=512M -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/olabs_oramrun.sh SWAP512M
-# sudo systemd-run --scope -p MemoryMax=512M -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/signal_jasmine/run.sh SWAP512M
-# sudo systemd-run --scope -p MemoryMax=64G -p MemorySwapMax=200G sudo -u $(whoami) sh ./benchmark/h2o2_oram/run.sh SWAP64G
+# systemd-run --user --scope -p MemoryMax=2G -p MemorySwapMax=60G sh ./benchmark/olabs_oram/run.sh SWAP2G
+# systemd-run --user --scope -p MemoryMax=1G -p MemorySwapMax=60G sh ./benchmark/signal_icelake/run.sh SWAP1G
+systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
+systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/h2o2_oram/run.sh SWAP512M
+systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/olabs_oram/run.sh SWAP512M
+# systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
+# systemd-run --user --scope -p MemoryMax=64G -p MemorySwapMax=200G sh ./benchmark/h2o2_oram/run.sh SWAP64G
 
-sh ./scripts/reset.sh
-sh ./scripts/setup.sh
 sh ./scripts/run_ramp_latency.sh
 
 # To run this script with memory limits: 
-# sudo systemd-run --scope -p MemoryMax=8G -p MemorySwapMax=60G sudo -u $(whoami) sh ./benchmark/__TARGET__/run.sh
+# systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=60G sh ./benchmark/__TARGET__/run.sh

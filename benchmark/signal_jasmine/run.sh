@@ -2,46 +2,62 @@
 set -e
 
 proj_name="signal_jasmine"
+repo_path="source"
 base_dir=$(git rev-parse --show-toplevel)
-depths="${SIGNAL_JASMINE_PATH_LENGTHS:-10 11 12 13 14 15 16 17 18 19 20 21 22 23 24}"
-run_timestamp=$(date +%s)
+. "${base_dir}/scripts/gen_args.sh"
 run_label="${1:-}"
+path_oram_args="${SIGNAL_JASMINE_PATH_ORAM_ARGS:-}"
 
-results_file=""
-logs_folder=""
+if [ -n "${SIGNAL_JASMINE_PATH_LENGTHS:-}" ]; then
+  depths="$SIGNAL_JASMINE_PATH_LENGTHS"
+elif [ -f "${build_folder}/depths" ]; then
+  IFS= read -r depths < "${build_folder}/depths"
+else
+  echo "Run benchmark/signal_jasmine/setup.sh and build.sh before running" >&2
+  exit 1
+fi
 
-for depth in $depths; do
-  cd "$base_dir"
-  echo "Running Signal Jasmine benchmarks with PATH_LENGTH=${depth}"
-  sh "${base_dir}/scripts/reset.sh" signal_jasmine
-  SIGNAL_JASMINE_PATH_LENGTH="${depth}" sh "${base_dir}/benchmark/signal_jasmine/setup.sh"
-  sh "${base_dir}/benchmark/signal_jasmine/build.sh"
-
-  if [ -z "$results_file" ]; then
-    commit_hash="$(git -C "${base_dir}/build/${proj_name}" rev-parse HEAD)"
-    run_id="${proj_name}_${run_timestamp}_${commit_hash}"
-    if [ -n "$run_label" ]; then
-      run_id="${run_id}_${run_label}"
+# Check the entire requested sweep before starting any benchmark. Never rebuild here.
+set -- $depths
+if [ "$#" -eq 0 ]; then
+  echo "SIGNAL_JASMINE_PATH_LENGTHS must contain at least one depth" >&2
+  exit 1
+fi
+for depth do
+  case "$depth" in
+    8|9|[12][0-9]|30) ;;
+    *) echo "Invalid Jasmine path length: $depth (expected 8 to 30, no leading zeros)" >&2; exit 1 ;;
+  esac
+  for test_name in path_oram loaded_table loaded_sharded_table; do
+    binary="${build_folder}/L${depth}/c/benchmarks/${test_name}.test"
+    if [ ! -x "$binary" ]; then
+      echo "Missing $binary; prepare and build this depth before running" >&2
+      exit 1
     fi
-    results_file="${base_dir}/results/${run_id}"
-    logs_folder="${base_dir}/logs/${run_id}"
-    mkdir -p "$logs_folder"
-    : > "$results_file"
-    echo "Writing aggregate results to ${results_file}"
-    echo "Writing per-depth logs to ${logs_folder}"
-  fi
+  done
+done
 
-  depth_label="L${depth}"
-  sh "${base_dir}/benchmark/signal_jasmine/run_for_fixed_depth.sh" "$depth_label"
+mkdir -p "${base_dir}/results" "$logs_folder"
+: > "$results_file"
+echo "Writing aggregate results to ${results_file}"
+echo "Writing per-depth logs to ${logs_folder}"
 
-  depth_results="$(ls -t "${base_dir}/results/${proj_name}_"*"_${depth_label}" | head -n 1)"
-  depth_logs="$(ls -td "${base_dir}/logs/${proj_name}_"*"_${depth_label}" | head -n 1)"
-  cp -f "${depth_logs}/path_oram.out" "${logs_folder}/path_oram_L${depth}.out"
-  cp -f "${depth_logs}/loaded_table.out" "${logs_folder}/loaded_table_L${depth}.out"
-  cp -f "${depth_logs}/loaded_sharded_table.out" "${logs_folder}/loaded_sharded_table_L${depth}.out"
-  sed '/^$/d' "$depth_results" >> "$results_file"
-  rm -f "$depth_results"
-  rm -rf "$depth_logs"
+run_test()
+{
+  test_name=$1
+  shift
+  log_file="${logs_folder}/${test_name}_L${depth}.out"
+  "./${test_name}.test" "$@" 2>&1 | stdbuf -oL tee "$log_file"
+  python "$base_dir/scripts/parse.py" -f "$log_file" >> "$results_file"
+}
+
+for depth do
+  echo "Running Signal Jasmine benchmarks with PATH_LENGTH=${depth}"
+  export BENCHMARK_VARIANT="${run_label:+${run_label}_}L${depth}"
+  cd "${build_folder}/L${depth}/c/benchmarks"
+  run_test path_oram $path_oram_args
+  run_test loaded_table
+  run_test loaded_sharded_table best
 done
 
 echo "Done. Results: ${results_file}"

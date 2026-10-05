@@ -150,11 +150,11 @@ int main()
 {
     // Should take __ to run
     for (uint64_t i = 10; i <= 28; i++) {
-        RUN_TEST_FORKED(path_oram_8_8(1<<i));
+        RUN_TEST_FORKED(path_oram_8_8(1<<i), "N=%zu", (size_t)1<<i);
     }
 
     for (uint64_t i = 10; i <= 28; i++) {
-        RUN_TEST_FORKED(path_oram_8_56(1<<i));
+        RUN_TEST_FORKED(path_oram_8_56(1<<i), "N=%zu", (size_t)1<<i);
     }
     
     return 0;

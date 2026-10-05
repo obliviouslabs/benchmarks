@@ -167,9 +167,9 @@ int main() {
       if (i == 0 && j >= 24) {
         continue;
       }
-      RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_sizes[i])));
-      RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, batch_sizes[i])));
-      RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, batch_sizes[i])));
+      RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);
+      RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);
+      RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);
     }
   }
 

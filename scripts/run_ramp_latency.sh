@@ -13,6 +13,25 @@ mkdir -p "$output_dir"
 ran=0
 skipped=0
 
+run_command()
+{
+    # Apply selection and record timing/outcome around the whole ramp command.
+    BENCHMARK_PROJECT="${implementation%_sharded}" uv run --no-project --python '>=3.9' - \
+        "$base_dir/benchmark/common" "ramp_${implementation}" "N=${n},workload=${RAMP_WORKLOAD:-ramp}" "$0" "$@" <<'PY'
+import subprocess
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from common import start_test, end_test
+
+case_id = start_test(sys.argv[2], sys.argv[3], sys.argv[4])
+if case_id is not None:
+    code = subprocess.call(sys.argv[5:])
+    end_test(case_id, code)
+    sys.exit(code if code >= 0 else 128 - code)
+PY
+}
+
 run_one()
 {
     implementation=$1
@@ -30,7 +49,7 @@ run_one()
             fi
             RAMP_START_FRACTION="${RAMP_START_FRACTION:-0.05}" \
                 RAMP_END_FRACTION="${RAMP_END_FRACTION:-0.25}" \
-                "$binary" "$n" "$output"
+                run_command "$binary" "$n" "$output"
             ;;
         olabs_oram)
             binary="${base_dir}/build/olabs_oram/build/applications/benchmarks/umap_ramp"
@@ -39,7 +58,7 @@ run_one()
                 skipped=$((skipped + 1))
                 return
             fi
-            "$binary" "$n" "$output"
+            run_command "$binary" "$n" "$output"
             ;;
         olabs_oram_sharded)
             binary="${base_dir}/build/olabs_oram/build/applications/benchmarks/umap_sharded_ramp"
@@ -48,7 +67,7 @@ run_one()
                 skipped=$((skipped + 1))
                 return
             fi
-            "$binary" "$n" "$output"
+            run_command "$binary" "$n" "$output"
             ;;
         olabs_rostl)
             manifest="${base_dir}/build/olabs_rostl/Cargo.toml"
@@ -57,7 +76,7 @@ run_one()
                 skipped=$((skipped + 1))
                 return
             fi
-            cargo run --quiet --profile=maxperf --manifest-path "$manifest" \
+            run_command cargo run --quiet --profile=maxperf --manifest-path "$manifest" \
                 --bin ramp_latency -- "$n" "$output"
             ;;
         mc_oblivious)
@@ -67,7 +86,7 @@ run_one()
                 skipped=$((skipped + 1))
                 return
             fi
-            cargo run --quiet --profile=maxperf --manifest-path "$manifest" \
+            run_command cargo run --quiet --profile=maxperf --manifest-path "$manifest" \
                 --bin ramp_latency -- "$n" "$output"
             ;;
         signal_icelake)
@@ -77,16 +96,20 @@ run_one()
                 skipped=$((skipped + 1))
                 return
             fi
-            "$binary" "$n" "$output"
+            run_command "$binary" "$n" "$output"
             ;;
         signal_jasmine)
-            binary="${base_dir}/build/signal_jasmine/c/benchmarks/loaded_table_ramp.test"
+            # The c symlink selects setup's fixed depth; an explicit L can override it.
+            binary="${base_dir}/build/signal_jasmine/${SIGNAL_JASMINE_PATH_LENGTH:+L${SIGNAL_JASMINE_PATH_LENGTH}/}c/benchmarks/loaded_table_ramp.test"
             if [ ! -x "$binary" ]; then
-                echo "Skipping ${implementation}: build a fixed depth with benchmark/signal_jasmine/build.sh" >&2
+                echo "Skipping ${implementation}: prepare and build this depth with benchmark/signal_jasmine/setup.sh and build.sh" >&2
                 skipped=$((skipped + 1))
                 return
             fi
-            "$binary" "$n" "$output"
+            binary="$(readlink -f "$binary")"
+            depth_label="${binary%/c/benchmarks/*}"
+            depth_label="${depth_label##*/}"
+            BENCHMARK_VARIANT="$depth_label" run_command "$binary" "$n" "$output"
             ;;
         *)
             echo "Unknown RAMP_IMPLEMENTATIONS entry: ${implementation}" >&2

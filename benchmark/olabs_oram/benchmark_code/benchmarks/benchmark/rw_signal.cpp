@@ -186,7 +186,7 @@ int benchmark_umap_sharded(uint64_t N, uint64_t Q, size_t batch_size) {
 int main() {
   for (uint64_t &N : std::array<uint64_t, 4> {10000000, 20000000, 50000000, 100000000}) {
     for (uint64_t &B : std::array<uint64_t, 4> {100,1000,4096,8192}) {
-      RUN_TEST_FORKED((benchmark_umap_sharded(N, 10000, B)));
+      RUN_TEST_FORKED((benchmark_umap_sharded(N, 10000, B)), "N=%zu,queries=10000,batch_size=%zu", (size_t)N, (size_t)B);
     }
   }
 

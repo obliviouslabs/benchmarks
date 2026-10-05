@@ -292,9 +292,9 @@ int benchmark_load_balancing(uint64_t B, uint64_t p) {
 
 int main() {
   for (uint64_t i = 10; i<=20; i++) {
-    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<8>,Bytes<8>>(1<<i, NUM_SHARDS)) );    
-    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<8>,Bytes<56>>(1<<i, NUM_SHARDS)) );
-    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<32>,Bytes<32>>(1<<i, NUM_SHARDS)) );
+    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<8>,Bytes<8>>(1<<i, NUM_SHARDS)), "N=%zu,shards=%zu", (size_t)1<<i, (size_t)NUM_SHARDS );
+    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<8>,Bytes<56>>(1<<i, NUM_SHARDS)), "N=%zu,shards=%zu", (size_t)1<<i, (size_t)NUM_SHARDS );
+    RUN_TEST_FORKED( (benchmark_load_balancing<Bytes<32>,Bytes<32>>(1<<i, NUM_SHARDS)), "N=%zu,shards=%zu", (size_t)1<<i, (size_t)NUM_SHARDS );
   }
 
   return 0;

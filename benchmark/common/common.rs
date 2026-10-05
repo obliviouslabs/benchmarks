@@ -117,16 +117,138 @@ macro_rules! report_line {
 }
 
 
+pub fn benchmark_planning() -> bool {
+    match std::env::var("BENCHMARK_MODE").as_deref() {
+        Err(_) | Ok("") | Ok("run") => false,
+        Ok("plan") => true,
+        Ok(mode) => panic!("Invalid BENCHMARK_MODE: {}", mode),
+    }
+}
+
+fn benchmark_json(value: &str) -> String {
+    let mut out = String::from("\"");
+    for c in value.chars() {
+        match c {
+            '"' | '\\' => { out.push('\\'); out.push(c); }
+            '\0'..='\u{1f}' => out.push_str(&format!("\\u{:04x}", c as u32)),
+            _ => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+fn benchmark_emit(record: String) {
+    use std::io::Write;
+    use std::os::unix::io::AsRawFd;
+    if let Some(path) = std::env::var_os("BENCHMARK_LOG_FILE").filter(|p| !p.is_empty()) {
+        let mut out = std::fs::OpenOptions::new().append(true).create(true)
+            .open(path).expect("BENCHMARK_LOG_FILE");
+        assert_eq!(unsafe { libc::flock(out.as_raw_fd(), libc::LOCK_EX) }, 0);
+        out.write_all(record.as_bytes()).expect("BENCHMARK_LOG_FILE");
+    } else {
+        std::io::stdout().write_all(record.as_bytes()).expect("benchmark log");
+    }
+}
+
+fn benchmark_selector_unescape(value: &str) -> Option<String> {
+    let mut out = String::new();
+    let mut chars = value.chars();
+    while let Some(c) = chars.next() {
+        let decoded = if c == '\\' {
+            match chars.next()? {
+                '\\' => '\\', 'n' => '\n', 'r' => '\r', 't' => '\t',
+                'x' => {
+                    let code = chars.next()?.to_digit(16)? * 16 + chars.next()?.to_digit(16)?;
+                    if code > 127 { return None; }
+                    char::from_u32(code)?
+                },
+                _ => return None,
+            }
+        } else {
+            if (c as u32) < 32 || c == '\u{7f}' { return None; }
+            c
+        };
+        out.push(decoded);
+    }
+    Some(out)
+}
+
+fn benchmark_selection(wanted: &[&str; 4]) -> &'static str {
+    let Some(path) = std::env::var_os("BENCHMARK_SELECTOR").filter(|p| !p.is_empty()) else {
+        return "start";
+    };
+    let input = File::open(path).expect("BENCHMARK_SELECTOR");
+    let mut choice = None;
+    let whitespace = |c| matches!(c, ' ' | '\t' | '\r' | '\n' | '\u{b}' | '\u{c}');
+    for (number, line) in BufReader::new(input).lines().enumerate() {
+        let line = line.expect("BENCHMARK_SELECTOR");
+        let text = line.strip_suffix('\r').unwrap_or(&line).trim_start_matches(whitespace);
+        if text.is_empty() { continue; }
+        let columns: Vec<_> = text.splitn(6, '\t').collect();
+        let mut action = columns[0].trim_matches(whitespace);
+        let commented = action.starts_with('#');
+        while let Some(rest) = action.strip_prefix('#') { action = rest.trim_matches(whitespace); }
+        let values = if !text.contains('\0') && columns.len() >= 5
+            && (columns.len() == 5 || columns[5].trim_start_matches(whitespace).starts_with('#'))
+            && !action.chars().any(whitespace) && (!action.is_empty() || commented) {
+            columns[1..5].iter().map(|field| benchmark_selector_unescape(field)).collect::<Option<Vec<_>>>()
+        } else { None };
+        let Some(values) = values else {
+            if commented { continue; }
+            panic!("invalid selector line {}; expected tab-separated action, project, variant, name, params", number + 1);
+        };
+        if values.iter().map(String::as_str).eq(wanted.iter().copied()) {
+            assert!(choice.is_none(), "duplicate selector case on line {}: {:?}", number + 1, wanted);
+            choice = Some(if !commented && matches!(action, "run" | "yes") { "start" } else { "skipped" });
+        }
+    }
+    choice.unwrap_or("skipped_missing")
+}
+
+#[track_caller]
+pub fn benchmark_start(name: &str, params: &str) -> Option<String> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEQUENCE: AtomicU64 = AtomicU64::new(1);
+    let id = format!("{}:{}", process::id(), SEQUENCE.fetch_add(1, Ordering::Relaxed));
+    let caller = std::panic::Location::caller();
+    let project = std::env::var("BENCHMARK_PROJECT").unwrap_or_default();
+    let variant = std::env::var("BENCHMARK_VARIANT").unwrap_or_default();
+    let event = if benchmark_planning() { "plan" }
+                else { benchmark_selection(&[&project, &variant, name, params]) };
+    let warning = if event == "skipped_missing" {
+        ",\"warning\":\"not present in selector; skipped\""
+    } else { "" };
+    let time = if event == "start" { format!(",\"time_ns\":{}", current_time_ns()) } else { String::new() };
+    benchmark_emit(format!(
+        "{{\"event\":\"{}\",\"id\":\"{}\",\"name\":{},\"params\":{},\"file\":{},\"line\":{},\"project\":{},\"variant\":{},\"run\":{}{}{}}}\n",
+        event, id, benchmark_json(name), benchmark_json(params),
+        benchmark_json(caller.file()), caller.line(), benchmark_json(&project), benchmark_json(&variant),
+        benchmark_json(&std::env::var("BENCHMARK_RUN").unwrap_or_default()), time, warning));
+    if event == "skipped_missing" {
+        eprintln!("Warning: {project} {variant} {name} [{params}] not present in selector; skipped");
+    }
+    if event == "start" { Some(id) } else { None }
+}
+
+pub fn benchmark_end(id: &str, returncode: i32, error: &str) {
+    benchmark_emit(format!("{{\"event\":\"end\",\"id\":{},\"time_ns\":{},\"returncode\":{},\"error\":{}}}\n",
+                           benchmark_json(id), current_time_ns(), returncode, benchmark_json(error)));
+}
+
 /// Equivalent to the RUN_TEST_FORKED(x) macro:
 /// - Fork a child
 /// - Child prints test name, runs function, exit(0) on success, or exit(errorCode) on fail
 /// - Parent waits and prints appropriate success/fail message.
 #[cfg(unix)]
-pub fn run_test_forked<F: FnOnce() -> i32>(test_name: &str, test_func: F) {
+#[track_caller]
+pub fn run_test_forked<F: FnOnce() -> i32>(test_name: &str, params: &str, test_func: F) {
+    let Some(id) = benchmark_start(test_name, params) else { return; };
     unsafe {
         let pid = libc::fork();
         if pid < 0 {
             eprintln!("FAILED: {}(fork)", test_name);
+            benchmark_end(&id, -1, "fork failed");
             return;
         }
         if pid == 0 {
@@ -143,7 +265,16 @@ pub fn run_test_forked<F: FnOnce() -> i32>(test_name: &str, test_func: F) {
         } else {
             // Parent
             let mut status: i32 = 0;
-            libc::waitpid(pid, &mut status as *mut i32, 0);
+            loop {
+                if libc::waitpid(pid, &mut status as *mut i32, 0) >= 0 { break; }
+                if std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+                    benchmark_end(&id, -1, "wait failed");
+                    return;
+                }
+            }
+            let code = if libc::WIFEXITED(status) { libc::WEXITSTATUS(status) }
+                       else { -libc::WTERMSIG(status) };
+            benchmark_end(&id, code, "");
             if status == 0 {
                 better_test_log!("OK");
             } else {

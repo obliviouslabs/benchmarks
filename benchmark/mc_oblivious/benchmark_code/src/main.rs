@@ -70,7 +70,7 @@ fn main() {
   for i in 10..=28 {
     let val = 1 << i;
     let test_name = format!("benchmark_umap<u64,u64>(1<<{})", i);
-    run_test_forked(&test_name, || {
+    run_test_forked(&test_name, &format!("N={val}"), || {
       benchmark_umap(val)
     });
   }

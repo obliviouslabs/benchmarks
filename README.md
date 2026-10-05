@@ -1,6 +1,6 @@
 # Oblivious Algorithms Benchmarks
 
-This repository contains reproducible benchmarks related to several implementations of ORAM, Oblivious Maps and other oblivious algorithms targeting TEEs (Trusted Execution Environments). To reproduce, simply run `go.sh`. Our goal with this repo is to provide transparent analysis of the performance of several oblivious algorithms, and to incentivize the development of efficient implementations of oblivious algorithms.
+This repository contains reproducible benchmarks related to several implementations of ORAM, Oblivious Maps and other oblivious algorithms targeting TEEs (Trusted Execution Environments). To reproduce, simply run `sh go.sh`. Our goal with this repo is to provide transparent analysis of the performance of several oblivious algorithms, and to incentivize the development of efficient implementations of oblivious algorithms.
 
 See [benchmark types](#benchmark-types) for information about the algorithms that are being benchmarked and implementations for each algorithm and [benchmark results](#benchmark-results) for a summary of the results of each implementation.
 Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONTRIBUTING.md) for information on how to add new benchmarks.
@@ -192,32 +192,48 @@ Latency (us) vs Map number of entries (N), using 8 byte keys, 8 byte values
 ## Reproducing Benchmarks
 
 ### Running Benchmarks
-Use the `go.sh` script to initiate benchmarking processes:
-```bash
-./go.sh
+`go.sh` sets up and runs the benchmarks, saving full-run JSONL logs under `logs/full_runs/`:
+```sh
+sh go.sh
 ```
 
-### Generating Figures
-To generate figures from benchmark data, use the `draw.sh` script:
-```bash
-./scripts/draw.sh
-```
-Make sure you edit the `files=...` line in `draw.sh` to match the benchmark result files you want to draw.
+`scripts/run.py` wraps `go.sh` or parses its saved full-run logs into editable case
+lists or per-test timing/outcome CSV:
 
-### Generating tables
-To generate tables from benchmark data, like the ones in the `README.md`, use the `generate_readme_bodies.py` script:
-```bash
-./scripts/generate_readme_bodies.py
+```sh
+# List cases without running test bodies (setup/build still run):
+BENCHMARK_MODE=plan uv run scripts/run.py > cases.txt
+# Edit cases.txt: only run/yes entries execute; comment out cases to skip them.
+BENCHMARK_SELECTOR=cases.txt uv run scripts/run.py > results.csv
+# Run all encountered cases:
+uv run scripts/run.py > results.csv
+# Parse a saved run without executing anything:
+uv run scripts/run.py logs/full_runs/FILE.jsonl > results.csv
+# Generate a case list from a saved run:
+uv run scripts/run.py --cases logs/full_runs/FILE.jsonl > cases.txt
 ```
-Make sure you edit the `files` list in `scripts/plot_config.py` to match the benchmark result files you want to table.
+
+### Generating Figures and tables
+
+To generate tables from benchmark data, like the ones in the `README.md`:
+```sh
+uv run scripts/generate_readme_bodies.py
+```
+
+For figures:
+```sh
+uv run scripts/draw_figures.py
+```
+
+Both commands use the `files` list in `scripts/plot_config.py` to select benchmark results.
 
 ## Repository Structure
 
 ### Root Directory
-- **go.sh**: A script to initiate benchmarking processes.
+- **go.sh**: Sets up and runs the benchmark pipeline.
 
 ### `benchmark/`
-Contains the code for each benchmarked implementation. Typically we sepparate each folder in `setup.sh` (setup all the benchmark environment in build/) and `run.sh` (cd into the build file an run the benchmark):
+Per-implementation code and `setup.sh`, `build.sh`, and `run.sh` scripts.
 
 ### `figures/`
 Contains PNG files visualizing benchmark results, such as:
@@ -226,21 +242,23 @@ Contains PNG files visualizing benchmark results, such as:
 - Latency and throughput metrics
 
 ### `logs/`
-Contains logs from benchmarking runs, organized by system and timestamp.
+Benchmark logs, including full-run JSONL events in `full_runs/`.
 
 ### `results/`
-Contains processed results from benchmarking runs.
+Parsed benchmark results used by plots and tables.
 
 ### `scripts/`
-Contains utility scripts for managing and visualizing benchmarks:
-- **draw_figure.py**: A Python script for generating figures from benchmark data.
-- **draw.sh**: A shell script for automating figure generation, it generates all the images in `figures/` from the log outputs.
-- **setup.sh**: A setup script for preparing the environment.
-- **parse.py**: An auxiliary python script for parsing benchmark logs in `logs/` into the json format in `results/`.
-- **generate_readme_body.sh**: A shell script for generating tables from benchmark data, like the ones in the `README.md`.
-- **config_ubuntu.sh**: A shell script for setting up the environment on Ubuntu systems, including installing dependencies like Rust, Docker, and others.
-- **draw_table.py**: A Python script for automatically generating tables for a given set of parameters.
-- **parse_util.py**: A Python utility script containing helper functions for parsing and filtering benchmark data.
+Utility scripts for managing and visualizing benchmarks:
+- **run.py**: Wraps `go.sh` or parses full-run JSONL into case lists or per-test CSV.
+- **setup.sh**: Fetches and builds benchmark implementations.
+- **reset.sh**: Removes benchmark build directories.
+- **run_ramp_latency.sh**: Runs latency workloads.
+- **parse.py**: Extracts benchmark reports from logs into JSON results.
+- **draw_figures.py**: Generates benchmark figures.
+- **generate_readme_bodies.py**: Generates Markdown benchmark tables.
+- **plot_config.py**: Selects result files for plots and tables.
+- **utils.py**: Shared result-loading, plotting and table helpers.
+- **config_ubuntu.sh** / **config_arch.sh**: Install system dependencies.
 
 
 ## Contributing

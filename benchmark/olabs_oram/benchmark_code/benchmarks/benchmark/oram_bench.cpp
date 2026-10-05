@@ -98,27 +98,27 @@ int benchmark_roram_8bk_32bv(uint64_t N) {
 int main() {
   // Should take 1min to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED( (benchmark_nroram<uint32_t,uint32_t>(1<<i)) );
+    RUN_TEST_FORKED( (benchmark_nroram<uint32_t,uint32_t>(1<<i)), "N=%zu", (size_t)1<<i );
   }
 
   // Should take 1min to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED( (benchmark_nroram<uint32_t,uint64_t>(1<<i)) );
+    RUN_TEST_FORKED( (benchmark_nroram<uint32_t,uint64_t>(1<<i)), "N=%zu", (size_t)1<<i );
   }
 
   // Should take 1min to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED( (benchmark_nroram<uint64_t,uint64_t>(1<<i)) );
+    RUN_TEST_FORKED( (benchmark_nroram<uint64_t,uint64_t>(1<<i)), "N=%zu", (size_t)1<<i );
   }
 
   // Should take 3min to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED(benchmark_roram_8bk_8bv(1<<i));
+    RUN_TEST_FORKED(benchmark_roram_8bk_8bv(1<<i), "N=%zu", (size_t)1<<i);
   }
 
   // Should take 3min to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED(benchmark_roram_8bk_56bv(1<<i));
+    RUN_TEST_FORKED(benchmark_roram_8bk_56bv(1<<i), "N=%zu", (size_t)1<<i);
   }
 
   return 0;

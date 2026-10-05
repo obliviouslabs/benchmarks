@@ -219,7 +219,7 @@ int main(int argc, char **argv)
             if (i == 0 && j >= 24) {
                 continue;
             }
-            RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, batch_sizes[i]));
+            RUN_TEST_FORKED(test_loaded_sharded_table(1<<j, batch_sizes[i]), "N=%zu,batch_size=%zu,path_length=%d", (size_t)1<<j, (size_t)batch_sizes[i], SIGNAL_JASMINE_PATH_LENGTH);
         }
     }
 

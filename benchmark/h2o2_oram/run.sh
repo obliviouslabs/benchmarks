@@ -11,7 +11,7 @@ mkdir -p "${logs_folder}/results"
 
 # Run the tests
 cd "${build_folder}/benchmarks"
-PYTHONUNBUFFERED=1 stdbuf -oL -eL python oram_exp_script.py "${logs_folder}" 2>&1 | stdbuf -oL tee "${logs_folder}/bench_oram.log"
+PYTHONUNBUFFERED=1 stdbuf -oL -eL uv run oram_exp_script.py "${logs_folder}" 2>&1 | stdbuf -oL tee "${logs_folder}/bench_oram.log"
 
 # Parse the results
 echo "" > "$results_file"

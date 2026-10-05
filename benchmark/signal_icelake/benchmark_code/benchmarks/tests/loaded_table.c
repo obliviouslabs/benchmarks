@@ -208,7 +208,7 @@ int main()
 
     // Should take 33h to run
     for (uint64_t i = 10; i <= 28; i++) {
-        RUN_TEST_FORKED(loaded_table_8_56(1<<i));
+        RUN_TEST_FORKED(loaded_table_8_56(1<<i), "N=%zu", (size_t)1<<i);
     }
     
     return 0;

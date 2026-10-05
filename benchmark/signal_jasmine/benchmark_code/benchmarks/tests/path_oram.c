@@ -215,17 +215,17 @@ int main(int argc, char **argv)
 {
     if (argc > 1 && strcmp(argv[1], "capacity") == 0)
     {
-        RUN_TEST_FORKED(path_oram_8_8(0));
-        RUN_TEST_FORKED(path_oram_8_56(0));
+        RUN_TEST_FORKED(path_oram_8_8(0), "N=capacity,path_length=%d", SIGNAL_JASMINE_PATH_LENGTH);
+        RUN_TEST_FORKED(path_oram_8_56(0), "N=capacity,path_length=%d", SIGNAL_JASMINE_PATH_LENGTH);
         return 0;
     }
 
     for (uint64_t i = 10; i <= 28; i++) {
-        RUN_TEST_FORKED(path_oram_8_8((size_t)1<<i));
+        RUN_TEST_FORKED(path_oram_8_8((size_t)1<<i), "N=%zu,path_length=%d", (size_t)1<<i, SIGNAL_JASMINE_PATH_LENGTH);
     }
 
     for (uint64_t i = 10; i <= 28; i++) {
-        RUN_TEST_FORKED(path_oram_8_56((size_t)1<<i));
+        RUN_TEST_FORKED(path_oram_8_56((size_t)1<<i), "N=%zu,path_length=%d", (size_t)1<<i, SIGNAL_JASMINE_PATH_LENGTH);
     }
 
     return 0;

@@ -53,7 +53,7 @@ fn main() {
     for i in 10..=28 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<8>>(1<<{})", i);
-        run_test_forked(&test_name, || {
+        run_test_forked(&test_name, &format!("N={val}"), || {
             benchmark_default_oram::<8>(val)
         });
     }
@@ -63,7 +63,7 @@ fn main() {
     for i in 10..=28 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<32>>(1<<{})", i);
-        run_test_forked(&test_name, || {
+        run_test_forked(&test_name, &format!("N={val}"), || {
             benchmark_default_oram::<32>(val)
         });
     }
@@ -73,7 +73,7 @@ fn main() {
     for i in 10..=28 {
         let val = 1 << i;
         let test_name = format!("benchmark_meta_oram<BlockValue<56>>(1<<{})", i);
-        run_test_forked(&test_name, || {
+        run_test_forked(&test_name, &format!("N={val}"), || {
             benchmark_default_oram::<56>(val)
         });
     }

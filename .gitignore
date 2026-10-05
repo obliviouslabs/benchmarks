@@ -6,3 +6,4 @@ figures/
 .venv/
 .DS_Store
 __pycache__/
+cases.txt

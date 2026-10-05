@@ -13,6 +13,9 @@
 #include <sys/wait.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/file.h>
+#include <stdarg.h>
+#include <ctype.h>
 
 // ----- helpers ---------------------------------------------------------------
 
@@ -219,8 +222,194 @@ static int waitpid_timeout_linux(pid_t pid, int *status, int timeout_ms) {
 }
 
 
-#define RUN_TEST_FORKED(x)                              \
+/* One append-only JSONL channel; no test registry or runner-specific parsing. */
+static int benchmark_planning(void) {
+  const char *mode = getenv("BENCHMARK_MODE");
+  if (!mode || !*mode || !strcmp(mode, "run")) return 0;
+  if (!strcmp(mode, "plan")) return 1;
+  fprintf(stderr, "Invalid BENCHMARK_MODE: %s\n", mode);
+  exit(2);
+}
+
+static void benchmark_json(FILE *out, const char *s) {
+  fputc('"', out);
+  for (const unsigned char *p = (const unsigned char *)(s ? s : ""); *p; ++p) {
+    if (*p == '"' || *p == '\\') fprintf(out, "\\%c", *p);
+    else if (*p < 32) fprintf(out, "\\u%04x", *p);
+    else fputc(*p, out);
+  }
+  fputc('"', out);
+}
+
+static FILE *benchmark_log_open(void) {
+  const char *path = getenv("BENCHMARK_LOG_FILE");
+  if (!path || !*path) return stdout;
+  FILE *out = fopen(path, "a");
+  if (!out || flock(fileno(out), LOCK_EX)) {
+    perror("BENCHMARK_LOG_FILE");
+    exit(2);
+  }
+  return out;
+}
+
+static void benchmark_log_close(FILE *out) {
+  int failed = ferror(out) || fflush(out);
+  if (out != stdout && fclose(out)) failed = 1;
+  if (failed) { perror("BENCHMARK_LOG_FILE"); exit(2); }
+}
+
+/* Selector fields are readable text, escaped only to keep tabs/control bytes on one line. */
+static int benchmark_selector_hex(unsigned char c) {
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  return -1;
+}
+
+static int benchmark_selector_unescape(char *field, size_t *length) {
+  char *out = field;
+  for (const char *p = field; *p;) {
+    unsigned char c = (unsigned char)*p++;
+    if (c == '\\') {
+      c = (unsigned char)*p++;
+      if (c == 'n') c = '\n';
+      else if (c == 'r') c = '\r';
+      else if (c == 't') c = '\t';
+      else if (c == 'x') {
+        if (!p[0] || !p[1]) return 0;
+        int hi = benchmark_selector_hex((unsigned char)p[0]);
+        int lo = benchmark_selector_hex((unsigned char)p[1]);
+        if (hi < 0 || hi > 7 || lo < 0) return 0;
+        c = (unsigned char)(hi * 16 + lo);
+        p += 2;
+      } else if (c != '\\') return 0;
+    } else if (c < 32 || c == 127) return 0;
+    *out++ = (char)c;
+  }
+  *length = (size_t)(out - field);
+  *out = '\0';
+  return 1;
+}
+
+static const char *benchmark_selection(const char *wanted[4]) {
+  const char *path = getenv("BENCHMARK_SELECTOR");
+  if (!path || !*path) return "start";
+  FILE *in = fopen(path, "r");
+  if (!in) { perror("BENCHMARK_SELECTOR"); exit(2); }
+  const char *result = "skipped_missing";
+  char *text = NULL;
+  size_t capacity = 0, number = 0;
+  ssize_t length;
+  int found = 0;
+  while ((length = getline(&text, &capacity, in)) >= 0) {
+    ++number;
+    int valid = (size_t)length == strlen(text);
+    if (length && text[length - 1] == '\n') text[--length] = '\0';
+    if (length && text[length - 1] == '\r') text[--length] = '\0';
+    char *p = text;
+    while (isspace((unsigned char)*p)) ++p;
+    if (!*p && valid) continue;
+    char *columns[6] = {p};
+    size_t lengths[4];
+    int count = 1;
+    for (char *q = p; *q && count < 6; ++q) {
+      if (*q == '\t') { *q = '\0'; columns[count++] = q + 1; }
+    }
+    int commented = *p == '#';
+    while (*p == '#') {
+      ++p;
+      while (isspace((unsigned char)*p)) ++p;
+    }
+    char *action = p;
+    while (*p && !isspace((unsigned char)*p)) ++p;
+    char *end = p;
+    while (isspace((unsigned char)*p)) ++p;
+    if (*p || (end == action && !commented)) valid = 0;
+    *end = '\0';
+    if (count < 5) valid = 0;
+    if (count == 6) {
+      p = columns[5];
+      while (isspace((unsigned char)*p)) ++p;
+      if (*p != '#') valid = 0;
+    }
+    if (valid) {
+      for (int i = 0; i < 4; ++i)
+        if (!benchmark_selector_unescape(columns[i + 1], &lengths[i])) valid = 0;
+    }
+    if (!valid) {
+      if (commented) continue;
+      fprintf(stderr, "Invalid selector entry in %s:%zu; expected tab-separated action, project, variant, name, params\n", path, number);
+      exit(2);
+    }
+    int matches = 1;
+    for (int i = 0; i < 4; ++i) {
+      const char *value = wanted[i] ? wanted[i] : "";
+      if (lengths[i] != strlen(value) || memcmp(columns[i + 1], value, lengths[i])) matches = 0;
+    }
+    if (matches) {
+      if (found++) { fprintf(stderr, "Duplicate selector case in %s:%zu\n", path, number); exit(2); }
+      result = (!commented && (!strcmp(action, "run") || !strcmp(action, "yes"))) ? "start" : "skipped";
+    }
+  }
+  if (ferror(in)) { perror("BENCHMARK_SELECTOR"); exit(2); }
+  free(text);
+  fclose(in);
+  return result;
+}
+
+static uint64_t benchmark_start(const char *name, const char *file, int line,
+                                const char *format, ...) {
+  static uint64_t sequence = 0;
+  uint64_t id = ++sequence;
+  int plan = benchmark_planning();
+  char params[1024];
+  va_list args;
+  va_start(args, format);
+  int length = vsnprintf(params, sizeof(params), format, args);
+  va_end(args);
+  if (length < 0 || (size_t)length >= sizeof(params)) {
+    fprintf(stderr, "Benchmark parameters exceed log buffer\n");
+    exit(2);
+  }
+  const char *fields[] = {getenv("BENCHMARK_PROJECT"), getenv("BENCHMARK_VARIANT"), name, params};
+  const char *event = plan ? "plan" : benchmark_selection(fields);
+  int run = !strcmp(event, "start");
+  int missing = !strcmp(event, "skipped_missing");
+  FILE *out = benchmark_log_open();
+  fprintf(out, "{\"event\":\"%s\",\"id\":\"%ld:%" PRIu64 "\",\"name\":",
+          event, (long)getpid(), id);
+  benchmark_json(out, name);
+  fputs(",\"params\":", out); benchmark_json(out, params);
+  fputs(",\"file\":", out); benchmark_json(out, file);
+  fputs(",\"project\":", out); benchmark_json(out, getenv("BENCHMARK_PROJECT"));
+  fputs(",\"variant\":", out); benchmark_json(out, getenv("BENCHMARK_VARIANT"));
+  fputs(",\"run\":", out); benchmark_json(out, getenv("BENCHMARK_RUN"));
+  fprintf(out, ",\"line\":%d", line);
+  if (missing) fputs(",\"warning\":\"not present in selector; skipped\"", out);
+  if (run) fprintf(out, ",\"time_ns\":%" PRIu64, current_time_ns());
+  fputs("}\n", out);
+  benchmark_log_close(out);  /* Flush before fork, including on redirected stdout. */
+  if (missing) fprintf(stderr, "Warning: %s %s %s [%s] not present in selector; skipped\n",
+                       fields[0] ? fields[0] : "", fields[1] ? fields[1] : "", name, params);
+  return run ? id : 0;
+}
+
+static void benchmark_end(uint64_t id, int returncode, const char *error) {
+  uint64_t now = current_time_ns();
+  FILE *out = benchmark_log_open();
+  fprintf(out, "{\"event\":\"end\",\"id\":\"%ld:%" PRIu64
+          "\",\"time_ns\":%" PRIu64 ",\"returncode\":%d,\"error\":",
+          (long)getpid(), id, now, returncode);
+  benchmark_json(out, error);
+  fputs("}\n", out);
+  benchmark_log_close(out);
+}
+
+/* Optional printf-style parameters are evaluated before the test is started. */
+#define RUN_TEST_FORKED(x, ...)                         \
 do {                                                    \
+  uint64_t _case_id = benchmark_start(#x, __FILE__, __LINE__, "" __VA_ARGS__); \
+  if (!_case_id) break;                                  \
   const long long timeout_ms = benchmark_test_timeout_ms(); \
   pid_t childPid = fork();                              \
   if (childPid == 0) {                                  \
@@ -237,8 +426,9 @@ do {                                                    \
   } else if (childPid < 0) {                            \
     /* Fork failed */                                   \
     fprintf(stderr, "FAILED: %s(fork)\n", #x);          \
+    benchmark_end(_case_id, -1, "fork failed");           \
   } else {                                              \
-    int returnStatus;                                   \
+    int returnStatus = 0;                               \
     int r = waitpid_timeout_linux(childPid, &returnStatus, timeout_ms);  \
     if (r == -1) {                                      \
       BETTER_TEST_LOG("FAILED: %s (wait error: %d)\n", #x, errno); \
@@ -251,5 +441,7 @@ do {                                                    \
         BETTER_TEST_LOG("FAILED: %s (%d)\n", #x, returnStatus);  \
       }                                                 \
     }                                                   \
+    int _code = WIFEXITED(returnStatus) ? WEXITSTATUS(returnStatus) : -WTERMSIG(returnStatus); \
+    benchmark_end(_case_id, r ? -1 : _code, r == 1 ? "timeout" : r == -1 ? "wait failed" : ""); \
   }                                                     \
 } while(0)

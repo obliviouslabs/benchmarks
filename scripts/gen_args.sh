@@ -12,3 +12,4 @@ if [ "$#" -ge 1 ]; then
 fi
 results_file="${base_dir}/results/${run_id}"
 logs_folder="${base_dir}/logs/${run_id}/"
+export BENCHMARK_PROJECT="$proj_name" BENCHMARK_RUN="$run_id" BENCHMARK_VARIANT="${1:-}"

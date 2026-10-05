@@ -1,7 +1,16 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["psutil"]
+# ///
 import math
 import sys
 from time import time
-from utils import parse_mean_time_from_outlines, report, run_process_registering_memory, check_if_alread_ran
+from pathlib import Path
+# The source and its build/ copy both live three directories below the repo.
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "benchmark" / "common"))
+from common import planning, start_test, end_test
+if not planning():
+  from utils import parse_mean_time_from_outlines, report, run_process_registering_memory, check_if_alread_ran
 
 target_dir = sys.argv[1]
 # block_sizes = [48, 64]
@@ -16,7 +25,10 @@ for threads in thread_nums:
       cnt_ub = 24
     for n_base in range(10, cnt_ub+1):
       repetitions = 1
-      n = 2**n_base 
+      n = 2**n_base
+      case_id = start_test(f"ORAMDataFixture{b}/ORAM", f"N={n},block_bytes={b},threads={threads},repetitions={repetitions}", __file__)
+      if case_id is None:
+        continue
       file_name = f"{target_dir}/results/results_{n}_{b}_{threads}.json"
       if check_if_alread_ran(file_name):
         assert False, "This experiment should not have been run already"
@@ -27,6 +39,7 @@ for threads in thread_nums:
       ret, mem, outlines = run_process_registering_memory(cmd, threads=threads)
       t = parse_mean_time_from_outlines(outlines)
       if t is None:
+        end_test(case_id, ret or 1, "could not parse benchmark result")
         print(f"({threads}, {b}, {n}) Could not parse time from output")
         if n_base > 20:
           # N' > N ==> fail(N) ==> fail(N')
@@ -50,3 +63,4 @@ for threads in thread_nums:
       report("RORAM", f"h2o2", mem, res, cores=threads)
 
       print(f"({threads}, {b}, {n}) Process exited with code {ret}, max memory usage: {mem} bytes")
+      end_test(case_id, ret)

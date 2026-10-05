@@ -216,12 +216,12 @@ int main() {
 
   // // Should take 1h30 to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED((benchmark_umap<8,56>(1<<i)));
+    RUN_TEST_FORKED((benchmark_umap<8,56>(1<<i)), "N=%zu", (size_t)1<<i);
   }
 
   // Should take 1h30 to run
   for (uint64_t i = 10; i<=28; i++) {
-    RUN_TEST_FORKED((benchmark_umap<32,32>(1<<i)));
+    RUN_TEST_FORKED((benchmark_umap<32,32>(1<<i)), "N=%zu", (size_t)1<<i);
   }
 
   // Should take 1h30 to run
