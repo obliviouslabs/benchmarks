@@ -3,9 +3,9 @@ set -eu
 
 base_dir=$(git rev-parse --show-toplevel)
 # map_sizes="${RAMP_MAP_SIZES:-65536 131072 262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864}"
-# implementations="${RAMP_IMPLEMENTATIONS:-h2o2_oram olabs_oram olabs_oram_sharded olabs_rostl mc_oblivious signal_icelake signal_jasmine}"
+# implementations="${RAMP_IMPLEMENTATIONS:-h2o2_oram olabs_oram olabs_oram_sharded olabs_rostl mc_oblivious signal_icelake signal_jasmine sonic}"
 map_sizes="${RAMP_MAP_SIZES:-134217728}"
-implementations="${RAMP_IMPLEMENTATIONS:-olabs_oram h2o2_oram signal_icelake signal_jasmine}"
+implementations="${RAMP_IMPLEMENTATIONS:-olabs_oram h2o2_oram signal_icelake signal_jasmine sonic}"
 run_timestamp=$(date +%s)
 output_dir="${RAMP_OUTPUT_DIR:-${base_dir}/logs/ramp_latency_${run_timestamp}}"
 mkdir -p "$output_dir"
@@ -64,6 +64,15 @@ run_one()
             binary="${base_dir}/build/olabs_oram/build/applications/benchmarks/umap_sharded_ramp"
             if [ ! -x "$binary" ]; then
                 echo "Skipping ${implementation}: build it with benchmark/olabs_oram/build.sh" >&2
+                skipped=$((skipped + 1))
+                return
+            fi
+            run_command "$binary" "$n" "$output"
+            ;;
+        sonic)
+            binary="${base_dir}/build/sonic/build/bin/sonic_pmchain_ramp"
+            if [ ! -x "$binary" ]; then
+                echo "Skipping ${implementation}: build it with benchmark/sonic/build.sh" >&2
                 skipped=$((skipped + 1))
                 return
             fi

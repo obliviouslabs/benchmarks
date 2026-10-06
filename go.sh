@@ -24,6 +24,7 @@ sh ./benchmark/h2o2_oram/run.sh
 sh ./benchmark/olabs_rostl/run.sh
 sh ./benchmark/mc_oblivious/run.sh
 sh ./benchmark/meta_oram/run.sh
+sh ./benchmark/sonic/run.sh
 
 # Comment out the lines you don't want this run to execute.
 
@@ -39,10 +40,9 @@ sh ./benchmark/meta_oram/run.sh
 systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
 systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/h2o2_oram/run.sh SWAP512M
 systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/olabs_oram/run.sh SWAP512M
+systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/sonic/run.sh SWAP512M
+
 # systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
 # systemd-run --user --scope -p MemoryMax=64G -p MemorySwapMax=200G sh ./benchmark/h2o2_oram/run.sh SWAP64G
 
 sh ./scripts/run_ramp_latency.sh
-
-# To run this script with memory limits: 
-# systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=60G sh ./benchmark/__TARGET__/run.sh

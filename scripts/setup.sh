@@ -9,6 +9,7 @@ olabs_oram
 olabs_rostl
 signal_icelake
 signal_jasmine
+sonic
 '
 
 ARGC=$#

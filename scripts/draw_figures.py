@@ -128,6 +128,7 @@ for (key_bytes, val_bytes) in [(8,8), (32,32), (8,56)]:
     & (P['benchmark_type'] == 'UnorderedMap')
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
     & (P['Shards'].isna())
+    & (P['implementation'] != 'sonic_pmchain') # batch latency, not per-query latency
     & (P['implementation'] != 'mc_oblivious') # too slow, makes graphs ugly
   ].sort_index().copy()
   w2 = w1.copy().loc[(w1['implementation'] == 'h2o2') & (w1['sys_lcores'] == 32)]
@@ -196,8 +197,8 @@ for batch_size in [1024,4096,8192,65536,1048576]:
       & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
     ].sort_index().copy()
     w2 = w1.loc[
-      (w1['Shards'] == 15)
-    & (w1['Batch_size'] == batch_size)
+      ((w1['Shards'] == 15) | (w1['implementation'] == 'sonic_pmchain'))
+      & (w1['Batch_size'] == batch_size)
     ]
     w3 = w1.loc[w1['implementation'] == 'h2o2'].copy()
     w3 = w3.loc[w3['sys_lcores'] == 32].copy()
@@ -244,14 +245,14 @@ for batch_size in [1024,4096,8192,65536,1048576]:
     )
 
 # UMAP - Batched performance scaling with batch size
-for i, implementation in enumerate(['Signal_Sharded', 'olabs_rostl_sharded', 'olabs_oram_sharded']):
+for i, implementation in enumerate(['Signal_Sharded', 'olabs_rostl_sharded', 'olabs_oram_sharded', 'sonic_pmchain']):
   for key_bytes, val_bytes in [(32, 32), (8, 56)]:
     w1 = P.loc[
       (P['Key_bytes'] == key_bytes)
       & (P['Value_bytes'] == val_bytes)
       & (P['benchmark_type'] == 'UnorderedMap')
       & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
-      & (P['Shards'] == 15)
+      & ((P['Shards'] == 15) | (P['implementation'] == 'sonic_pmchain'))
       & (P['implementation'] == implementation)
     ].sort_index().copy()
     w1["name"] = w1.apply(lambda r: f"{r['implementation']}-{r['Batch_size']}", axis=1)
@@ -289,6 +290,7 @@ for key_bytes, val_bytes in [(8, 8), (32, 32), (8, 56)]:
     & (P['N'] >= (1<<10)) & (P['N'] <= (1<<26))
     & (
       (P['Shards'] == 15)
+     |(P['implementation'] == 'sonic_pmchain')
      |((P['implementation'] == 'h2o2') & (P['sys_lcores'] == 32))
     )
   ].sort_index().copy()

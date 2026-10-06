@@ -27,6 +27,7 @@ Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONT
 | [**mc_oblivious**](https://github.com/mobilecoinfoundation/mc-oblivious) | Mobilecoin's implementation of ORAM and UMAP | Rust | RORAM, UMAP, Ramp-UMAP |
 | [**meta_oram**](https://github.com/facebook/oram) | Meta's implementation of RORAM | Rust | RORAM |
 | [**h2o2_oram**](https://github.com/55199789/H2O2RAM) | H2O2RAM's high-performance hierarchical doubly oblivious RAM | C++ | RORAM, Ramp-UMAP |
+| [**sonic**](https://zenodo.org/records/21522021) | Native SONIC RingORAM and PMCHAIN batched OMAP ([details](benchmark/sonic/README.md)) | C++ | NRORAM, Batched-UMAP, Ramp-UMAP |
 
 ## Benchmark Results
 
@@ -204,6 +205,9 @@ lists or per-test timing/outcome CSV:
 # List cases without running test bodies (setup/build still run):
 BENCHMARK_MODE=plan uv run scripts/run.py > cases.txt
 # Edit cases.txt: only run/yes entries execute; comment out cases to skip them.
+# bulk update cases.txt: skip large N unless batch_size is 4096:
+uv run scripts/edit_cases.py cases.txt \
+  'N is not None and N >= 2**24 and batch_size != 4096' --in-place
 BENCHMARK_SELECTOR=cases.txt uv run scripts/run.py > results.csv
 # Run all encountered cases:
 uv run scripts/run.py > results.csv
@@ -211,6 +215,7 @@ uv run scripts/run.py > results.csv
 uv run scripts/run.py logs/full_runs/FILE.jsonl > results.csv
 # Generate a case list from a saved run:
 uv run scripts/run.py --cases logs/full_runs/FILE.jsonl > cases.txt
+
 ```
 
 ### Generating Figures and tables

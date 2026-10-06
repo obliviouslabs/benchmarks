@@ -12,10 +12,12 @@ RESULT_PREFIXES = [
   "mc_oblivious",
   "meta_oram",
   "olabs_rostl",
+  "sonic",
 ]
 
+# Git commits (40 hex digits) or pinned release archive SHA-256s (64).
 CANONICAL_RESULT_RE = re.compile(
-  r"^(?P<prefix>[a-z0-9_]+)_(?P<timestamp>\d+)_([0-9a-f]{40})(?:_SWAP[0-9A-Za-z]+)?$"
+  r"^(?P<prefix>[a-z0-9_]+)_(?P<timestamp>\d+)_([0-9a-f]{40}|[0-9a-f]{64})(?:_SWAP[0-9A-Za-z]+)?$"
 )
 
 

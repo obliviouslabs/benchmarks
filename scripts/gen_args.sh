@@ -1,6 +1,7 @@
 run_timestamp=$(date +%s)
 repo_path=${repo_path:-"/"}
-commit_hash="$(git -C ${base_dir}/build/${proj_name}/${repo_path} rev-parse HEAD 2>/dev/null || echo 'unknown')"
+# Release archives can supply their checksum instead of a Git commit.
+commit_hash="${source_revision:-$(git -C "${base_dir}/build/${proj_name}/${repo_path}" rev-parse HEAD 2>/dev/null || echo 'unknown')}"
 build_folder="${base_dir}/build/${proj_name}/"
 sources_folder="${base_dir}/benchmark/${proj_name}"
 

@@ -3,7 +3,7 @@ rustup install stable
 sudo apt install cmake ninja-build
 sudo apt install g++ clang
 sudo apt install libboost-all-dev
-sudo apt install libbearssl-dev
+sudo apt install libbearssl-dev libssl-dev
 sudo apt install libtbb-dev libnlopt-dev libbenchmark-dev
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl
