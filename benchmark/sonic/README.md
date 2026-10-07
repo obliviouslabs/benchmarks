@@ -34,6 +34,9 @@ PMCHAIN pads these to a fixed power-of-two capacity of at least 64, which must f
 (N ≥ 2048). Per-request latency includes queueing, padding, position-map processing,
 and eviction; CSV batch sizes count only real requests. Large N can make preloading slow.
 
+Upstream parallel bucket rebuilding shares a non-thread-safe PRNG (confirmed with
+ThreadSanitizer). This remains unpatched; treat parallel results as provisional.
+
 ## Running
 
 Requires Linux, Clang with C++20 support, CMake, Ninja, OpenSSL development headers,

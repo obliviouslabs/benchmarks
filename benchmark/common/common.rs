@@ -244,10 +244,12 @@ pub fn benchmark_end(id: &str, returncode: i32, error: &str) {
 #[track_caller]
 pub fn run_test_forked<F: FnOnce() -> i32>(test_name: &str, params: &str, test_func: F) {
     let Some(id) = benchmark_start(test_name, params) else { return; };
+    let started_ns = current_time_ns();
     unsafe {
         let pid = libc::fork();
         if pid < 0 {
-            eprintln!("FAILED: {}(fork)", test_name);
+            eprintln!("FAILED: {} (fork failed, elapsed={:.3}s)", test_name,
+                      (current_time_ns() - started_ns) as f64 / 1e9);
             benchmark_end(&id, -1, "fork failed");
             return;
         }
@@ -268,18 +270,20 @@ pub fn run_test_forked<F: FnOnce() -> i32>(test_name: &str, params: &str, test_f
             loop {
                 if libc::waitpid(pid, &mut status as *mut i32, 0) >= 0 { break; }
                 if std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+                    let elapsed_s = (current_time_ns() - started_ns) as f64 / 1e9;
                     benchmark_end(&id, -1, "wait failed");
+                    better_test_log!("FAILED: {} (wait failed, elapsed={:.3}s)", test_name, elapsed_s);
                     return;
                 }
             }
+            let elapsed_s = (current_time_ns() - started_ns) as f64 / 1e9;
             let code = if libc::WIFEXITED(status) { libc::WEXITSTATUS(status) }
                        else { -libc::WTERMSIG(status) };
             benchmark_end(&id, code, "");
             if status == 0 {
-                better_test_log!("OK");
+                better_test_log!("OK: {} (elapsed={:.3}s)", test_name, elapsed_s);
             } else {
-                // In C code: BETTER_TEST_LOG("FAILED: %s (%d)\n", #x, returnStatus);
-                better_test_log!("FAILED: {} ({})", test_name, status);
+                better_test_log!("FAILED: {} ({}, elapsed={:.3}s)", test_name, status, elapsed_s);
             }
         }
     }

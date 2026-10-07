@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <vector>
@@ -19,13 +20,16 @@ static uint8_t payload_byte(uint64_t key, size_t byte) {
 
 template <size_t ValueBytes>
 int benchmark_pmchain(uint64_t n, uint64_t batch_size, uint32_t threads) {
-    constexpr uint64_t accesses = UINT64_C(1) << 21;
+    constexpr uint64_t minimum_accesses = UINT64_C(1) << 21;
+    constexpr uint64_t minimum_batches = 32;
     using Traits = sn::oram::zingoram::traits<ValueBytes, sn::oram::zingoram::epoch_mode::disjoint_epoch>;
     using Backing = sn::oram::zingoram::client<Traits>;
     using Adapter = sn::oram::adapter::direct_block<Backing>;
     using Posmap = sn::omap::o2th::o2th_rwkv<uint64_t, 8>;
     using Chain = sn::omap::pmchain::client<Posmap, Adapter>;
-    const uint64_t batches = accesses / batch_size;
+
+    const uint64_t batches = std::max(minimum_batches, (minimum_accesses + batch_size - 1) / batch_size);
+    const uint64_t accesses = batches * batch_size;
     const uint64_t memory_before = getMemValue();
     const uint64_t init_start = current_time_ns();
 
@@ -154,7 +158,7 @@ int main() {
     constexpr uint64_t batch_sizes[] = {1024, 4096, 8192, 65536, UINT64_C(1) << 20};
 
     // R=5 and E=4 require N >= 2048 for a non-empty eviction subpath.
-    for (unsigned exponent = 11; exponent <= 27; ++exponent) {
+    for (unsigned exponent = 11; exponent <= 24; ++exponent) {
         const uint64_t n = UINT64_C(1) << exponent;
         for (const uint32_t threads : thread_counts) {
             for (const uint64_t batch_size : batch_sizes) {

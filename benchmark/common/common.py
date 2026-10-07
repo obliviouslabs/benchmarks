@@ -8,6 +8,7 @@ import sys
 import time
 
 _sequence = itertools.count(1)
+_running_tests = {}
 
 
 def planning():
@@ -111,11 +112,23 @@ def start_test(name, params, file, line=0):
     if event["event"] == "start":
         event["time_ns"] = time.monotonic_ns()
     emit(event)
+    if event["event"] == "start":
+        _running_tests[case_id] = event
     if event["event"] == "skipped_missing":
         print(f"Warning: {event['project']} {event['variant']} {name} [{params}] not present in selector; skipped", file=sys.stderr)
     return case_id if event["event"] == "start" else None
 
 
 def end_test(case_id, returncode=0, error=""):
-    emit(dict(event="end", id=case_id, time_ns=time.monotonic_ns(),
+    now = time.monotonic_ns()
+    emit(dict(event="end", id=case_id, time_ns=now,
               returncode=returncode, error=error))
+    case = _running_tests.pop(case_id, None)
+    if case is not None:
+        elapsed_s = (now - case["time_ns"]) / 1e9
+        status = "FAILED" if returncode or error else "OK"
+        detail = f", exit={returncode}" if returncode else ""
+        if error:
+            detail += f", {error}"
+        print(f"{status}: {case['name']} [{case['params']}] (elapsed={elapsed_s:.3f}s{detail})",
+              file=sys.stderr, flush=True)

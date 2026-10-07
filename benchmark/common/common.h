@@ -168,7 +168,7 @@ static int pidfd_open_linux(pid_t pid, unsigned int flags) {
 static long long benchmark_test_timeout_ms(void)
 {
   const char *raw = getenv("BENCHMARK_TEST_TIMEOUT_MS");
-  const long long default_timeout_ms = 3LL * 60LL * 60LL * 1000LL;
+  const long long default_timeout_ms = 2LL * 60LL * 60LL * 1000LL;
 
   if (raw == NULL || raw[0] == '\0')
   {
@@ -410,6 +410,7 @@ static void benchmark_end(uint64_t id, int returncode, const char *error) {
 do {                                                    \
   uint64_t _case_id = benchmark_start(#x, __FILE__, __LINE__, "" __VA_ARGS__); \
   if (!_case_id) break;                                  \
+  const uint64_t _started_ns = current_time_ns();         \
   const long long timeout_ms = benchmark_test_timeout_ms(); \
   pid_t childPid = fork();                              \
   if (childPid == 0) {                                  \
@@ -425,20 +426,22 @@ do {                                                    \
     }                                                   \
   } else if (childPid < 0) {                            \
     /* Fork failed */                                   \
-    fprintf(stderr, "FAILED: %s(fork)\n", #x);          \
+    fprintf(stderr, "FAILED: %s (fork failed, elapsed=%.3fs)\n", #x, \
+            (current_time_ns() - _started_ns) / 1e9);     \
     benchmark_end(_case_id, -1, "fork failed");           \
   } else {                                              \
     int returnStatus = 0;                               \
     int r = waitpid_timeout_linux(childPid, &returnStatus, timeout_ms);  \
+    const double _elapsed_s = (current_time_ns() - _started_ns) / 1e9; \
     if (r == -1) {                                      \
-      BETTER_TEST_LOG("FAILED: %s (wait error: %d)\n", #x, errno); \
+      BETTER_TEST_LOG("FAILED: %s (wait error: %d, elapsed=%.3fs)", #x, errno, _elapsed_s); \
     } else if (r == 1) {                                \
-      BETTER_TEST_LOG("FAILED: %s (timeout after %.3fs)\n", #x, (double)timeout_ms / 1000.0); \
+      BETTER_TEST_LOG("FAILED: %s (timeout after %.3fs, elapsed=%.3fs)", #x, (double)timeout_ms / 1000.0, _elapsed_s); \
     } else  {                                           \
       if (returnStatus == 0) {                          \
-        BETTER_TEST_LOG("OK\n");                        \
+        BETTER_TEST_LOG("OK: %s (elapsed=%.3fs)", #x, _elapsed_s); \
       } else {                                          \
-        BETTER_TEST_LOG("FAILED: %s (%d)\n", #x, returnStatus);  \
+        BETTER_TEST_LOG("FAILED: %s (%d, elapsed=%.3fs)", #x, returnStatus, _elapsed_s);  \
       }                                                 \
     }                                                   \
     int _code = WIFEXITED(returnStatus) ? WEXITSTATUS(returnStatus) : -WTERMSIG(returnStatus); \

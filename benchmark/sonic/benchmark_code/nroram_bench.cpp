@@ -127,7 +127,7 @@ int main() {
         {"Par32", "sonic_par32", 32, 16, 16, 2},
     };
 
-    for (unsigned exponent = 10; exponent <= 27; ++exponent) {
+    for (unsigned exponent = 10; exponent <= 28; ++exponent) {
         const uint64_t n = UINT64_C(1) << exponent;
         for (const auto &config : configurations) {
             RUN_TEST_FORKED(benchmark_nroram<8>(n, config),

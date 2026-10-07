@@ -37,10 +37,11 @@ sh ./benchmark/sonic/run.sh
 
 # systemd-run --user --scope -p MemoryMax=2G -p MemorySwapMax=60G sh ./benchmark/olabs_oram/run.sh SWAP2G
 # systemd-run --user --scope -p MemoryMax=1G -p MemorySwapMax=60G sh ./benchmark/signal_icelake/run.sh SWAP1G
-systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
-systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/h2o2_oram/run.sh SWAP512M
-systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/olabs_oram/run.sh SWAP512M
-systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/sonic/run.sh SWAP512M
+
+# systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
+# systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/h2o2_oram/run.sh SWAP512M
+# systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/olabs_oram/run.sh SWAP512M
+# systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/sonic/run.sh SWAP512M
 
 # systemd-run --user --scope -p MemoryMax=512M -p MemorySwapMax=60G sh ./benchmark/signal_jasmine/run.sh SWAP512M
 # systemd-run --user --scope -p MemoryMax=64G -p MemorySwapMax=200G sh ./benchmark/h2o2_oram/run.sh SWAP64G
