@@ -16,5 +16,5 @@ python "$base_dir/scripts/parse.py" -f "${logs_folder}/path_oram.out" >> "$resul
 ./loaded_table.test 2>&1 | stdbuf -oL tee "${logs_folder}/loaded_table.out"
 python "$base_dir/scripts/parse.py" -f "${logs_folder}/loaded_table.out" >> "$results_file"
 
-./loaded_sharded_table.test best 2>&1 | stdbuf -oL tee "${logs_folder}/loaded_sharded_table.out"
+./loaded_sharded_table.test 2>&1 | stdbuf -oL tee "${logs_folder}/loaded_sharded_table.out"
 python "$base_dir/scripts/parse.py" -f "${logs_folder}/loaded_sharded_table.out" >> "$results_file"

@@ -154,15 +154,17 @@ int benchmark_pmchain(uint64_t n, uint64_t batch_size, uint32_t threads) {
 }
 
 int main() {
-    constexpr uint32_t thread_counts[] = {8};
-    constexpr uint64_t batch_sizes[] = {1024, 4096, 8192, 65536, UINT64_C(1) << 20};
+    constexpr uint32_t thread_counts[] = {32};
+    constexpr uint64_t batch_sizes[] = {1024, 4096, 8192, 65536};
 
     // R=5 and E=4 require N >= 2048 for a non-empty eviction subpath.
-    for (unsigned exponent = 11; exponent <= 24; ++exponent) {
+    for (unsigned exponent = 11; exponent <= 28; ++exponent) {
         const uint64_t n = UINT64_C(1) << exponent;
         for (const uint32_t threads : thread_counts) {
             for (const uint64_t batch_size : batch_sizes) {
                 if (batch_size > n) continue;
+                if (batch_size == 1024 && exponent >= 24) continue;
+                if (batch_size == 4096 && exponent >= 26) continue;
                 RUN_TEST_FORKED(benchmark_pmchain<8>(n, batch_size, threads),
                     "N=%" PRIu64 ",key_bytes=8,value_bytes=8,batch_size=%" PRIu64 ",threads=%u",
                     n, batch_size, threads);

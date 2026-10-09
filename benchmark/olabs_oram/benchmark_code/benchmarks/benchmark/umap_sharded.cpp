@@ -158,13 +158,12 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 }
 
 
-// UNDONE(): Should take less than 4h to run
 int main() {
-  uint64_t batch_sizes[] = {NUM_SHARDS,1024,4096,8192,65536,1<<20};
+  uint64_t batch_sizes[] = {1024,4096,8192,65536};
 
-  for (uint64_t i = 1; i<6; i++) {
+  for (uint64_t i = 1; i<4; i++) {
     for (uint64_t j = 10; j<=28; j++) {
-      if (i == 0 && j >= 24) {
+      if (batch_sizes[i] >= (1ULL<<j)) {
         continue;
       }
       RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);

@@ -57,7 +57,7 @@ for depth do
   cd "${build_folder}/L${depth}/c/benchmarks"
   run_test path_oram $path_oram_args
   run_test loaded_table
-  run_test loaded_sharded_table best
+  run_test loaded_sharded_table
 done
 
 echo "Done. Results: ${results_file}"

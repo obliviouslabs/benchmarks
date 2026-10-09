@@ -5,7 +5,8 @@ base_dir=$(git rev-parse --show-toplevel)
 # map_sizes="${RAMP_MAP_SIZES:-65536 131072 262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864 134217728}"
 # implementations="${RAMP_IMPLEMENTATIONS:-h2o2_oram olabs_oram olabs_oram_sharded olabs_rostl mc_oblivious signal_icelake signal_jasmine sonic}"
 map_sizes="${RAMP_MAP_SIZES:-16777216}"
-implementations="${RAMP_IMPLEMENTATIONS:-olabs_oram h2o2_oram signal_icelake signal_jasmine sonic}"
+# implementations="${RAMP_IMPLEMENTATIONS:-olabs_oram h2o2_oram signal_icelake signal_jasmine sonic}"
+implementations="${RAMP_IMPLEMENTATIONS:-olabs_oram h2o2_oram sonic signal_jasmine}"
 run_timestamp=$(date +%s)
 output_dir="${RAMP_OUTPUT_DIR:-${base_dir}/logs/ramp_latency_${run_timestamp}}"
 mkdir -p "$output_dir"

@@ -262,14 +262,6 @@ fn main() {
     });
   }
 
-  for i in 10..=28 {
-    let val = 1 << i;
-    let test_name = format!("benchmark_sharded_umap<u64,B448>(1<<{})", i);
-    run_test_forked(&test_name, &format!("N={val},B=70000,batch_size=1048576"), || {
-      benchmark_sharded_umap::<B448, 70000, 1048576>(val)
-    });
-  }
-
 
   for i in 10..=28 {
     let val = 1 << i;
@@ -300,14 +292,6 @@ fn main() {
     let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
     run_test_forked(&test_name, &format!("N={val},B=4800,batch_size=65536"), || {
       benchmark_sharded_umap::<u64, 4800, 65536>(val)
-    });
-  }
-
-  for i in 10..=28 {
-    let val = 1 << i;
-    let test_name = format!("benchmark_sharded_umap<u64,u64>(1<<{})", i);
-    run_test_forked(&test_name, &format!("N={val},B=70000,batch_size=1048576"), || {
-      benchmark_sharded_umap::<u64, 70000, 1048576>(val)
     });
   }
 
