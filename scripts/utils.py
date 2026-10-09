@@ -79,6 +79,7 @@ def select_best_signal_jasmine_rows(rows):
     "Value_bytes",
     "Batch_size",
     "Shards",
+    "Threads",
   )
 
   def to_float_or_none(v):
@@ -290,6 +291,11 @@ def draw_table(data: pd.DataFrame,
   "olabs_umap_shortkv",
   "olabs_umap",
   "meta_oram",
+  "h2o2",
+  "sonic_ser",
+  "sonic_par8",
+  "sonic_par16",
+  "sonic_pmchain",
   "snoopy",
 ]):
   tbl = data.pivot_table(
@@ -335,7 +341,7 @@ def draw_table(data: pd.DataFrame,
     rest = sorted(rest)
     tbl = tbl.reindex(columns=present + rest)
   
-  md = tbl.to_markdown(tablefmt="github", stralign="right", numalign="right", disable_numparse=True, preserve_whitespace=True)
+  md = tbl.to_markdown(tablefmt="github", stralign="right", numalign="right", disable_numparse=True)
   print(md)
 
 

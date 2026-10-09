@@ -155,7 +155,7 @@ int benchmark_pmchain(uint64_t n, uint64_t batch_size, uint32_t threads) {
 
 int main() {
     constexpr uint32_t thread_counts[] = {32};
-    constexpr uint64_t batch_sizes[] = {1024, 4096, 8192, 65536};
+    constexpr uint64_t batch_sizes[] = {1024, 4096, 8192, 65536, (1<<20)};
 
     // R=5 and E=4 require N >= 2048 for a non-empty eviction subpath.
     for (unsigned exponent = 11; exponent <= 28; ++exponent) {

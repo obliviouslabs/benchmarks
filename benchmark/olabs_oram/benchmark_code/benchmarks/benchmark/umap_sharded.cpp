@@ -159,16 +159,16 @@ int benchmark_umap_sharded(uint64_t N, size_t batch_size) {
 
 
 int main() {
-  uint64_t batch_sizes[] = {1024,4096,8192,65536};
+  uint64_t batch_sizes[] = {1024, 4096, 8192, 65536, (1<<20)};
 
-  for (uint64_t i = 1; i<4; i++) {
+  for (const uint64_t batch_size : batch_sizes) {
     for (uint64_t j = 10; j<=28; j++) {
-      if (batch_sizes[i] >= (1ULL<<j)) {
+      if (batch_size >= (1ULL<<j)) {
         continue;
       }
-      RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);
-      RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);
-      RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, batch_sizes[i])), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_sizes[i]);
+      RUN_TEST_FORKED((benchmark_umap_sharded<8,8>(1<<j, batch_size)), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_size);
+      RUN_TEST_FORKED((benchmark_umap_sharded<8,56>(1<<j, batch_size)), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_size);
+      RUN_TEST_FORKED((benchmark_umap_sharded<32,32>(1<<j, batch_size)), "N=%zu,batch_size=%zu", (size_t)1<<j, (size_t)batch_size);
     }
   }
 

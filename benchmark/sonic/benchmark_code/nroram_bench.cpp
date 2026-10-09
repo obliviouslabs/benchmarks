@@ -124,7 +124,7 @@ int main() {
         {"Ser", "sonic_ser", 1, 8, 12, 1},
         {"Par8", "sonic_par8", 8, 16, 16, 2},
         {"Par16", "sonic_par16", 16, 16, 16, 2},
-        {"Par32", "sonic_par32", 32, 16, 16, 2},
+        {"Par32", "sonic_par32", 32, 14, 10, 4},
     };
 
     for (unsigned exponent = 10; exponent <= 28; ++exponent) {

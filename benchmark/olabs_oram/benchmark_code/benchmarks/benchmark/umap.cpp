@@ -210,9 +210,9 @@ int benchmark_umap(uint64_t N) {
 /// UNDONE(): remove unecessary tests
 int main() {
   // // Should take 1h30 to run
-  // for (uint64_t i = 10; i<=28; i++) {
-  //   RUN_TEST_FORKED((benchmark_umap<8,8>(1<<i)));
-  // }
+  for (uint64_t i = 10; i<=28; i++) {
+    RUN_TEST_FORKED((benchmark_umap<8,8>(1<<i)));
+  }
 
   // // Should take 1h30 to run
   for (uint64_t i = 10; i<=28; i++) {
