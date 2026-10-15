@@ -14,6 +14,7 @@ RESULT_PREFIXES = [
   "meta_oram",
   "olabs_rostl",
   "sonic",
+  "cpp_stl",
 ]
 
 # Git commits (40 hex digits) or pinned release archive SHA-256s (64).

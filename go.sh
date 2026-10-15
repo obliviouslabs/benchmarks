@@ -25,6 +25,7 @@ sh ./benchmark/olabs_rostl/run.sh
 sh ./benchmark/mc_oblivious/run.sh
 sh ./benchmark/meta_oram/run.sh
 sh ./benchmark/sonic/run.sh
+# sh ./benchmark/cpp_stl/run.sh
 
 # Comment out the lines you don't want this run to execute.
 

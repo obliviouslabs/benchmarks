@@ -41,6 +41,7 @@ def format_batch_size(value):
 
 def readme_implementation_label(implementation, benchmark_type=None):
   labels = {
+    "cpp_stl": "cpp_stl (non-oblivious)",
     "Signal": "Signal-Old",
     "Signal_Sharded": "Signal-Old-Sharded",
     "Signal_Jasmine": "Signal-Jasmine",

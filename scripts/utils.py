@@ -272,8 +272,11 @@ def HORIZONTAL_LINE():
 
 def simp_float(v):
   try:
-    ret = f"{float(v):.2f}  "
-    return ret
+    value = float(v)
+    # Nanosecond-scale STL timings are fractions of a microsecond; do not
+    # round these positive measurements to a misleading 0.00.
+    precision = 6 if 0 < abs(value) < 0.01 else 2
+    return f"{value:.{precision}f}  "
   except:
     return v
 
@@ -283,6 +286,7 @@ def draw_table(data: pd.DataFrame,
                highlight=-1, # 0 for none, -1 for min, 1 for max
                columns='implementation',
                col_order=[
+  "cpp_stl",
   "mc_oblivious",
   "Signal-Old",
   "Signal-Jasmine",
@@ -319,7 +323,7 @@ def draw_table(data: pd.DataFrame,
         continue
       if highlight != 0:
         if tbl.loc[idx, col] == rmin:
-          tbl.loc[idx, col] = f"**{tbl.loc[idx, col]:.2f}**"
+          tbl.loc[idx, col] = f"**{simp_float(tbl.loc[idx, col]).strip()}**"
           continue
       tbl.loc[idx, col] = simp_float(tbl.loc[idx, col])
   

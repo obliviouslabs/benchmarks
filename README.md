@@ -28,6 +28,7 @@ Contributions with new implementations are welcome, see [CONTRIBUTING.md](./CONT
 | [**meta_oram**](https://github.com/facebook/oram) | Meta's implementation of RORAM | Rust | RORAM |
 | [**h2o2_oram**](https://github.com/55199789/H2O2RAM) | H2O2RAM's high-performance hierarchical doubly oblivious RAM | C++ | RORAM, Ramp-UMAP |
 | [**sonic**](https://zenodo.org/records/21522021) | Native SONIC RingORAM and PMCHAIN batched OMAP ([details](benchmark/sonic/README.md)) | C++ | NRORAM, Batched-UMAP, Ramp-UMAP |
+| [**cpp_stl**](benchmark/cpp_stl/README.md) | **Non-oblivious baseline:** contiguous arrays (`std::vector`) and `std::unordered_map`; N insertions and N shuffled successful queries | C++ | RORAM baseline, UMAP baseline |
 
 ## Benchmark Results
 

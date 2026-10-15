@@ -10,6 +10,7 @@ olabs_rostl
 signal_icelake
 signal_jasmine
 sonic
+cpp_stl
 '
 
 ARGC=$#
