@@ -10,25 +10,44 @@
 #include <unordered_map>
 #include <vector>
 
-// Compiler barriers, not CPU fences. Register operands force actual loads of
+// Compiler-only anti-elision marker. Register operands force actual loads of
 // every queried payload word; a memory-only operand on a reference need not.
 inline void do_not_optimize(uint64_t value) {
     asm volatile("" : : "r"(value) : "memory");
 }
 
-inline void clobber_memory() {
-    asm volatile("" : : : "memory");
+// Full instruction-stream serialization, not merely compiler/memory ordering.
+// CPUID also completes prior stores before the next iteration starts. Its cost
+// is deliberately included in the measured time (can dominate in very small arrays/maps).
+inline void serialize_cpu() {
+#if defined(__x86_64__)
+    uint32_t eax = 0, ebx, ecx = 0, edx; // Fixed, unprivileged leaf 0.
+    asm volatile("cpuid" : "+a"(eax), "=b"(ebx), "+c"(ecx), "=d"(edx) : : "memory");
+#else
+#error "The serialized C++ STL benchmark requires x86-64 (CPUID)."
+#endif
+}
+
+template <bool Serialized>
+inline void iteration_barrier() {
+    if constexpr (Serialized) {
+        serialize_cpu();
+    } else {
+        // Compiler-only barrier: retain individual stores, but permit CPU overlap.
+        asm volatile("" : : : "memory");
+    }
 }
 
 template <class Action>
 uint64_t time_ns(Action action) {
-    clobber_memory();
+    // Identical clock boundaries in both modes; no per-operation clock calls.
+    serialize_cpu();
     const uint64_t start = current_time_ns();
-    clobber_memory();
+    serialize_cpu();
     action();
-    clobber_memory();
+    serialize_cpu();
     const uint64_t end = current_time_ns();
-    clobber_memory();
+    serialize_cpu();
     return end - start;
 }
 
@@ -83,16 +102,16 @@ struct QueryResult {
 
 // Keep the timed kernels identifiable in optimized disassembly. These noinline
 // wrappers add one call per phase, not per access; STL internals may still call out.
-template <size_t ValueBytes>
+template <size_t ValueBytes, bool Serialized>
 [[gnu::noinline]] void insert_array(Value<ValueBytes> *array, const uint64_t *keys,
                                   const Value<ValueBytes> *values, size_t n) {
     for (size_t i = 0; i < n; ++i) {
         array[keys[i]] = values[i];
-        clobber_memory(); // Do not coalesce/remove the individual stores.
+        iteration_barrier<Serialized>();
     }
 }
 
-template <size_t ValueBytes>
+template <size_t ValueBytes, bool Serialized>
 [[gnu::noinline]] QueryResult query_array(const Value<ValueBytes> *array,
                                         const uint64_t *keys, size_t n) {
     uint64_t checksum = 0;
@@ -100,6 +119,8 @@ template <size_t ValueBytes>
         const auto value = array[keys[i]];
         for (uint64_t word : value) do_not_optimize(word);
         checksum += value[0];
+        do_not_optimize(checksum); // Keep register-only accumulation before the barrier too.
+        iteration_barrier<Serialized>();
     }
     return {checksum, true};
 }
@@ -107,18 +128,18 @@ template <size_t ValueBytes>
 template <size_t ValueBytes>
 using Map = std::unordered_map<uint64_t, Value<ValueBytes>>;
 
-template <size_t ValueBytes>
+template <size_t ValueBytes, bool Serialized>
 [[gnu::noinline]] bool insert_map(Map<ValueBytes> &map, const uint64_t *keys,
                                 const Value<ValueBytes> *values, size_t n) {
     for (size_t i = 0; i < n; ++i) {
         const auto inserted = map.emplace(keys[i], values[i]);
         if (!inserted.second) return false;
-        clobber_memory();
+        iteration_barrier<Serialized>();
     }
     return true;
 }
 
-template <size_t ValueBytes>
+template <size_t ValueBytes, bool Serialized>
 [[gnu::noinline]] QueryResult query_map(const Map<ValueBytes> &map,
                                       const uint64_t *keys, size_t n) {
     uint64_t checksum = 0;
@@ -128,6 +149,8 @@ template <size_t ValueBytes>
         const auto value = found->second;
         for (uint64_t word : value) do_not_optimize(word);
         checksum += value[0];
+        do_not_optimize(checksum);
+        iteration_barrier<Serialized>();
     }
     return {checksum, true};
 }
@@ -139,6 +162,7 @@ struct Measurements {
     uint64_t memory_kb = 0;
 };
 
+template <bool Serialized>
 void report(bool map, size_t n, size_t value_bytes, const Measurements &m,
             size_t buckets = 0, float max_load_factor = 0, float load_factor = 0) {
     const char *query = map ? "Get" : "Read";
@@ -147,19 +171,29 @@ void report(bool map, size_t n, size_t value_bytes, const Measurements &m,
         "REPORT_123%s|cpp_stl|%s| N := %zu | Key_bytes := 8 | Value_bytes := %zu"
         " | Threads := 1 | Insertions := %zu | Queries := %zu"
         " | Workload := full_population_shuffled_hits"
-        " | Initialization_time_us := %.6f"
-        " | Insertion_latency_us := %.6f | Insertion_throughput_qps := %.2f"
-        " | %s_latency_us := %.6f | %s_throughput_qps := %.2f"
-        " | Memory_kb := %" PRIu64,
+        " | Timing_mode := %s | Iteration_barrier := %s",
         map ? "UnorderedMap" : "RORAM", version_string(), n, value_bytes, n, n,
-        m.initialization_ns / 1000.0,
-        m.insertion_ns / (1000.0 * n), n * 1e9 / m.insertion_ns,
-        query, m.query_ns / (1000.0 * n), query, n * 1e9 / m.query_ns, m.memory_kb);
+        Serialized ? "serialized" : "pipelined", Serialized ? "cpuid" : "compiler");
+    // Complementary metrics: never mix pipelined averages into latency tables,
+    // or serialized throughput into throughput tables. No reciprocal backfill.
+    if constexpr (Serialized) {
+        std::fprintf(stderr,
+            " | Insertion_latency_us := %.6f | %s_latency_us := %.6f"
+            " | Serialized_initialization_time_us := %.6f | Serialized_memory_kb := %" PRIu64,
+            m.insertion_ns / (1000.0 * n), query, m.query_ns / (1000.0 * n),
+            m.initialization_ns / 1000.0, m.memory_kb);
+    } else {
+        std::fprintf(stderr,
+            " | Insertion_throughput_qps := %.2f | %s_throughput_qps := %.2f"
+            " | Initialization_time_us := %.6f | Memory_kb := %" PRIu64,
+            n * 1e9 / m.insertion_ns, query, n * 1e9 / m.query_ns,
+            m.initialization_ns / 1000.0, m.memory_kb);
+    }
     if (map) {
         std::fprintf(stderr,
             " | Max_load_factor := %.9f | Load_factor := %.9f | Bucket_count := %zu",
             static_cast<double>(max_load_factor), static_cast<double>(load_factor), buckets);
-    } else {
+    } else if constexpr (!Serialized) {
         std::fprintf(stderr, " | Initialization_zeroed_time_us := %.6f", m.initialization_ns / 1000.0);
     }
     char compiler[] = __VERSION__;
@@ -173,7 +207,7 @@ void report(bool map, size_t n, size_t value_bytes, const Measurements &m,
     std::fprintf(stderr, "REPORT_123\n");
 }
 
-template <size_t ValueBytes>
+template <size_t ValueBytes, bool Serialized>
 int benchmark_array(size_t n) try {
     Inputs<ValueBytes> inputs(n, false); // All key/payload generation is untimed.
     const uint64_t memory_before = getMemValue();
@@ -181,11 +215,13 @@ int benchmark_array(size_t n) try {
     Measurements m;
     m.initialization_ns = time_ns([&] { array.resize(n); }); // Allocate and zero.
     m.insertion_ns = time_ns([&] {
-        insert_array<ValueBytes>(array.data(), inputs.keys.data(), inputs.values.data(), n);
+        insert_array<ValueBytes, Serialized>(array.data(), inputs.keys.data(), inputs.values.data(), n);
     });
     inputs.prepare_queries(); // Shuffle outside both timed loops.
     QueryResult result{};
-    m.query_ns = time_ns([&] { result = query_array<ValueBytes>(array.data(), inputs.keys.data(), n); });
+    m.query_ns = time_ns([&] {
+        result = query_array<ValueBytes, Serialized>(array.data(), inputs.keys.data(), n);
+    });
     const uint64_t memory_after = getMemValue();
     m.memory_kb = memory_after > memory_before ? memory_after - memory_before : 0;
     if (result.checksum != inputs.expected_checksum) {
@@ -199,14 +235,14 @@ int benchmark_array(size_t n) try {
             return 1;
         }
     }
-    report(false, n, ValueBytes, m);
+    report<Serialized>(false, n, ValueBytes, m);
     return 0;
 } catch (const std::exception &error) {
     std::fprintf(stderr, "STL array failed: %s\n", error.what());
     return 1;
 }
 
-template <size_t ValueBytes>
+template <size_t ValueBytes, bool Serialized>
 int benchmark_unordered_map(size_t n, float max_load_factor) try {
     Inputs<ValueBytes> inputs(n, true);
     const uint64_t memory_before = getMemValue();
@@ -219,7 +255,7 @@ int benchmark_unordered_map(size_t n, float max_load_factor) try {
     const size_t reserved_buckets = map.bucket_count();
     bool inserted = false;
     m.insertion_ns = time_ns([&] {
-        inserted = insert_map<ValueBytes>(map, inputs.keys.data(), inputs.values.data(), n);
+        inserted = insert_map<ValueBytes, Serialized>(map, inputs.keys.data(), inputs.values.data(), n);
     });
     if (!inserted || map.size() != n || map.bucket_count() != reserved_buckets) {
         std::fprintf(stderr, "STL map insertion count or reserved bucket count mismatch\n");
@@ -227,7 +263,7 @@ int benchmark_unordered_map(size_t n, float max_load_factor) try {
     }
     inputs.prepare_queries();
     QueryResult result{};
-    m.query_ns = time_ns([&] { result = query_map<ValueBytes>(map, inputs.keys.data(), n); });
+    m.query_ns = time_ns([&] { result = query_map<ValueBytes, Serialized>(map, inputs.keys.data(), n); });
     const uint64_t memory_after = getMemValue();
     m.memory_kb = memory_after > memory_before ? memory_after - memory_before : 0;
     if (!result.found || result.checksum != inputs.expected_checksum) {
@@ -240,7 +276,7 @@ int benchmark_unordered_map(size_t n, float max_load_factor) try {
             return 1;
         }
     }
-    report(true, n, ValueBytes, m, map.bucket_count(), map.max_load_factor(), map.load_factor());
+    report<Serialized>(true, n, ValueBytes, m, map.bucket_count(), map.max_load_factor(), map.load_factor());
     return 0;
 } catch (const std::exception &error) {
     std::fprintf(stderr, "STL map failed: %s\n", error.what());
@@ -249,19 +285,31 @@ int benchmark_unordered_map(size_t n, float max_load_factor) try {
 
 int main() {
     constexpr float max_load_factor = 1.0f;
-    // Work is exactly N insertions followed by N queries per case. Large cases
-    // also need substantial untimed input preparation and validation; use selectors.
+    // Run each workload twice on fresh containers with identical inputs: first
+    // pipelined throughput, then serialized latency. Each mode does N insertions
+    // and N queries, with its own selector identity, timeout and correctness checks.
+    // Large cases also need substantial untimed preparation/validation; use selectors.
     for (unsigned exponent = 10; exponent <= 28; ++exponent) {
         const size_t n = size_t{1} << exponent;
-        RUN_TEST_FORKED(benchmark_array<8>(n),
-            "N=%zu,key_bytes=8,value_bytes=8,threads=1", n);
-        RUN_TEST_FORKED(benchmark_array<56>(n),
-            "N=%zu,key_bytes=8,value_bytes=56,threads=1", n);
-        RUN_TEST_FORKED(benchmark_unordered_map<8>(n, max_load_factor),
-            "N=%zu,key_bytes=8,value_bytes=8,threads=1,max_load_factor=%.3g", n,
+        RUN_TEST_FORKED((benchmark_array<8, false>(n)),
+            "N=%zu,key_bytes=8,value_bytes=8,threads=1,timing_mode=pipelined,iteration_barrier=compiler", n);
+        RUN_TEST_FORKED((benchmark_array<8, true>(n)),
+            "N=%zu,key_bytes=8,value_bytes=8,threads=1,timing_mode=serialized,iteration_barrier=cpuid", n);
+        RUN_TEST_FORKED((benchmark_array<56, false>(n)),
+            "N=%zu,key_bytes=8,value_bytes=56,threads=1,timing_mode=pipelined,iteration_barrier=compiler", n);
+        RUN_TEST_FORKED((benchmark_array<56, true>(n)),
+            "N=%zu,key_bytes=8,value_bytes=56,threads=1,timing_mode=serialized,iteration_barrier=cpuid", n);
+        RUN_TEST_FORKED((benchmark_unordered_map<8, false>(n, max_load_factor)),
+            "N=%zu,key_bytes=8,value_bytes=8,threads=1,max_load_factor=%.3g,timing_mode=pipelined,iteration_barrier=compiler", n,
             static_cast<double>(max_load_factor));
-        RUN_TEST_FORKED(benchmark_unordered_map<56>(n, max_load_factor),
-            "N=%zu,key_bytes=8,value_bytes=56,threads=1,max_load_factor=%.3g", n,
+        RUN_TEST_FORKED((benchmark_unordered_map<8, true>(n, max_load_factor)),
+            "N=%zu,key_bytes=8,value_bytes=8,threads=1,max_load_factor=%.3g,timing_mode=serialized,iteration_barrier=cpuid", n,
+            static_cast<double>(max_load_factor));
+        RUN_TEST_FORKED((benchmark_unordered_map<56, false>(n, max_load_factor)),
+            "N=%zu,key_bytes=8,value_bytes=56,threads=1,max_load_factor=%.3g,timing_mode=pipelined,iteration_barrier=compiler", n,
+            static_cast<double>(max_load_factor));
+        RUN_TEST_FORKED((benchmark_unordered_map<56, true>(n, max_load_factor)),
+            "N=%zu,key_bytes=8,value_bytes=56,threads=1,max_load_factor=%.3g,timing_mode=serialized,iteration_barrier=cpuid", n,
             static_cast<double>(max_load_factor));
     }
     return 0;
